@@ -60,12 +60,31 @@ export type ChatMessage = {
 export interface ConversationArea extends Interactable {
   topic?: string;
 };
+
 export interface BoundingBox {
   x: number;
   y: number;
   width: number;
   height: number;
 };
+
+export interface MusicArea extends Interactable {
+  song?: Song;
+  isPlaying: boolean;
+  queue: SongQueue;
+}
+
+export type SongQueue = {
+  qID: int;
+  songs: Song[];
+}
+
+export type Song = {
+  name: string;
+  trackURI: string;
+}
+
+
 
 export interface ViewingArea extends Interactable {
   video?: string;

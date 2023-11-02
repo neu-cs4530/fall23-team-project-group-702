@@ -7,6 +7,7 @@ import { io } from 'socket.io-client';
 import TypedEmitter from 'typed-emitter';
 import Interactable from '../components/Town/Interactable';
 import ConversationArea from '../components/Town/interactables/ConversationArea';
+import MusicArea from '../components/Town/interactables/MusicArea';
 import GameArea from '../components/Town/interactables/GameArea';
 import ViewingArea from '../components/Town/interactables/ViewingArea';
 import { LoginController } from '../contexts/LoginControllerContext';
@@ -35,6 +36,7 @@ import InteractableAreaController, {
 import TicTacToeAreaController from './interactable/TicTacToeAreaController';
 import ViewingAreaController from './interactable/ViewingAreaController';
 import PlayerController from './PlayerController';
+import MusicAreaController from './interactable/MusicAreaController';
 
 const CALCULATE_NEARBY_PLAYERS_DELAY_MS = 300;
 const SOCKET_COMMAND_TIMEOUT_MS = 5000;
@@ -645,6 +647,30 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
       return existingController;
     } else {
       throw new Error(`No such viewing area controller ${existingController}`);
+    }
+  }
+
+  /**
+   * Create a new conversation area, sending the request to the townService. Throws an error if the request
+   * is not successful. Does not immediately update local state about the new conversation area - it will be
+   * updated once the townService creates the area and emits an interactableUpdate
+   *
+   * @param newArea
+   */
+  async createMusicArea(newArea: { id: InteractableID, occupants: Array<string> }) {
+    await this._townsService.createMusicArea(this.townID, this.sessionToken, newArea);
+  }
+
+  public getMusicAreaController(
+    musicArea: MusicArea,
+  ): MusicAreaController {
+    const existingController = this._interactableControllers.find(
+      eachExistingArea => eachExistingArea.id === musicArea.name,
+    );
+    if (existingController instanceof MusicAreaController) {
+      return existingController;
+    } else {
+      throw new Error(`No such music area controller ${existingController}`);
     }
   }
 
