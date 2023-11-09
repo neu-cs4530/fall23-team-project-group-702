@@ -35,10 +35,10 @@ export default class MusicAreaController extends InteractableAreaController<
   private _musicArea?: MusicAreaController;
 
   /**
-   * Constructs a new ViewingAreaController, initialized with the state of the
-   * provided viewingAreaModel.
+   * Constructs a new MusicAreaController, initialized with the state of the
+   * provided musicAreaModel.
    *
-   * @param musicAreaModel The viewing area model that this controller should represent
+   * @param musicAreaModel The music area model that this controller should represent
    */
   constructor(musicAreaModel: MusicAreaModel) {
     super(musicAreaModel.id);
@@ -68,13 +68,15 @@ export default class MusicAreaController extends InteractableAreaController<
     }
   }
 
-    /**
+    /** TO FIX.
    * The URL of the video assigned to this viewing area, or undefined if there is not one.
-   */
+ 
      public get queue() {
         return this._model.queue;
       }
-    
+  
+     */
+
       /**
        * The URL of the video assigned to this viewing area, or undefined if there is not one.
        *

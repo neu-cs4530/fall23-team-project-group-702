@@ -9,6 +9,7 @@ import { isViewingArea } from '../TestUtils';
 import {
   ChatMessage,
   ConversationArea as ConversationAreaModel,
+  MusicArea as MusicAreaModel,
   CoveyTownSocket,
   Interactable,
   InteractableCommand,
@@ -22,6 +23,7 @@ import { logError } from '../Utils';
 import ConversationArea from './ConversationArea';
 import GameAreaFactory from './games/GameAreaFactory';
 import InteractableArea from './InteractableArea';
+import MusicArea from './MusicArea';
 import ViewingArea from './ViewingArea';
 
 /**
@@ -302,6 +304,34 @@ export default class Town {
   }
 
   /**
+   * Creates a new music area in this town if there is not currently an active
+   * music session with the same ID. The music area ID must match the name of a
+   * music area that exists in this town's map, and the music area must not
+   * already have a song set.
+   *
+   * If successful creating the music area, this method:
+   *  Adds any players who are in the region defined by the music area to it.
+   *  Notifies all players in the town that the music area has been updated
+   *
+   * @param musicArea Information describing the music area to create. Ignores any
+   *  occupantsById that are set on the music area that is passed to this method.
+   *
+   * @returns true if the music session is successfully created, or false if there is no known
+   * music area with the specified ID or if there is already an active music area
+   * with the specified ID
+   */
+  public addMusicArea(musicArea: MusicAreaModel): boolean {
+    const area = this._interactables.find(eachArea => eachArea.id === musicArea.id) as MusicArea;
+    if (!area || !musicArea.topic || area.topic) {
+      return false;
+    }
+    area.topic = musicArea.topic;
+    area.addPlayersWithinBounds(this._players);
+    this._broadcastEmitter.emit('interactableUpdate', area.toModel());
+    return true;
+  }
+
+  /**
    * Creates a new viewing area in this town if there is not currently an active
    * viewing area with the same ID. The viewing area ID must match the name of a
    * viewing area that exists in this town's map, and the viewing area must not
@@ -404,10 +434,15 @@ export default class Town {
       .filter(eachObject => eachObject.type === 'GameArea')
       .map(eachGameAreaObj => GameAreaFactory(eachGameAreaObj, this._broadcastEmitter));
 
+    const musicAreas = objectLayer.objects
+      .filter(eachObject => eachObject.type === 'MusicArea')
+      .map(eachGameAreaObj => MusicArea.fromMapObject(eachGameAreaObj, this._broadcastEmitter));
+
     this._interactables = this._interactables
       .concat(viewingAreas)
       .concat(conversationAreas)
-      .concat(gameAreas);
+      .concat(gameAreas)
+      .concat(musicAreas);
     this._validateInteractables();
   }
 

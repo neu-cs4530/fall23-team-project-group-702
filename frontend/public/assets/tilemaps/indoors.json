@@ -543,21 +543,15 @@
                  "y":730.666666666667
                 }, 
                 {
-                 "height":92.2796984663374,
-                 "id":39,
-                 "name":"Tic Tac Toe 2",
-                 "properties":[
-                        {
-                         "name":"type",
-                         "type":"string",
-                         "value":"TicTacToe"
-                        }],
-                 "rotation":0,
-                 "type":"GameArea",
-                 "visible":true,
-                 "width":135.170262542241,
-                 "x":2941.25292435664,
-                 "y":738.416428385755
+                     "height":92.2796984663374,
+                     "id":53,
+                     "name":"Music Room 1",
+                     "rotation":0,
+                     "type":"MusicArea",
+                     "visible":true,
+                     "width":135.170262542241,
+                     "x":2941.25292435664,
+                     "y":738.416428385755
                 }, 
                 {
                  "height":83.8442547785938,

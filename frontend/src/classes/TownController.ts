@@ -27,7 +27,7 @@ import {
   TownSettingsUpdate,
   ViewingArea as ViewingAreaModel,
 } from '../types/CoveyTownSocket';
-import { isConversationArea, isTicTacToeArea, isViewingArea } from '../types/TypeUtils';
+import { isConversationArea, isMusicArea, isTicTacToeArea, isViewingArea } from '../types/TypeUtils';
 import ConversationAreaController from './interactable/ConversationAreaController';
 import GameAreaController, { GameEventTypes } from './interactable/GameAreaController';
 import InteractableAreaController, {
@@ -332,6 +332,13 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
     return ret as GameAreaController<GameState, GameEventTypes>[];
   }
 
+  public get musicAreas() {
+    const ret = this._interactableControllers.filter(
+      eachInteractable => eachInteractable instanceof MusicAreaController,
+    );
+    return ret as MusicAreaController[];
+  }
+
   /**
    * Begin interacting with an interactable object. Emits an event to all listeners.
    * @param interactedObj
@@ -603,6 +610,8 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
             );
           } else if (isViewingArea(eachInteractable)) {
             this._interactableControllers.push(new ViewingAreaController(eachInteractable));
+          } else if (isMusicArea(eachInteractable)) {
+            this._interactableControllers.push(new MusicAreaController(eachInteractable));
           } else if (isTicTacToeArea(eachInteractable)) {
             this._interactableControllers.push(
               new TicTacToeAreaController(eachInteractable.id, eachInteractable, this),
@@ -651,8 +660,8 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
   }
 
   /**
-   * Create a new conversation area, sending the request to the townService. Throws an error if the request
-   * is not successful. Does not immediately update local state about the new conversation area - it will be
+   * Create a new music area, sending the request to the townService. Throws an error if the request
+   * is not successful. Does not immediately update local state about the new music area - it will be
    * updated once the townService creates the area and emits an interactableUpdate
    *
    * @param newArea
@@ -665,7 +674,7 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
     musicArea: MusicArea,
   ): MusicAreaController {
     const existingController = this._interactableControllers.find(
-      eachExistingArea => eachExistingArea.id === musicArea.name,
+      eachExistingArea => eachExistingArea.id === musicArea.id,
     );
     if (existingController instanceof MusicAreaController) {
       return existingController;

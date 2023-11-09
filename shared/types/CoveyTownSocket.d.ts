@@ -17,7 +17,7 @@ export type TownJoinResponse = {
   interactables: TypedInteractable[];
 }
 
-export type InteractableType = 'ConversationArea' | 'ViewingArea' | 'TicTacToeArea';
+export type InteractableType = 'ConversationArea' | 'ViewingArea' | 'TicTacToeArea' | 'MusicArea';
 export interface Interactable {
   type: InteractableType;
   id: InteractableID;
@@ -71,7 +71,8 @@ export interface BoundingBox {
 export interface MusicArea extends Interactable {
   song?: Song;
   isPlaying: boolean;
-  queue: SongQueue;
+  queue?: SongQueue;
+  topic?: string;
 }
 
 export type SongQueue = {
@@ -83,7 +84,6 @@ export type Song = {
   name: string;
   trackURI: string;
 }
-
 
 
 export interface ViewingArea extends Interactable {
