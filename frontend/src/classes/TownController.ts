@@ -344,6 +344,7 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
    * @param interactedObj
    */
   public interact<T extends Interactable>(interactedObj: T) {
+    console.log(interactedObj.getType())
     this._interactableEmitter.emit(interactedObj.getType(), interactedObj);
   }
 
@@ -861,10 +862,12 @@ function samePlayers(a1: PlayerController[], a2: PlayerController[]) {
 export function useInteractable<T extends Interactable>(
   interactableType: T['name'],
 ): T | undefined {
+  console.log("interactable name " + interactableType)
   const townController = useTownController();
   const [interactable, setInteractable] = useState<T | undefined>(undefined);
   useEffect(() => {
     const onInteract = (interactWith: T) => {
+      console.log("interacting")
       setInteractable(interactWith);
     };
     const offInteract = () => {

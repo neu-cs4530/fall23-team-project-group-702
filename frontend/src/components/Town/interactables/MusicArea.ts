@@ -54,6 +54,7 @@ export default class MusicArea extends Interactable {
   }
 
   interact(): void {
+    console.log("inside interACT")
     this._labelText?.setVisible(false);
     this._isInteracting = true;
   }
