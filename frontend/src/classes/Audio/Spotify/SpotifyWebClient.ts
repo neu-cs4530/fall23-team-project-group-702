@@ -1,7 +1,7 @@
 export default class SpotifyWebClient {
-    private readonly _clientId = process.env.SPOTIFY_CLIENT_ID;
+    private readonly _clientId = '4690611fb9e348178f36e8a01d72b5e0';
   
-    private readonly _clientSecret = process.env.SPOTIFY_SECRET;
+    private readonly _clientSecret = '6484719f63b84373810d0b7a15fd3754';
   
     private _authOptions = new URLSearchParams();
   

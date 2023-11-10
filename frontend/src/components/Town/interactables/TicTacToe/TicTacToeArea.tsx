@@ -158,43 +158,6 @@ function TicTacToeArea({ interactableID }: { interactableID: InteractableID }): 
 
   return (
     <Container>
-      <Accordion allowToggle>
-        <AccordionItem>
-          <Heading as='h3'>
-            <AccordionButton>
-              <Box as='span' flex='1' textAlign='left'>
-                Leaderboard
-                <AccordionIcon />
-              </Box>
-            </AccordionButton>
-          </Heading>
-          <AccordionPanel>
-            <TicTacToeLeaderboard results={history} />
-          </AccordionPanel>
-        </AccordionItem>
-        <AccordionItem>
-          <Heading as='h3'>
-            <AccordionButton>
-              <Box as='span' flex='1' textAlign='left'>
-                Current Observers
-                <AccordionIcon />
-              </Box>
-            </AccordionButton>
-          </Heading>
-          <AccordionPanel>
-            <List aria-label='list of observers in the game'>
-              {observers.map(player => {
-                return <ListItem key={player.id}>{player.userName}</ListItem>;
-              })}
-            </List>
-          </AccordionPanel>
-        </AccordionItem>
-      </Accordion>
-      {gameStatusText}
-      <List aria-label='list of players in the game'>
-        <ListItem>X: {x?.userName || '(No player yet!)'}</ListItem>
-        <ListItem>O: {o?.userName || '(No player yet!)'}</ListItem>
-      </List>
       <TicTacToeBoard gameAreaController={gameAreaController} />
     </Container>
   );
@@ -222,7 +185,7 @@ export default function TicTacToeAreaWrapper(): JSX.Element {
       <Modal isOpen={true} onClose={closeModal} closeOnOverlayClick={false}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>{gameArea.name}</ModalHeader>
+          <ModalHeader>Spotify Player</ModalHeader>
           <ModalCloseButton />
           <TicTacToeArea interactableID={gameArea.name} />;
         </ModalContent>

@@ -1,9 +1,13 @@
+/// <reference types="@types/spotify-web-playback-sdk"/>
 import { Button, chakra, Container, useToast } from '@chakra-ui/react';
 import React, { useEffect, useState } from 'react';
 import TicTacToeAreaController, {
   TicTacToeCell,
 } from '../../../../classes/interactable/TicTacToeAreaController';
-import { TicTacToeGridPosition } from '../../../../types/CoveyTownSocket';
+import { TicTacToeGridPosition } from '../../../../types/CoveyTownSocket';;
+// Spotify
+import SpotifyPlayback from './SpotifyPlayback';
+import { Scopes } from '@spotify/web-api-ts-sdk';
 
 export type TicTacToeGameProps = {
   gameAreaController: TicTacToeAreaController;
@@ -57,45 +61,19 @@ const StyledTicTacToeBoard = chakra(Container, {
  * @param gameAreaController the controller for the TicTacToe game
  */
 export default function TicTacToeBoard({ gameAreaController }: TicTacToeGameProps): JSX.Element {
-  const [board, setBoard] = useState<TicTacToeCell[][]>(gameAreaController.board);
-  const [isOurTurn, setIsOurTurn] = useState(gameAreaController.isOurTurn);
-  const toast = useToast();
-  useEffect(() => {
-    gameAreaController.addListener('turnChanged', setIsOurTurn);
-    gameAreaController.addListener('boardChanged', setBoard);
-    return () => {
-      gameAreaController.removeListener('boardChanged', setBoard);
-      gameAreaController.removeListener('turnChanged', setIsOurTurn);
-    };
-  }, [gameAreaController]);
+  // useEffect(() => {
+  //   // load Web Playback SDK.
+  //   const script = document.createElement("script");
+  //   script.src = 'https://sdk.scdn.co/spotify-player.js';
+  //   document.body.appendChild(script);
+
+  //   return () => {
+  //     document.body.removeChild(script);
+  //   };
+  // }, []);
   return (
-    <StyledTicTacToeBoard aria-label='Tic-Tac-Toe Board'>
-      {board.map((row, rowIndex) => {
-        return row.map((cell, colIndex) => {
-          return (
-            <StyledTicTacToeSquare
-              key={`${rowIndex}.${colIndex}`}
-              onClick={async () => {
-                try {
-                  await gameAreaController.makeMove(
-                    rowIndex as TicTacToeGridPosition,
-                    colIndex as TicTacToeGridPosition,
-                  );
-                } catch (e) {
-                  toast({
-                    title: 'Error making move',
-                    description: (e as Error).toString(),
-                    status: 'error',
-                  });
-                }
-              }}
-              disabled={!isOurTurn}
-              aria-label={`Cell ${rowIndex},${colIndex}`}>
-              {cell}
-            </StyledTicTacToeSquare>
-          );
-        });
-      })}
-    </StyledTicTacToeBoard>
+    <>
+      <SpotifyPlayback clientId='4690611fb9e348178f36e8a01d72b5e0' redirectUrl='http://localhost:3000/callback/' scopes={Scopes.all} />
+    </>
   );
 }
