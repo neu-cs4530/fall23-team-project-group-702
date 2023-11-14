@@ -61,16 +61,6 @@ const StyledTicTacToeBoard = chakra(Container, {
  * @param gameAreaController the controller for the TicTacToe game
  */
 export default function TicTacToeBoard({ gameAreaController }: TicTacToeGameProps): JSX.Element {
-  // useEffect(() => {
-  //   // load Web Playback SDK.
-  //   const script = document.createElement("script");
-  //   script.src = 'https://sdk.scdn.co/spotify-player.js';
-  //   document.body.appendChild(script);
-
-  //   return () => {
-  //     document.body.removeChild(script);
-  //   };
-  // }, []);
   return (
     <>
       <SpotifyPlayback clientId='4690611fb9e348178f36e8a01d72b5e0' redirectUrl='http://localhost:3000/callback/' scopes={Scopes.all} />

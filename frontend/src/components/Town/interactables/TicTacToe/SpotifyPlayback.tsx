@@ -1,7 +1,16 @@
+/*
+- Need to split frontend into components
+- Ideally move spotify api stuff to the backend and add API route
+- Ideally move code for creating new playback to new component
+- 
+- 
+*/
+
 import { SpotifyApi, UserProfile, SdkOptions, AuthorizationCodeWithPKCEStrategy, Devices, Track } from '@spotify/web-api-ts-sdk';
 import { useEffect, useRef, useState } from 'react';
 import WebPlayback from './WebPlaybackSdk';
 import { Button, FormLabel, Heading, Table, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/react';
+// import 'spotify-web-api-js'
 
 /*
 A song should automatically move to the next song in the queue when the current song ends
@@ -30,48 +39,60 @@ export default function SpotifyPlayback(props: { clientId: string, redirectUrl: 
     const [player, setPlayer] = useState(null as Spotify.Player | null);
 
     useEffect(() => {
-        if (!accessToken) return;
+        if (!accessToken || !sdk) return;
         const script = document.createElement("script");
         script.src = "https://sdk.scdn.co/spotify-player.js";
         script.async = true;
 
         document.body.appendChild(script);
 
-        window.onSpotifyWebPlaybackSDKReady = () => {
-            const player = new window.Spotify.Player({
+        window.onSpotifyWebPlaybackSDKReady = async () => {
+            const spotifyPlayer = new window.Spotify.Player({
                 name: 'Web Playback SDK',
                 getOAuthToken: cb => { cb(accessToken); },
                 volume: 0.5
             });
 
-            setPlayer(player);
+            setPlayer(spotifyPlayer);
+            // if (!player) {
+            //     throw new Error("Player not initialized");
+            // };
 
-            player.addListener('ready', ({ device_id }) => {
+            spotifyPlayer.addListener('ready', ({ device_id }) => {
                 console.log('Ready with Device ID', device_id);
             });
 
-            player.addListener('not_ready', ({ device_id }) => {
+            spotifyPlayer.addListener('not_ready', ({ device_id }) => {
                 console.log('Device ID has gone offline', device_id);
             });
 
-            player.connect().then(state => {
-                console.log(`state.valueOf: ${state.valueOf()}`)
-            });
+            await spotifyPlayer.connect();
 
-            console.log("player: ", player?._options.id)
-            if (!player) return;
-            console.log("using player: ", player._options.id);
-            fetch(`https://api.spotify.com/v1/me/player`, {
+            // console.log("player: ", player?._options.id)
+            if (!spotifyPlayer) return;
+            // console.log("using player: ", spotifyPlayer._options.id);
+            /*
+            Transferring the playback to the Web SDK
+            */
+            await fetch(`https://api.spotify.com/v1/me/player`, {
                 method: "PUT",
-                body: JSON.stringify({ device_ids: [player._options.id], play: false }),
+                body: JSON.stringify({ device_ids: [spotifyPlayer._options.id], play: false }),
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${accessToken}`,
                 },
-            });
+            })
+            // await sdk.player.transferPlayback([spotifyPlayer._options.id], true);
+            await spotifyPlayer.activateElement();
+            const state = await spotifyPlayer.getCurrentState();
 
+            console.log(`state: ${JSON.stringify(state)}`)
+
+            spotifyPlayer._options.enableMediaSession = true;
+            console.log(`options ${JSON.stringify(spotifyPlayer._options.enableMediaSession)}`)
 
             return () => {
+                spotifyPlayer.disconnect();
                 document.body.removeChild(script);
             };
         };
@@ -240,7 +261,12 @@ export default function SpotifyPlayback(props: { clientId: string, redirectUrl: 
             setProfile(user);
 
             const currentDevices = await sdk.player.getAvailableDevices();
-            setActiveDevices({ ...activeDevices, devices: currentDevices.devices.filter((device) => device.is_active) });
+            currentDevices.devices.forEach(async (device) => {
+                console.log("device: ", device.name, " is_active: ", device.is_active);
+                device.is_active = true;
+            })
+            setActiveDevices(currentDevices)
+            // setActiveDevices({ ...activeDevices, devices: currentDevices.devices.filter((device) => device.is_active) });
         })();
     }, [sdk]);
 
