@@ -9,6 +9,7 @@
 import { SpotifyApi, UserProfile, SdkOptions, AuthorizationCodeWithPKCEStrategy, Devices, Track } from '@spotify/web-api-ts-sdk';
 import { useEffect, useRef, useState } from 'react';
 import { Button, FormLabel, Heading, Table, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/react';
+import { useErrorState, usePlaybackState, usePlayerDevice, useSpotifyPlayer, useWebPlaybackSDKReady } from 'react-spotify-web-playback-sdk';
 // import 'spotify-web-api-js'
 
 /*
@@ -25,6 +26,12 @@ export default function SpotifyPlayback(props: { sdk: SpotifyApi }) {
   const [searchResults, setSearchResults] = useState<Track[]>([]);
   const [currentTrack, setCurrentTrack] = useState<Track>({} as Track);
   const [queue, setQueue] = useState<Track[]>([]);
+
+  const playbackState = usePlaybackState(true, 100);
+  const playerDevice = usePlayerDevice();
+  const errorState = useErrorState();
+  const webPlaybackSDKReady = useWebPlaybackSDKReady();
+  const spotifyPlayer = useSpotifyPlayer();
 
   const handleSearch = async () => {
     if (!props.sdk) {
@@ -103,19 +110,36 @@ export default function SpotifyPlayback(props: { sdk: SpotifyApi }) {
       return;
     }
 
+    if (playerDevice?.device_id === undefined) return;
+    
+
     (async () => {
+
+      const access_token = await props.sdk.getAccessToken();
+
+      await fetch(`https://api.spotify.com/v1/me/player`, {
+        method: "PUT",
+        body: JSON.stringify({ device_ids: [playerDevice.device_id], play: false }),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${access_token}`,
+        },
+      });
+      await spotifyPlayer?.togglePlay();
+
+
       const user = await props.sdk.currentUser.profile();
       setProfile(user);
 
       const currentDevices = await props.sdk.player.getAvailableDevices();
       currentDevices.devices.forEach(async (device) => {
         console.log("device: ", device.name, " is_active: ", device.is_active);
-        props.sdk.player.transferPlayback([device.id as string]);
+        // props.sdk.player.transferPlayback([device.id as string]);
       })
       setActiveDevices(currentDevices)
       // setActiveDevices({ ...activeDevices, devices: currentDevices.devices.filter((device) => device.is_active) });
     })();
-  }, [props.sdk]);
+  }, [props.sdk, playerDevice?.device_id]);
 
   return (
     <>

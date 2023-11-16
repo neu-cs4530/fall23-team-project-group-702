@@ -96,10 +96,11 @@ export default function TicTacToeBoard({ gameAreaController }: TicTacToeGameProp
 
   return (
     <>
-      {(sdk && accessToken!="") ?
+      {(sdk && accessToken != "") ?
         <>
-          <SpotifyPlayback sdk={sdk} />
-          <SpotifySdk token={accessToken} />
+          <SpotifySdk token={accessToken} sdk={sdk} >
+            {/* <SpotifyPlayback sdk={sdk} /> */}
+          </SpotifySdk>
         </>
         :
         <>

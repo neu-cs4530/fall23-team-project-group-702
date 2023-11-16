@@ -2,6 +2,7 @@ import { useSpotifyPlayer } from "react-spotify-web-playback-sdk";
 import { Button } from "@chakra-ui/react";
 
 /*
+    *** NECESSARY TO SET DEVICE TO ACTIVE ***
   Represents the controls for a single player. Need to link this to webSDK
 */
 export default function SpotifyPlayer() {
