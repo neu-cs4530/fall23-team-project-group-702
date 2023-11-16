@@ -172,6 +172,19 @@ function TicTacToeArea({ interactableID }: { interactableID: InteractableID }): 
 export default function TicTacToeAreaWrapper(): JSX.Element {
   const gameArea = useInteractable<GameAreaInteractable>('gameArea');
   const townController = useTownController();
+
+  const [topic, setTopic] = useState<string>('');
+
+  const isOpen = gameArea !== undefined;
+
+  useEffect(() => {
+    if (gameArea) {
+      townController.pause();
+    } else {
+      townController.unPause();
+    }
+  }, [townController, gameArea]);
+
   const closeModal = useCallback(() => {
     if (gameArea) {
       townController.interactEnd(gameArea);
@@ -182,7 +195,13 @@ export default function TicTacToeAreaWrapper(): JSX.Element {
 
   if (gameArea && gameArea.getData('type') === 'TicTacToe') {
     return (
-      <Modal isOpen={true} onClose={closeModal} closeOnOverlayClick={false}>
+      <Modal
+        isOpen={isOpen}
+        onClose={() => {
+          closeModal();
+          townController.unPause();
+        }}
+        closeOnOverlayClick={false}>
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>Spotify Player</ModalHeader>
