@@ -261,7 +261,9 @@ export default function SpotifyPlayback(props: { clientId: string, redirectUrl: 
         <Heading size='md'>Devices currently playing:</Heading>
         <ul>
           {activeDevices.devices ? activeDevices.devices.map(device => (
-            <li key={device.id}>{device.name}</li>
+            <li key={device.id}>
+              {device.name}: {device.is_active ? "Active" : "Inactive"} | {device.type} | {device.id}
+            </li>
           )) : null}
         </ul>
       </div>
