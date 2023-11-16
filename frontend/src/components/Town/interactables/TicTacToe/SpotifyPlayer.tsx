@@ -28,8 +28,19 @@ export default function SpotifyPlayer() {
                     </Button>
                 </div>
                 <div>
-                    <Button onClick={() => player.seek(10)}>
-                        <code>player.seek(10)</code>
+                    <Button onClick={async () => {
+                        const pos = await player.getCurrentState();
+                        if (pos === null) return;
+                        player.seek(pos.position + 10000);
+                    }}>
+                        <code>+10s</code>
+                    </Button>
+                    <Button onClick={async () => {
+                        const pos = await player.getCurrentState();
+                        if (pos === null) return;
+                        player.seek(pos.position - 10000);
+                    }}>
+                        <code>-10s</code>
                     </Button>
                 </div>
                 <div>
