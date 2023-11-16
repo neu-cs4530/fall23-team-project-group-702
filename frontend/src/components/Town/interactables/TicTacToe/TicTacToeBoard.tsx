@@ -1,6 +1,5 @@
 /// <reference types="@types/spotify-web-playback-sdk"/>
 import { Button, chakra, Container, useToast } from '@chakra-ui/react';
-import React, { useEffect, useState } from 'react';
 import TicTacToeAreaController, {
   TicTacToeCell,
 } from '../../../../classes/interactable/TicTacToeAreaController';
