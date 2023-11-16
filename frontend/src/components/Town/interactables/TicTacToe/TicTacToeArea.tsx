@@ -7,7 +7,10 @@ import {
   Box,
   Button,
   Container,
+  FormControl,
+  FormLabel,
   Heading,
+  Input,
   List,
   ListItem,
   Modal,
@@ -173,7 +176,8 @@ export default function TicTacToeAreaWrapper(): JSX.Element {
   const gameArea = useInteractable<GameAreaInteractable>('gameArea');
   const townController = useTownController();
 
-  const [topic, setTopic] = useState<string>('');
+  const [sessionName, setSessionName] = useState<string>('');
+  const [sessionActive, setSessionActive] = useState<boolean>(false); // TODO should use environment by default
 
   const isOpen = gameArea !== undefined;
 
@@ -193,23 +197,64 @@ export default function TicTacToeAreaWrapper(): JSX.Element {
     }
   }, [townController, gameArea]);
 
+  const handleStartMusicSession = () => {
+    console.log('handleStartMusicSession clicked');
+    setSessionActive(true);
+  };
+
   if (gameArea && gameArea.getData('type') === 'TicTacToe') {
-    return (
-      <Modal
-        isOpen={isOpen}
-        onClose={() => {
-          closeModal();
-          townController.unPause();
-        }}
-        closeOnOverlayClick={false}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Spotify Player</ModalHeader>
-          <ModalCloseButton />
-          <TicTacToeArea interactableID={gameArea.name} />;
-        </ModalContent>
-      </Modal>
-    );
+    if (!sessionActive) {
+      return (
+        <Modal
+          isOpen={isOpen}
+          onClose={() => {
+            closeModal();
+            townController.unPause();
+          }}
+          closeOnOverlayClick={false}>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader> Start a Music Session</ModalHeader>
+            <ModalCloseButton />
+            <p>Open Lounge Jukebox 1</p> {/* should be replaced with jukebox item name */}
+            <form>
+              <FormControl>
+                <FormLabel htmlFor='topic'>Name of Music Session</FormLabel>
+                <Input
+                  id='name'
+                  placeholder='What are the vibes'
+                  name='name'
+                  value={sessionName}
+                  onChange={e => setSessionName(e.target.value)}
+                />
+              </FormControl>
+            </form>
+            <Button colorScheme='blue' mr={3} onClick={handleStartMusicSession}>
+              Create
+            </Button>
+            <Button>Cancel</Button>
+          </ModalContent>
+        </Modal>
+      );
+    } else {
+      return (
+        <Modal
+          isOpen={isOpen}
+          onClose={() => {
+            closeModal();
+            setSessionActive(false); // TODO should be based on when owner closes
+            townController.unPause();
+          }}
+          closeOnOverlayClick={false}>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>{sessionName}</ModalHeader>
+            <ModalCloseButton />
+            <TicTacToeArea interactableID={gameArea.name} />;
+          </ModalContent>
+        </Modal>
+      )
+    }
   }
   return <></>;
 }
