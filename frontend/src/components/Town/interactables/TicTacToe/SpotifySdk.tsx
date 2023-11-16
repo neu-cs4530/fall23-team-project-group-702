@@ -30,13 +30,13 @@ const SpotifySdk: React.VFC<Props> = ({ token, children, sdk }) => {
             initialVolume={0.5}>
             <div >
                 <div>
-                    <SpotifyPlayer />
-                </div>
-                <div>
                     <SpotifyDetails access_token={token} />
                 </div>
+                <div>
+                    <SpotifyPlayer sdk={sdk}/>
+                </div>
                 {/* {children} */}
-                <SpotifyPlayback sdk={sdk} />
+                {/* <SpotifyPlayback sdk={sdk} /> */}
             </div>
         </WebPlaybackSDK>
     );

@@ -1,14 +1,35 @@
 import { useSpotifyPlayer } from "react-spotify-web-playback-sdk";
 import { Button } from "@chakra-ui/react";
+import { SpotifyApi } from "@spotify/web-api-ts-sdk";
+import SpotifyPlayback from "./SpotifyPlayback";
+import { useEffect } from "react";
 
 /*
     *** NECESSARY TO SET DEVICE TO ACTIVE ***
   Represents the controls for a single player. Need to link this to webSDK
 */
-export default function SpotifyPlayer() {
+export default function SpotifyPlayer(props: { sdk: SpotifyApi }) {
     const player = useSpotifyPlayer();
 
     if (player === null) return null;
+
+    // useEffect(() => {
+    //     async function activate() {
+    //         if (player === null) return;
+    //         await fetch("https://api.spotify.com/v1/me/player/play?device_id=" + player._options.id, {
+    //             method: "PUT",
+    //             body: JSON.stringify({ uris: ["spotify:track:5ya2gsaIhTkAuWYEMB0nw5"] }),
+    //             headers: {
+    //                 "Content-Type": "application/json",
+    //                 "Authorization": "Bearer " + await props.sdk.getAccessToken()
+    //             }
+    //         }).then(response => response.json())
+    //             .then(data => console.log(data))
+    //             .catch(error => console.error('Error:', error));
+    //     }
+    //     activate();
+    // }, [player]);
+
 
     return (
         <div >
@@ -55,6 +76,7 @@ export default function SpotifyPlayer() {
                     </Button>
                 </div>
             </div>
+            <SpotifyPlayback sdk={props.sdk} />
         </div>
     );
 };

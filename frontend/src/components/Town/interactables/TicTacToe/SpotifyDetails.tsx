@@ -19,20 +19,33 @@ export const SpotifyDetails: React.VFC<{ access_token: string }> = memo(
 
         useEffect(() => {
             if (playerDevice?.device_id === undefined) return;
-
-            fetch(`https://api.spotify.com/v1/me/player`, {
-                method: "PUT",
-                body: JSON.stringify({ device_ids: [playerDevice.device_id], play: false }),
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${access_token}`,
-                },
-            });
+            async function activate() {
+                if (playerDevice?.device_id === undefined) return;
+                await fetch(`https://api.spotify.com/v1/me/player`, {
+                    method: "PUT",
+                    body: JSON.stringify({ device_ids: [playerDevice.device_id], play: false }),
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${access_token}`,
+                    },
+                });
+                await fetch("https://api.spotify.com/v1/me/player/play?device_id=" + playerDevice.device_id, {
+                    method: "PUT",
+                    body: JSON.stringify({ uris: ["spotify:track:1HYzRuWjmS9LXCkdVHi25K"] }),
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": "Bearer " + access_token
+                    }
+                }).then(response => response.json())
+                    .then(data => console.log(data))
+                    .catch(error => console.error('Error:', error));
+            }
+            activate();
         }, [playerDevice?.device_id]);
 
         return (
             <div>
-                Placeholder
+                {/* Placeholder */}
             </div>
         );
     },
