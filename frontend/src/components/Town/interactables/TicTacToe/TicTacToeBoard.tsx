@@ -5,8 +5,10 @@ import TicTacToeAreaController, {
 } from '../../../../classes/interactable/TicTacToeAreaController';
 import { TicTacToeGridPosition } from '../../../../types/CoveyTownSocket';;
 // Spotify
+import { AuthorizationCodeWithPKCEStrategy, Scopes, SpotifyApi } from '@spotify/web-api-ts-sdk';
+import { useEffect, useState } from 'react';
+import SpotifySdk from './SpotifySdk';
 import SpotifyPlayback from './SpotifyPlayback';
-import { Scopes } from '@spotify/web-api-ts-sdk';
 
 export type TicTacToeGameProps = {
   gameAreaController: TicTacToeAreaController;
@@ -60,9 +62,50 @@ const StyledTicTacToeBoard = chakra(Container, {
  * @param gameAreaController the controller for the TicTacToe game
  */
 export default function TicTacToeBoard({ gameAreaController }: TicTacToeGameProps): JSX.Element {
+  const [accessToken, setAccessToken] = useState("");
+  const [sdk, setSdk] = useState<SpotifyApi>(null as unknown as SpotifyApi);
+
+  useEffect(() => {
+    (async () => {
+      const auth = new AuthorizationCodeWithPKCEStrategy(process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID as string, "http://localhost:3000/callback/", Scopes.all);
+      const internalSdk = new SpotifyApi(auth, undefined);
+
+      try {
+        const { authenticated } = await internalSdk.authenticate();
+
+        if (authenticated) {
+          setSdk(internalSdk);
+          const clientToken = await internalSdk.getAccessToken();
+          if (!clientToken) {
+            throw new Error("Authentication failed");
+          }
+          setAccessToken(clientToken.access_token);
+        }
+      } catch (e: Error | unknown) {
+
+        const error = e as Error;
+        if (error && error.message && error.message.includes("No verifier found in cache")) {
+          console.error("If you are seeing this error in a React Development Environment it's because React calls useEffect twice. Using the Spotify SDK performs a token exchange that is only valid once, so React re-rendering this component will result in a second, failed authentication. This will not impact your production applications (or anything running outside of Strict Mode - which is designed for debugging components).", error);
+        } else {
+          console.error(e);
+        }
+      }
+
+    })();
+  }, []);
+
   return (
     <>
-      <SpotifyPlayback clientId='4690611fb9e348178f36e8a01d72b5e0' redirectUrl='http://localhost:3000/callback/' scopes={Scopes.all} />
+      {(sdk && accessToken!="") ?
+        <>
+          <SpotifyPlayback sdk={sdk} />
+          <SpotifySdk token={accessToken} />
+        </>
+        :
+        <>
+          SDK / Access Token Not Loaded
+        </>
+      }
     </>
   );
 }
