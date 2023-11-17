@@ -12,9 +12,24 @@ import { Button, FormLabel, Heading, Table, Tbody, Td, Th, Thead, Tr } from '@ch
 import { useErrorState, usePlaybackState, usePlayerDevice, useSpotifyPlayer, useWebPlaybackSDKReady } from 'react-spotify-web-playback-sdk';
 // import 'spotify-web-api-js'
 
+
+/*
+
+QUESTIONS: 
+- How should we implement testing if this is linked to spotify API, do we only need to test frontend components?
+- How is state managed? I saw useContext but it is not nearly as powerful as Redux. Are we allowed to install redux?
+  - How does React maintain state across multiple browsers
+*/
+
+
 /*
 A song should automatically move to the next song in the queue when the current song ends
 If the current song ends and the queue doesn't exist 
+
+ * We can have a web playback for each player, and when a player moves between interactable areas we can transfer the
+playback. IDEA - if player leaves interactable area, pause the playback and remove the device from the list of 
+active devices for the SDK of the player
+
 */
 
 export default function SpotifyPlayback(props: { sdk: SpotifyApi }) {

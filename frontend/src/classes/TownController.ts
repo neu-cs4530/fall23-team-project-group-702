@@ -657,9 +657,9 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
    *
    * @param newArea
    */
-  async createMusicArea(newArea: { id: InteractableID, occupants: Array<string> }) {
-    await this._townsService.createMusicArea(this.townID, this.sessionToken, newArea);
-  }
+  // async createMusicArea(newArea: { id: InteractableID, occupants: Array<string> }) {
+  //   await this._townsService.createMusicArea(this.townID, this.sessionToken, newArea);
+  // }
 
   public getMusicAreaController(
     musicArea: MusicArea,
