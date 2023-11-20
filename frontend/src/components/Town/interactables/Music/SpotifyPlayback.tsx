@@ -136,7 +136,7 @@ export default function SpotifyPlayback(props: { clientId: string, redirectUrl: 
         }
 
         try {
-            activeDevices.devices.forEach(async (device) => { await sdk.player.startResumePlayback(device.id as string); });
+            activeDevices.devices.forEach(async (device) => { await sdk.player.startResumePlayback(device.id as string); }); // will throw multiple 502 error because only one device is playing
             setIsPlaying(true);
         } catch (e) {
             console.error(e);
@@ -149,7 +149,10 @@ export default function SpotifyPlayback(props: { clientId: string, redirectUrl: 
         }
 
         try {
-            activeDevices.devices.forEach(async (device) => { await sdk.player.pausePlayback(device.id as string); });
+            activeDevices.devices.forEach(async (device) => { 
+                await sdk.player.pausePlayback(device.id as string); 
+                console.log('paused ' + device.name);
+            });
             setIsPlaying(false);
         } catch (e) {
             console.error(e);
@@ -164,12 +167,18 @@ export default function SpotifyPlayback(props: { clientId: string, redirectUrl: 
             return;
         }
 
-        const nextSong = queue[0];
-        await sdk.player.addItemToPlaybackQueue(`spotify:track:${nextSong.id}`);
-        await sdk.player.skipToNext(activeDevices.devices[0].id as string);
-        setCurrentTrack(nextSong);
-        const currentQueueWithoutFirst = queue.slice(1);
-        setQueue(currentQueueWithoutFirst);
+        try {
+            const nextSong = queue[0];
+            await sdk.player.addItemToPlaybackQueue(`spotify:track:${nextSong.id}`);
+            activeDevices.devices.forEach(async (device) => { // will throw multiple 502 error because only one device is playing
+                await sdk.player.skipToNext(device.id as string); 
+            })
+            setCurrentTrack(nextSong);
+            const currentQueueWithoutFirst = queue.slice(1);
+            setQueue(currentQueueWithoutFirst);
+        } catch (e) {
+            console.error(e);
+        }
     }
 
     const handleAddToQueue = async () => {
