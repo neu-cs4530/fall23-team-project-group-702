@@ -13,24 +13,6 @@ export default function SpotifyPlayer(props: { sdk: SpotifyApi }) {
 
     if (player === null) return null;
 
-    // useEffect(() => {
-    //     async function activate() {
-    //         if (player === null) return;
-    //         await fetch("https://api.spotify.com/v1/me/player/play?device_id=" + player._options.id, {
-    //             method: "PUT",
-    //             body: JSON.stringify({ uris: ["spotify:track:5ya2gsaIhTkAuWYEMB0nw5"] }),
-    //             headers: {
-    //                 "Content-Type": "application/json",
-    //                 "Authorization": "Bearer " + await props.sdk.getAccessToken()
-    //             }
-    //         }).then(response => response.json())
-    //             .then(data => console.log(data))
-    //             .catch(error => console.error('Error:', error));
-    //     }
-    //     activate();
-    // }, [player]);
-
-
     return (
         <div >
             <div>

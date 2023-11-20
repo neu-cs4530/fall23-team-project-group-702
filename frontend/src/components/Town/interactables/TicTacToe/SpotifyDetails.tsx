@@ -1,3 +1,4 @@
+import { SpotifyApi } from "@spotify/web-api-ts-sdk";
 import { memo, useEffect } from "react";
 import {
     usePlaybackState,
@@ -10,8 +11,8 @@ import {
   Every player should have their own playback device upon entering Covey.Town. We should move this logic
   out of the component eventually.
 */
-export const SpotifyDetails: React.VFC<{ access_token: string }> = memo(
-    ({ access_token }) => {
+export const SpotifyDetails: React.VFC<{ sdk: SpotifyApi }> = memo(
+    ({ sdk }) => {
         const playbackState = usePlaybackState(true, 100);
         const playerDevice = usePlayerDevice();
         const errorState = useErrorState();
@@ -20,6 +21,9 @@ export const SpotifyDetails: React.VFC<{ access_token: string }> = memo(
         useEffect(() => {
             if (playerDevice?.device_id === undefined) return;
             async function activate() {
+                const response = await sdk.getAccessToken();
+                const access_token = response?.access_token;
+                console.log("Access Token For SDK: " + access_token);
                 if (playerDevice?.device_id === undefined) return;
                 await fetch(`https://api.spotify.com/v1/me/player`, {
                     method: "PUT",
