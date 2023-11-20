@@ -87,6 +87,11 @@ export default function TicTacToeBoard(): JSX.Element {
         }
         window.location.href = loginData;
       } else if (!accessToken && !sdk) {
+        const internalSdk = SpotifyApi.withClientCredentials(client_id, client_secret, Scopes.all);
+        const test = await internalSdk.authenticate();
+        console.log(`Application accessToken: ${test.accessToken.access_token}`)
+        setSdk(internalSdk);
+        
         console.log("REACHED")
         const spotifyAccessTokenParams = new URLSearchParams({
           grant_type: "authorization_code",
@@ -107,10 +112,6 @@ export default function TicTacToeBoard(): JSX.Element {
           setAccessToken(authorizationData.access_token);
         }
         console.log(`user accessToken: ${authorizationData.access_token}`)
-        const internalSdk = SpotifyApi.withClientCredentials(client_id, client_secret, Scopes.all);
-        const test = await internalSdk.authenticate();
-        console.log(`Application accessToken: ${test.accessToken.access_token}`)
-        setSdk(internalSdk);
       }
     })();
   }, []);
