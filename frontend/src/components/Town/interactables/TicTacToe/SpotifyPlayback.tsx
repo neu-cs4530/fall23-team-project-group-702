@@ -32,7 +32,7 @@ active devices for the SDK of the player
 
 */
 
-export default function SpotifyPlayback(props: { sdk: SpotifyApi }) {
+export default function SpotifyPlayback(props: { sdk: SpotifyApi}) {
   const [profile, setProfile] = useState({} as UserProfile);
   const [isPlaying, setIsPlaying] = useState(false);
   const [activeDevices, setActiveDevices] = useState({} as Devices);
@@ -130,17 +130,15 @@ export default function SpotifyPlayback(props: { sdk: SpotifyApi }) {
 
     (async () => {
 
-      const access_token = await props.sdk.getAccessToken();
-
-      await fetch(`https://api.spotify.com/v1/me/player`, {
-        method: "PUT",
-        body: JSON.stringify({ device_ids: [playerDevice.device_id], play: false }),
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${access_token}`,
-        },
-      });
-      await spotifyPlayer?.togglePlay();
+      // await fetch(`https://api.spotify.com/v1/me/player`, {
+      //   method: "PUT",
+      //   body: JSON.stringify({ device_ids: [playerDevice.device_id], play: false }),
+      //   headers: {
+      //     "Content-Type": "application/json",
+      //     Authorization: `Bearer ${props.serverAccessToken}`,
+      //   },
+      // });
+      // await spotifyPlayer?.togglePlay();
 
 
       const user = await props.sdk.currentUser.profile();

@@ -5,10 +5,10 @@ import TicTacToeAreaController, {
 } from '../../../../classes/interactable/TicTacToeAreaController';
 import { TicTacToeGridPosition } from '../../../../types/CoveyTownSocket';;
 // Spotify
-import { Scopes, SpotifyApi } from '@spotify/web-api-ts-sdk';
-import { useEffect, useState } from 'react';
-import SpotifySdk from './SpotifySdk';
-import { useRouter } from 'next/router';
+  import { Scopes, SpotifyApi } from '@spotify/web-api-ts-sdk';
+  import { useEffect, useState } from 'react';
+  import SpotifySdk from './SpotifySdk';
+  import { useRouter } from 'next/router';
 
 export type TicTacToeGameProps = {
   gameAreaController: TicTacToeAreaController;
@@ -71,6 +71,7 @@ export const redirect_uri = process.env.NEXT_PUBLIC_SPOTIFY_REDIRECT_URI as stri
 export default function TicTacToeBoard(): JSX.Element {
   const [accessToken, setAccessToken] = useState("");
   const [sdk, setSdk] = useState<SpotifyApi>(null as unknown as SpotifyApi);
+  const [sdkAccessToken, setSdkAccessToken] = useState("");
   const router = useRouter();
 
   useEffect(() => {
@@ -88,11 +89,12 @@ export default function TicTacToeBoard(): JSX.Element {
         window.location.href = loginData;
       } else if (!accessToken && !sdk) {
         const internalSdk = SpotifyApi.withClientCredentials(client_id, client_secret, Scopes.all);
-        const test = await internalSdk.authenticate();
-        console.log(`Application accessToken: ${test.accessToken.access_token}`)
+        const response = await internalSdk.authenticate();
+        const internalAccessToken = response.accessToken;
+        setSdkAccessToken(internalAccessToken.access_token);
+        console.log(`Application accessToken: ${sdkAccessToken}`)
         setSdk(internalSdk);
         
-        console.log("REACHED")
         const spotifyAccessTokenParams = new URLSearchParams({
           grant_type: "authorization_code",
           code: params.code as string,
@@ -106,7 +108,6 @@ export default function TicTacToeBoard(): JSX.Element {
           body: spotifyAccessTokenParams,
         });
         const authorizationData = await authResponse.json();
-        // console.log(`Data2: ${JSON.stringify(data2)}`);
 
         if (authorizationData && authorizationData.access_token) {
           setAccessToken(authorizationData.access_token);
@@ -119,9 +120,13 @@ export default function TicTacToeBoard(): JSX.Element {
   return (
     <>
       {accessToken}
+      <div>
+        Temp <br/>
+        {sdkAccessToken}
+      </div>
       {(sdk && accessToken != "") ?
         <>
-          <SpotifySdk token={accessToken} sdk={sdk} />
+          <SpotifySdk userAccessToken={accessToken} sdk={sdk} serverAccessToken={sdkAccessToken}/>
         </>
         :
         <>
@@ -137,109 +142,3 @@ export default function TicTacToeBoard(): JSX.Element {
     </>
   );
 }
-
-/*
-
-import { useCallback } from "react";
-import { GetServerSideProps } from "next";
-import nookies from "nookies";
-import { WebPlaybackSDK } from "react-spotify-web-playback-sdk";
-import {
-  SPOTIFY_API_TOKEN_URL,
-  SPOTIFY_CLIENT_ID,
-  SPOTIFY_CLIENT_SECRET,
-  SPOTIFY_REDIRECT_URI,
-} from "../common/constant";
-import styles from "../styles/player.module.css";
-import { PlayerHeader } from "../components/PlayerHeader";
-import { PlayerContent } from "../components/PlayerContent";
-
-type Props = { token: TokenObject };
-
-const Player: React.VFC<Props> = ({ token }) => {
-  const getOAuthToken: Spotify.PlayerInit["getOAuthToken"] = useCallback(
-    callback => callback(token.access_token),
-    [token.access_token],
-  );
-
-  return (
-    <WebPlaybackSDK
-      initialDeviceName="Spotify Player on Next.js"
-      getOAuthToken={getOAuthToken}
-      connectOnInitialized={true}
-      initialVolume={0.5}>
-      <div className={styles.root}>
-        <div className={styles.header}>
-          <PlayerHeader />
-        </div>
-        <main className={styles.player}>
-          <PlayerContent access_token={token.access_token} />
-        </main>
-      </div>
-    </WebPlaybackSDK>
-  );
-};
-
-export const getServerSideProps: GetServerSideProps<Props> = async ({
-  query,
-  req,
-}) => {
-  const stateFromCookies = nookies.get({ req }).state;
-  const stateFromRequest = query.state;
-
-  if (
-    typeof stateFromCookies === "string" &&
-    typeof stateFromRequest === "string" &&
-    stateFromCookies === stateFromRequest &&
-    typeof query.code === "string"
-  ) {
-    const params = new URLSearchParams({
-      grant_type: "authorization_code",
-      code: query.code,
-      redirect_uri: SPOTIFY_REDIRECT_URI,
-      client_id: SPOTIFY_CLIENT_ID,
-      client_secret: SPOTIFY_CLIENT_SECRET,
-    });
-
-    const response = await fetch(SPOTIFY_API_TOKEN_URL, {
-      method: "POST",
-      body: params,
-    }).then(res => res.json());
-
-    if (isTokenObject(response)) {
-      return {
-        props: { token: response },
-      };
-    }
-  }
-
-  return {
-    redirect: {
-      destination: "/",
-      permanent: false,
-    },
-  };
-};
-
-export default Player;
-
-type TokenObject = {
-  access_token: string;
-  token_type: string;
-  scope: string;
-  expires_in: number;
-  refresh_token: string;
-};
-
-function isTokenObject(value: any): value is TokenObject {
-  return (
-    value != undefined &&
-    typeof value.access_token === "string" &&
-    typeof value.token_type === "string" &&
-    typeof value.scope === "string" &&
-    typeof value.expires_in === "number" &&
-    typeof value.refresh_token === "string"
-  );
-}
-
-*/
