@@ -181,8 +181,8 @@ export default function SpotifyPlayback(props: { clientId: string, redirectUrl: 
         }
     }
 
-    const handleAddToQueue = async () => {
-        if (!sdk || !trackId) {
+    const handleAddToQueue = async (trackId: string) => {
+        if (!sdk) {
             return;
         }
 
@@ -192,7 +192,6 @@ export default function SpotifyPlayback(props: { clientId: string, redirectUrl: 
             // setQueue(currentQueue.queue as Track[]);
             const track = await sdk.tracks.get(trackId);
             setQueue([...queue, track]);
-            setTrackId("");
         } catch (e) {
             throw new Error("Error adding track to queue");
         }
@@ -277,19 +276,6 @@ export default function SpotifyPlayback(props: { clientId: string, redirectUrl: 
                     )) : null}
                 </ul>
             </div>
-            <Heading size='md'>Queue</Heading>
-            <div>
-                <div style={{ display: "flex", alignItems: "center" }}>
-                    <FormLabel>Add to Queue</FormLabel>
-                    <input
-                        type="text"
-                        value={trackId}
-                        onChange={(e) => setTrackId(e.target.value)}
-                        placeholder='Track ID'
-                    />
-                    <Button onClick={handleAddToQueue}>Add</Button>
-                </div>
-            </div>
             <Heading size='md'>Current Queue</Heading>
             <div>
                 <Table>
@@ -297,7 +283,6 @@ export default function SpotifyPlayback(props: { clientId: string, redirectUrl: 
                         <Tr>
                             <Th>Artist</Th>
                             <Th>Track Name</Th>
-                            <Th>Track ID</Th>
                         </Tr>
                     </Thead>
                     <Tbody>
@@ -305,7 +290,6 @@ export default function SpotifyPlayback(props: { clientId: string, redirectUrl: 
                             <Tr key={track.id}>
                                 <Td>{track.artists[0].name}</Td>
                                 <Td>{track.name}</Td>
-                                <Td>{track.id}</Td>
                             </Tr>
                         ))}
                     </Tbody>
@@ -329,7 +313,7 @@ export default function SpotifyPlayback(props: { clientId: string, redirectUrl: 
                             <Tr>
                                 <Th>Artists</Th>
                                 <Th>Track Name</Th>
-                                <Th>Track ID</Th>
+                                <Th>Queue</Th>
                             </Tr>
                         </Thead>
                         <Tbody>
@@ -337,7 +321,7 @@ export default function SpotifyPlayback(props: { clientId: string, redirectUrl: 
                                 <Tr key={track.id}>
                                     <Td>{track.artists[0].name}</Td>
                                     <Td>{track.name}</Td>
-                                    <Td>{track.id}</Td>
+                                    <Button onClick={() => handleAddToQueue(track.id)}>Add</Button>
                                 </Tr>
                             ))}
                         </Tbody>
