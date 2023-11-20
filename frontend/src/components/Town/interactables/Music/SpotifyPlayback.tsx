@@ -10,6 +10,7 @@ import { SpotifyApi, UserProfile, SdkOptions, AuthorizationCodeWithPKCEStrategy,
 import { useEffect, useRef, useState } from 'react';
 import WebPlayback from './WebPlaybackSdk';
 import { Button, FormLabel, Heading, Table, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/react';
+import { uniqueId } from 'lodash';
 // import 'spotify-web-api-js'
 
 /*
@@ -23,6 +24,12 @@ declare global {
     }
 }
 
+// Uniquely-identifiable Track added to a Spotify Playback Queue
+interface QueuedTrack {
+    queueId: string
+    track: Track
+}
+
 export default function SpotifyPlayback(props: { clientId: string, redirectUrl: string, scopes: string[], config?: SdkOptions }) {
     const [sdk, setSdk] = useState<SpotifyApi | null>(null);
     const { current: activeScopes } = useRef(props.scopes);
@@ -34,7 +41,7 @@ export default function SpotifyPlayback(props: { clientId: string, redirectUrl: 
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState<Track[]>([]);
     const [currentTrack, setCurrentTrack] = useState<Track>({} as Track);
-    const [queue, setQueue] = useState<Track[]>([]);
+    const [queue, setQueue] = useState<QueuedTrack[]>([]);
     const [progressMs, setProgressMs] = useState(0);
     const [player, setPlayer] = useState(null as Spotify.Player | null);
 
@@ -59,11 +66,11 @@ export default function SpotifyPlayback(props: { clientId: string, redirectUrl: 
             // };
 
             spotifyPlayer.addListener('ready', ({ device_id }) => {
-                console.log('Ready with Device ID', device_id);
+                // console.log('Ready with Device ID', device_id);
             });
 
             spotifyPlayer.addListener('not_ready', ({ device_id }) => {
-                console.log('Device ID has gone offline', device_id);
+                // console.log('Device ID has gone offline', device_id);
             });
 
             await spotifyPlayer.connect();
@@ -125,6 +132,7 @@ export default function SpotifyPlayback(props: { clientId: string, redirectUrl: 
         try {
             const results = await sdk.search(searchQuery, ["track"]);
             setSearchResults(results.tracks.items);
+            setSearchQuery('');
         } catch (e) {
             console.error(e);
         }
@@ -163,17 +171,26 @@ export default function SpotifyPlayback(props: { clientId: string, redirectUrl: 
         if (!sdk) {
             throw new Error('SDK not created');
         }
-        if (queue.length < 1) {
-            return;
-        }
 
         try {
+            // When there's no more songs in queue
+            if (queue.length < 1) {
+                console.log('Error: Queue empty');
+                // If there's still a current song set, clear it and pause
+                if (currentTrack.id) {
+                    setCurrentTrack({} as Track);
+                    handlePauseClick();
+                }
+                return;
+            }
+
             const nextSong = queue[0];
-            await sdk.player.addItemToPlaybackQueue(`spotify:track:${nextSong.id}`);
+            await sdk.player.addItemToPlaybackQueue(`spotify:track:${nextSong.track.id}`);
             activeDevices.devices.forEach(async (device) => { // will throw multiple 502 error because only one device is playing
                 await sdk.player.skipToNext(device.id as string); 
+                setIsPlaying(true); // skipToNext() autoplays
             })
-            setCurrentTrack(nextSong);
+            setCurrentTrack(nextSong.track);
             const currentQueueWithoutFirst = queue.slice(1);
             setQueue(currentQueueWithoutFirst);
         } catch (e) {
@@ -191,11 +208,37 @@ export default function SpotifyPlayback(props: { clientId: string, redirectUrl: 
             // const currentQueue = await sdk.player.getUsersQueue()
             // setQueue(currentQueue.queue as Track[]);
             const track = await sdk.tracks.get(trackId);
-            setQueue([...queue, track]);
+            const queuedTrack: QueuedTrack = {
+                queueId: uniqueId(),
+                track: track
+            };
+            setQueue([...queue, queuedTrack]);
         } catch (e) {
             throw new Error("Error adding track to queue");
         }
     };
+
+    // Set the currentTrack from the queue, if not empty
+    useEffect(() => {
+        // if currentTrack not set, initialize to first in queue
+        if (queue.length > 0 && !currentTrack.id) {
+            console.log('preloading first song')
+            handleSkip();
+        }
+    }, [queue])
+
+    const handleRemoveFromQueue = async (queueId: string) => {
+        if (!sdk) {
+            return;
+        }
+
+        try {
+            const newQueue = queue.filter((item) => item.queueId !== queueId)
+            setQueue(newQueue);
+        } catch (e) {
+            throw new Error("Error removing track from queue");
+        }
+    }
 
     useEffect(() => {
         (async () => {
@@ -268,14 +311,14 @@ export default function SpotifyPlayback(props: { clientId: string, redirectUrl: 
                     Skip
                 </Button>
             </div>
-            <div>
+            {/* <div>
                 <Heading size='md'>Devices currently playing:</Heading>
                 <ul>
                     {activeDevices.devices ? activeDevices.devices.map(device => (
                         <li key={device.id}>{device.name}</li>
                     )) : null}
                 </ul>
-            </div>
+            </div> */}
             <Heading size='md'>Current Queue</Heading>
             <div>
                 <Table>
@@ -287,9 +330,12 @@ export default function SpotifyPlayback(props: { clientId: string, redirectUrl: 
                     </Thead>
                     <Tbody>
                         {queue.map((track) => (
-                            <Tr key={track.id}>
-                                <Td>{track.artists[0].name}</Td>
-                                <Td>{track.name}</Td>
+                            <Tr key={track.queueId}>
+                                <Td>{track.track.artists[0].name}</Td>
+                                <Td>{track.track.name}</Td>
+                                <Td>
+                                    <Button onClick={() => handleRemoveFromQueue(track.queueId)}>Remove</Button>
+                                </Td>
                             </Tr>
                         ))}
                     </Tbody>
@@ -321,7 +367,9 @@ export default function SpotifyPlayback(props: { clientId: string, redirectUrl: 
                                 <Tr key={track.id}>
                                     <Td>{track.artists[0].name}</Td>
                                     <Td>{track.name}</Td>
-                                    <Button onClick={() => handleAddToQueue(track.id)}>Add</Button>
+                                    <Td>
+                                        <Button onClick={() => handleAddToQueue(track.id)}>Add</Button>
+                                    </Td>
                                 </Tr>
                             ))}
                         </Tbody>
