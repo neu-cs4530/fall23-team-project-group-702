@@ -10,6 +10,8 @@ import { useEffect, useState } from 'react';
 import SpotifySdk from './SpotifySdk';
 import { useRouter } from 'next/router';
 
+import { client_id, client_secret, loginURL, redirect_uri, tokenURL } from '../../../../utilities/constants';
+
 export type TicTacToeGameProps = {
   gameAreaController: TicTacToeAreaController;
 };
@@ -43,12 +45,6 @@ const StyledTicTacToeBoard = chakra(Container, {
   },
 });
 
-export const client_id = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID as string;
-export const client_secret = process.env.NEXT_PUBLIC_SPOTIFY_SECRET_TOKEN as string;
-export const loginURL = process.env.NEXT_PUBLIC_AUTHORIZATION_URL as string;
-export const tokenURL = process.env.NEXT_PUBLIC_ACCESS_TOKEN_URL as string;
-export const redirect_uri = process.env.NEXT_PUBLIC_SPOTIFY_REDIRECT_URI as string;
-
 
 /**
  * A component that renders the TicTacToe board
@@ -75,7 +71,6 @@ export default function TicTacToeBoard(): JSX.Element {
   const router = useRouter();
 
   useEffect(() => {
-    console.log(`client_id: ${client_id} client_secret: ${client_secret} loginURL: ${loginURL} tokenURL: ${tokenURL} redirect_uri: ${redirect_uri}`)
     const params = router.query;
     (async () => {
       if (!params.code) {
@@ -112,6 +107,7 @@ export default function TicTacToeBoard(): JSX.Element {
         if (authorizationData && authorizationData.access_token) {
           setAccessToken(authorizationData.access_token);
         }
+        console.log(`client_id: ${client_id} client_secret: ${client_secret} loginURL: ${loginURL} tokenURL: ${tokenURL} redirect_uri: ${redirect_uri}`)
         console.log(`user accessToken: ${JSON.stringify(authorizationData)}`)
 
         const internalSdk = SpotifyApi.withAccessToken(client_id, authorizationData);
@@ -120,6 +116,8 @@ export default function TicTacToeBoard(): JSX.Element {
         setSdkAccessToken(internalAccessToken.access_token);
         console.log(`Application accessToken: ${JSON.stringify(response)}`)
         setSdk(internalSdk);
+        const test = await internalSdk.player.getAvailableDevices();
+        console.log(`Available Devices: ${JSON.stringify(test)}`)
       }
     })();
   }, []);
