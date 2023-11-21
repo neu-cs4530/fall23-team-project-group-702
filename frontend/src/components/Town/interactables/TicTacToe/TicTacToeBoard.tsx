@@ -5,10 +5,10 @@ import TicTacToeAreaController, {
 } from '../../../../classes/interactable/TicTacToeAreaController';
 import { TicTacToeGridPosition } from '../../../../types/CoveyTownSocket';;
 // Spotify
-  import { Scopes, SpotifyApi } from '@spotify/web-api-ts-sdk';
-  import { useEffect, useState } from 'react';
-  import SpotifySdk from './SpotifySdk';
-  import { useRouter } from 'next/router';
+import { Scopes, SpotifyApi } from '@spotify/web-api-ts-sdk';
+import { useEffect, useState } from 'react';
+import SpotifySdk from './SpotifySdk';
+import { useRouter } from 'next/router';
 
 export type TicTacToeGameProps = {
   gameAreaController: TicTacToeAreaController;
@@ -75,7 +75,7 @@ export default function TicTacToeBoard(): JSX.Element {
   const router = useRouter();
 
   useEffect(() => {
-    // console.log(`client_id: ${client_id} client_secret: ${client_secret} loginURL: ${loginURL} tokenURL: ${tokenURL} redirect_uri: ${redirect_uri}`)
+    console.log(`client_id: ${client_id} client_secret: ${client_secret} loginURL: ${loginURL} tokenURL: ${tokenURL} redirect_uri: ${redirect_uri}`)
     const params = router.query;
     (async () => {
       if (!params.code) {
@@ -87,14 +87,14 @@ export default function TicTacToeBoard(): JSX.Element {
           throw new Error("Unable to get Spotify login URL");
         }
         window.location.href = loginData;
-      } else if (!accessToken && !sdk) {
-        const internalSdk = SpotifyApi.withClientCredentials(client_id, client_secret, Scopes.all);
-        const response = await internalSdk.authenticate();
-        const internalAccessToken = response.accessToken;
-        setSdkAccessToken(internalAccessToken.access_token);
-        console.log(`Application accessToken: ${sdkAccessToken}`)
-        setSdk(internalSdk);
-        
+      } else if (!accessToken) {
+        // const internalSdk = SpotifyApi.withClientCredentials(client_id, client_secret, Scopes.all);
+        // const response = await internalSdk.authenticate();
+        // const internalAccessToken = response.accessToken;
+        // setSdkAccessToken(internalAccessToken.access_token);
+        // console.log(`Application accessToken: ${sdkAccessToken}`)
+        // setSdk(internalSdk);
+
         const spotifyAccessTokenParams = new URLSearchParams({
           grant_type: "authorization_code",
           code: params.code as string,
@@ -112,7 +112,14 @@ export default function TicTacToeBoard(): JSX.Element {
         if (authorizationData && authorizationData.access_token) {
           setAccessToken(authorizationData.access_token);
         }
-        console.log(`user accessToken: ${authorizationData.access_token}`)
+        console.log(`user accessToken: ${JSON.stringify(authorizationData)}`)
+
+        const internalSdk = SpotifyApi.withAccessToken(client_id, authorizationData);
+        const response = await internalSdk.authenticate();
+        const internalAccessToken = response.accessToken;
+        setSdkAccessToken(internalAccessToken.access_token);
+        console.log(`Application accessToken: ${JSON.stringify(response)}`)
+        setSdk(internalSdk);
       }
     })();
   }, []);
@@ -121,12 +128,12 @@ export default function TicTacToeBoard(): JSX.Element {
     <>
       {accessToken}
       <div>
-        Temp <br/>
+        Temp <br />
         {sdkAccessToken}
       </div>
       {(sdk && accessToken != "") ?
         <>
-          <SpotifySdk userAccessToken={accessToken} sdk={sdk} serverAccessToken={sdkAccessToken}/>
+          <SpotifySdk userAccessToken={accessToken} sdk={sdk} serverAccessToken={sdkAccessToken} />
         </>
         :
         <>

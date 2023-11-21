@@ -1,5 +1,5 @@
 import { NextApiHandler } from "next";
-import { setCookie } from "nookies";
+// import { setCookie } from "nookies";
 
 const generateRandomString = function (length: number) {
   let text = '';
