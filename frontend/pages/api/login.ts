@@ -7,6 +7,12 @@ const loginURL = process.env.NEXT_PUBLIC_AUTHORIZATION_URL as string;
 const tokenURL = process.env.NEXT_PUBLIC_ACCESS_TOKEN_URL as string;
 const redirect_uri = process.env.NEXT_PUBLIC_SPOTIFY_REDIRECT_URI as string;
 
+let dictionary: { [key: string]: string } = {
+  "key1": "value1",
+  "key2": "value2",
+  "key3": "value3"
+};
+
 export const SPOTIFY_SCOPES = [
   "ugc-image-upload",
   "user-read-recently-played",
@@ -63,7 +69,18 @@ const handler: NextApiHandler = (req, res) => {
     const url = `${loginURL}?${redirectParams.toString()}`;
 
     res.json(url);
-  } else {
+  }
+  else if (req.method === "POST") {
+    const queryParams = req.query;
+    const queryParamsString = JSON.stringify(queryParams);
+    if (dictionary[queryParamsString]) {
+      res.status(200).send("Already created");
+      return;
+    }
+    dictionary[queryParamsString] = queryParamsString;
+    res.send(queryParamsString);
+  }
+  else {
     res.status(405).send("Method Not Allowed, must be GET request");
   }
 };
