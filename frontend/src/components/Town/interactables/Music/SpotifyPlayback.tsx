@@ -33,78 +33,17 @@ interface QueuedTrack {
 export default function SpotifyPlayback(props: { clientId: string, redirectUrl: string, scopes: string[], config?: SdkOptions }) {
     const [sdk, setSdk] = useState<SpotifyApi | null>(null);
     const { current: activeScopes } = useRef(props.scopes);
-    const [accessToken, setAccessToken] = useState("");
+    // const [accessToken, setAccessToken] = useState("");
     const [profile, setProfile] = useState({} as UserProfile);
     const [isPlaying, setIsPlaying] = useState(false);
     const [activeDevices, setActiveDevices] = useState({} as Devices);
-    const [trackId, setTrackId] = useState("");
+    // const [trackId, setTrackId] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState<Track[]>([]);
     const [currentTrack, setCurrentTrack] = useState<Track>({} as Track);
     const [queue, setQueue] = useState<QueuedTrack[]>([]);
     const [progressMs, setProgressMs] = useState(0);
-    const [player, setPlayer] = useState(null as Spotify.Player | null);
-
-    useEffect(() => {
-        if (!accessToken || !sdk) return;
-        const script = document.createElement("script");
-        script.src = "https://sdk.scdn.co/spotify-player.js";
-        script.async = true;
-
-        document.body.appendChild(script);
-
-        window.onSpotifyWebPlaybackSDKReady = async () => {
-            const spotifyPlayer = new window.Spotify.Player({
-                name: 'Web Playback SDK',
-                getOAuthToken: cb => { cb(accessToken); },
-                volume: 0.5
-            });
-
-            setPlayer(spotifyPlayer);
-            // if (!player) {
-            //     throw new Error("Player not initialized");
-            // };
-
-            spotifyPlayer.addListener('ready', ({ device_id }) => {
-                // console.log('Ready with Device ID', device_id);
-            });
-
-            spotifyPlayer.addListener('not_ready', ({ device_id }) => {
-                // console.log('Device ID has gone offline', device_id);
-            });
-
-            await spotifyPlayer.connect();
-
-            // console.log("player: ", player?._options.id)
-            if (!spotifyPlayer) return;
-            // console.log("using player: ", spotifyPlayer._options.id);
-            /*
-            Transferring the playback to the Web SDK
-            */
-            await fetch(`https://api.spotify.com/v1/me/player`, {
-                method: "PUT",
-                body: JSON.stringify({ device_ids: [spotifyPlayer._options.id], play: false }),
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${accessToken}`,
-                },
-            })
-            // await sdk.player.transferPlayback([spotifyPlayer._options.id], true);
-            await spotifyPlayer.activateElement();
-            const state = await spotifyPlayer.getCurrentState();
-
-            console.log(`state: ${JSON.stringify(state)}`)
-
-            spotifyPlayer._options.enableMediaSession = true;
-            console.log(`options ${JSON.stringify(spotifyPlayer._options.enableMediaSession)}`)
-
-            return () => {
-                console.log("disconnecting")
-                spotifyPlayer.disconnect();
-                document.body.removeChild(script);
-            };
-        };
-    }, [accessToken]);
+    // const [player, setPlayer] = useState(null as Spotify.Player | null);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -272,11 +211,11 @@ export default function SpotifyPlayback(props: { clientId: string, redirectUrl: 
 
         (async () => {
             const user = await sdk.currentUser.profile();
-            const clientToken = await sdk.getAccessToken();
-            if (!clientToken) {
-                throw new Error("Authentication failed");
-            }
-            setAccessToken(clientToken.access_token);
+            // const clientToken = await sdk.getAccessToken();
+            // if (!clientToken) {
+                // throw new Error("Authentication failed");
+            // }
+            // setAccessToken(clientToken.access_token);
             setProfile(user);
 
             const allDevices = await sdk.player.getAvailableDevices();

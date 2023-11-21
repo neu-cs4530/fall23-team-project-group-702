@@ -86,8 +86,7 @@ import { Scopes } from "@spotify/web-api-ts-sdk";
           <ModalContent>
             <ModalHeader>{sessionName}</ModalHeader>
             <ModalCloseButton />
-            {/* put in your own Spotify App clientID and redirectUrl */}
-            <SpotifyPlayback clientId='2c6d7129736b4168a9ab4f66ba029db1' redirectUrl='http://localhost:3000/api/auth/callback' scopes={Scopes.all}/>
+            
           </ModalContent>
         </Modal>
       )
