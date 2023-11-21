@@ -99,6 +99,7 @@ export default function SpotifyPlayback(props: { clientId: string, redirectUrl: 
             console.log(`options ${JSON.stringify(spotifyPlayer._options.enableMediaSession)}`)
 
             return () => {
+                console.log("disconnecting")
                 spotifyPlayer.disconnect();
                 document.body.removeChild(script);
             };
@@ -278,12 +279,8 @@ export default function SpotifyPlayback(props: { clientId: string, redirectUrl: 
             setAccessToken(clientToken.access_token);
             setProfile(user);
 
-            const currentDevices = await sdk.player.getAvailableDevices();
-            currentDevices.devices.forEach(async (device) => {
-                console.log("device: ", device.name, " is_active: ", device.is_active);
-                device.is_active = true;
-            })
-            setActiveDevices(currentDevices)
+            const allDevices = await sdk.player.getAvailableDevices();
+            setActiveDevices({devices: allDevices.devices.filter((device) => device.is_active)});
             // setActiveDevices({ ...activeDevices, devices: currentDevices.devices.filter((device) => device.is_active) });
         })();
     }, [sdk]);
@@ -311,14 +308,14 @@ export default function SpotifyPlayback(props: { clientId: string, redirectUrl: 
                     Skip
                 </Button>
             </div>
-            {/* <div>
+            <div>
                 <Heading size='md'>Devices currently playing:</Heading>
                 <ul>
                     {activeDevices.devices ? activeDevices.devices.map(device => (
                         <li key={device.id}>{device.name}</li>
                     )) : null}
                 </ul>
-            </div> */}
+            </div>
             <Heading size='md'>Current Queue</Heading>
             <div>
                 <Table>

@@ -30,7 +30,6 @@ import { Scopes } from "@spotify/web-api-ts-sdk";
   const closeModal = useCallback(() => {
     if (musicArea) {
       townController.interactEnd(musicArea);
-      const controller = townController.getMusicAreaController(musicArea);
     }
   }, [townController, musicArea]);
 
