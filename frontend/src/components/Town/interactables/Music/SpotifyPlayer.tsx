@@ -17,21 +17,6 @@ export default function SpotifyPlayer(props: { sdk: SpotifyApi }) {
         <div >
             <div>
                 <div>
-                    <Button onClick={() => player.previousTrack()}>
-                        <code>player.previousTrack</code>
-                    </Button>
-                </div>
-                <div>
-                    <Button onClick={() => player.togglePlay()}>
-                        <code>player.togglePlay</code>
-                    </Button>
-                </div>
-                <div>
-                    <Button onClick={() => player.nextTrack()}>
-                        <code>player.nextTrack</code>
-                    </Button>
-                </div>
-                <div>
                     <Button onClick={async () => {
                         const pos = await player.getCurrentState();
                         if (pos === null) return;
@@ -45,16 +30,6 @@ export default function SpotifyPlayer(props: { sdk: SpotifyApi }) {
                         player.seek(pos.position - 10000);
                     }}>
                         <code>-10s</code>
-                    </Button>
-                </div>
-                <div>
-                    <Button onClick={() => player.connect()}>
-                        <code>player.connect</code>
-                    </Button>
-                </div>
-                <div>
-                    <Button onClick={() => player.disconnect()}>
-                        <code>player.disconnect</code>
                     </Button>
                 </div>
             </div>

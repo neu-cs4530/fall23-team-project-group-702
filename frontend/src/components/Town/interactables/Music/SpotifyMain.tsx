@@ -70,11 +70,6 @@ export default function SpotifyMain() {
 
   return (
     <>
-      {accessToken}
-      <div>
-        Temp <br />
-        {sdkAccessToken}
-      </div>
       {(sdk && accessToken != "") ?
         <>
           <SpotifySdk userAccessToken={accessToken} sdk={sdk} serverAccessToken={sdkAccessToken} />

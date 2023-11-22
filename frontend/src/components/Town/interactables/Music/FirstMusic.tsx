@@ -3,21 +3,37 @@ import { useInteractable, useInteractableAreaController } from "../../../../clas
 import useTownController from "../../../../hooks/useTownController";
 import MusicAreaInteractable from "../MusicArea";
 import { useCallback, useEffect, useState } from "react";
-import MusicPlaybackScreen from "../MusicPlaybackScreen";
-import SpotifyPlayback from "./SpotifyPlayback";
-import { Scopes } from "@spotify/web-api-ts-sdk";
+import SpotifyMain from "./SpotifyMain";
+import { set } from "ramda";
 
 /**
  * Jukebox Interface Component that handles rendering the join/create music session modal and the music playback interface modal.
  */
- export default function FirstMusic(): JSX.Element {
+export default function FirstMusic(): JSX.Element {
   const musicArea = useInteractable<MusicAreaInteractable>('musicArea');
   const townController = useTownController();
-  
+
   const [sessionName, setSessionName] = useState<string>('');
   const [sessionActive, setSessionActive] = useState<boolean>(false); // TODO should use environment by default
 
   const isOpen = musicArea !== undefined;
+
+  useEffect(() => {
+    (async () => {
+      const loginResponse = await fetch("http://localhost:3000/api/login?hello=hello", {
+        method: "POST",
+      });
+      const loginData = await loginResponse.json();
+      if (!loginData) {
+        throw new Error("Unable to get Spotify login URL");
+      }
+      if (loginData === 'Already created') {
+        setSessionActive(true);
+      } else {
+        setSessionActive(true);
+      }
+    });
+  }, []);
 
   useEffect(() => {
     if (musicArea) {
@@ -49,6 +65,7 @@ import { Scopes } from "@spotify/web-api-ts-sdk";
           }}
           closeOnOverlayClick={false}>
           <ModalOverlay />
+
           <ModalContent>
             <ModalHeader> Start a Music Session</ModalHeader>
             <ModalCloseButton />
@@ -86,7 +103,8 @@ import { Scopes } from "@spotify/web-api-ts-sdk";
           <ModalContent>
             <ModalHeader>{sessionName}</ModalHeader>
             <ModalCloseButton />
-            
+            <SpotifyMain />
+
           </ModalContent>
         </Modal>
       )

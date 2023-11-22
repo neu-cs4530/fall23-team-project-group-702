@@ -11,7 +11,7 @@ let dictionary: { [key: string]: string } = {
   "key1": "value1",
   "key2": "value2",
   "key3": "value3"
-};
+}; 
 
 export const SPOTIFY_SCOPES = [
   "ugc-image-upload",
@@ -59,13 +59,6 @@ const handler: NextApiHandler = (req, res) => {
     state: state,
     });
 
-    // const secure = !req.headers.host?.includes("localhost");
-    // setCookie({ res }, "state", state, {
-    //   maxAge: 3600000,
-    //   secure: secure,
-    //   httpOnly: true,
-    //   path: "/",
-    // });
     const url = `${loginURL}?${redirectParams.toString()}`;
 
     res.json(url);
@@ -74,11 +67,11 @@ const handler: NextApiHandler = (req, res) => {
     const queryParams = req.query;
     const queryParamsString = JSON.stringify(queryParams);
     if (dictionary[queryParamsString]) {
-      res.status(200).send("Already created");
+      res.json('Already created')
       return;
     }
     dictionary[queryParamsString] = queryParamsString;
-    res.send(queryParamsString);
+    res.json(queryParamsString);
   }
   else {
     res.status(405).send("Method Not Allowed, must be GET request");

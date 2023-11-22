@@ -8,83 +8,66 @@
 
 import { SpotifyApi, UserProfile, SdkOptions, AuthorizationCodeWithPKCEStrategy, Devices, Track } from '@spotify/web-api-ts-sdk';
 import { useEffect, useRef, useState } from 'react';
-import WebPlayback from './WebPlaybackSdk';
 import { Button, FormLabel, Heading, Table, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/react';
-import { uniqueId } from 'lodash';
+import { useErrorState, usePlaybackState, usePlayerDevice, useSpotifyPlayer, useWebPlaybackSDKReady } from 'react-spotify-web-playback-sdk';
 // import 'spotify-web-api-js'
+
+
+/*
+
+QUESTIONS: 
+- How should we implement testing if this is linked to spotify API, do we only need to test frontend components?
+- How is state managed? I saw useContext but it is not nearly as powerful as Redux. Are we allowed to install redux?
+  - How does React maintain state across multiple browsers
+*/
+
 
 /*
 A song should automatically move to the next song in the queue when the current song ends
 If the current song ends and the queue doesn't exist 
+
+ * We can have a web playback for each player, and when a player moves between interactable areas we can transfer the
+playback. IDEA - if player leaves interactable area, pause the playback and remove the device from the list of 
+active devices for the SDK of the player
+
 */
 
-declare global {
-    interface Window {
-        onSpotifyWebPlaybackSDKReady: () => void;
-    }
-}
-
-// Uniquely-identifiable Track added to a Spotify Playback Queue
-interface QueuedTrack {
-    queueId: string
-    track: Track
-}
-
-export default function SpotifyPlayback(props: { clientId: string, redirectUrl: string, scopes: string[], config?: SdkOptions }) {
-    const [sdk, setSdk] = useState<SpotifyApi | null>(null);
-    const { current: activeScopes } = useRef(props.scopes);
-    // const [accessToken, setAccessToken] = useState("");
+export default function SpotifyPlayback(props: { sdk: SpotifyApi }) {
     const [profile, setProfile] = useState({} as UserProfile);
     const [isPlaying, setIsPlaying] = useState(false);
     const [activeDevices, setActiveDevices] = useState({} as Devices);
-    // const [trackId, setTrackId] = useState("");
+    const [trackId, setTrackId] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
     const [searchResults, setSearchResults] = useState<Track[]>([]);
     const [currentTrack, setCurrentTrack] = useState<Track>({} as Track);
-    const [queue, setQueue] = useState<QueuedTrack[]>([]);
-    const [progressMs, setProgressMs] = useState(0);
-    // const [player, setPlayer] = useState(null as Spotify.Player | null);
+    const [queue, setQueue] = useState<Track[]>([]);
 
-    useEffect(() => {
-        const interval = setInterval(() => {
-            if (isPlaying) {
-                setProgressMs((prevProgressMs) => prevProgressMs + 1000);
-            }
-        }, 1000);
-
-        return () => clearInterval(interval);
-    }, [isPlaying]);
-
-    useEffect(() => {
-        async function check() {
-            if (currentTrack.duration_ms && progressMs >= currentTrack.duration_ms) {
-                await handleSkip();
-            }
-        }
-        check();
-    }, [currentTrack, progressMs]);
+    const playbackState = usePlaybackState(true, 100);
+    const playerDevice = usePlayerDevice();
+    const errorState = useErrorState();
+    const webPlaybackSDKReady = useWebPlaybackSDKReady();
+    const spotifyPlayer = useSpotifyPlayer();
 
     const handleSearch = async () => {
-        if (!sdk) {
+        if (!props.sdk) {
             return;
         }
 
         try {
-            const results = await sdk.search(searchQuery, ["track"]);
+            const results = await props.sdk.search(searchQuery, ["track"]);
             setSearchResults(results.tracks.items);
-            setSearchQuery('');
         } catch (e) {
             console.error(e);
         }
     };
 
     const handlePlayClick = async () => {
-        if (!sdk) {
+        if (!props.sdk) {
             return;
         }
 
         try {
-            activeDevices.devices.forEach(async (device) => { await sdk.player.startResumePlayback(device.id as string); }); // will throw multiple 502 error because only one device is playing
+            activeDevices.devices.forEach(async (device) => { await props.sdk.player.startResumePlayback(device.id as string); });
             setIsPlaying(true);
         } catch (e) {
             console.error(e);
@@ -92,15 +75,12 @@ export default function SpotifyPlayback(props: { clientId: string, redirectUrl: 
     };
 
     const handlePauseClick = async () => {
-        if (!sdk) {
+        if (!props.sdk) {
             return;
         }
 
         try {
-            activeDevices.devices.forEach(async (device) => { 
-                await sdk.player.pausePlayback(device.id as string); 
-                console.log('paused ' + device.name);
-            });
+            activeDevices.devices.forEach(async (device) => { await props.sdk.player.pausePlayback(device.id as string); });
             setIsPlaying(false);
         } catch (e) {
             console.error(e);
@@ -108,38 +88,23 @@ export default function SpotifyPlayback(props: { clientId: string, redirectUrl: 
     };
 
     const handleSkip = async () => {
-        if (!sdk) {
+        if (!props.sdk) {
             throw new Error('SDK not created');
         }
-
-        try {
-            // When there's no more songs in queue
-            if (queue.length < 1) {
-                console.log('Error: Queue empty');
-                // If there's still a current song set, clear it and pause
-                if (currentTrack.id) {
-                    setCurrentTrack({} as Track);
-                    handlePauseClick();
-                }
-                return;
-            }
-
-            const nextSong = queue[0];
-            await sdk.player.addItemToPlaybackQueue(`spotify:track:${nextSong.track.id}`);
-            activeDevices.devices.forEach(async (device) => { // will throw multiple 502 error because only one device is playing
-                await sdk.player.skipToNext(device.id as string); 
-                setIsPlaying(true); // skipToNext() autoplays
-            })
-            setCurrentTrack(nextSong.track);
-            const currentQueueWithoutFirst = queue.slice(1);
-            setQueue(currentQueueWithoutFirst);
-        } catch (e) {
-            console.error(e);
+        if (queue.length < 1) {
+            return;
         }
+
+        const nextSong = queue[0];
+        await props.sdk.player.addItemToPlaybackQueue(`spotify:track:${nextSong.id}`);
+        await props.sdk.player.skipToNext(activeDevices.devices[0].id as string);
+        setCurrentTrack(nextSong);
+        const currentQueueWithoutFirst = queue.slice(1);
+        setQueue(currentQueueWithoutFirst);
     }
 
-    const handleAddToQueue = async (trackId: string) => {
-        if (!sdk) {
+    const handleAddToQueue = async () => {
+        if (!props.sdk || !trackId) {
             return;
         }
 
@@ -147,91 +112,50 @@ export default function SpotifyPlayback(props: { clientId: string, redirectUrl: 
             // await sdk.player.addItemToPlaybackQueue(`spotify:track:${trackId}`);
             // const currentQueue = await sdk.player.getUsersQueue()
             // setQueue(currentQueue.queue as Track[]);
-            const track = await sdk.tracks.get(trackId);
-            const queuedTrack: QueuedTrack = {
-                queueId: uniqueId(),
-                track: track
-            };
-            setQueue([...queue, queuedTrack]);
+            const track = await props.sdk.tracks.get(trackId);
+            setQueue([...queue, track]);
+            setTrackId("");
         } catch (e) {
             throw new Error("Error adding track to queue");
         }
     };
 
-    // Set the currentTrack from the queue, if not empty
     useEffect(() => {
-        // if currentTrack not set, initialize to first in queue
-        if (queue.length > 0 && !currentTrack.id) {
-            console.log('preloading first song')
-            handleSkip();
-        }
-    }, [queue])
-
-    const handleRemoveFromQueue = async (queueId: string) => {
-        if (!sdk) {
+        if (!props.sdk) {
             return;
         }
 
-        try {
-            const newQueue = queue.filter((item) => item.queueId !== queueId)
-            setQueue(newQueue);
-        } catch (e) {
-            throw new Error("Error removing track from queue");
-        }
-    }
+        if (playerDevice?.device_id === undefined) return;
 
-    useEffect(() => {
-        (async () => {
-            const auth = new AuthorizationCodeWithPKCEStrategy(props.clientId, props.redirectUrl, activeScopes);
-            const internalSdk = new SpotifyApi(auth, props.config);
-
-            try {
-                const { authenticated } = await internalSdk.authenticate();
-
-                if (authenticated) {
-                    setSdk(() => internalSdk);
-                }
-            } catch (e: Error | unknown) {
-
-                const error = e as Error;
-                if (error && error.message && error.message.includes("No verifier found in cache")) {
-                    console.error("If you are seeing this error in a React Development Environment it's because React calls useEffect twice. Using the Spotify SDK performs a token exchange that is only valid once, so React re-rendering this component will result in a second, failed authentication. This will not impact your production applications (or anything running outside of Strict Mode - which is designed for debugging components).", error);
-                } else {
-                    console.error(e);
-                }
-            }
-
-        })();
-    }, [props.clientId, props.redirectUrl, props.config, activeScopes]);
-
-    useEffect(() => {
-        if (!sdk) {
-            return;
-        }
 
         (async () => {
-            const user = await sdk.currentUser.profile();
-            // const clientToken = await sdk.getAccessToken();
-            // if (!clientToken) {
-                // throw new Error("Authentication failed");
-            // }
-            // setAccessToken(clientToken.access_token);
+
+            // await fetch(`https://api.spotify.com/v1/me/player`, {
+            //   method: "PUT",
+            //   body: JSON.stringify({ device_ids: [playerDevice.device_id], play: false }),
+            //   headers: {
+            //     "Content-Type": "application/json",
+            //     Authorization: `Bearer ${props.serverAccessToken}`,
+            //   },
+            // });
+            // await spotifyPlayer?.togglePlay();
+
+
+            const user = await props.sdk.currentUser.profile();
             setProfile(user);
 
-            const allDevices = await sdk.player.getAvailableDevices();
-            setActiveDevices({devices: allDevices.devices.filter((device) => device.is_active)});
+            const currentDevices = await props.sdk.player.getAvailableDevices();
+            currentDevices.devices.forEach(async (device) => {
+                console.log("device: ", device.name, " is_active: ", device.is_active);
+                // props.sdk.player.transferPlayback([device.id as string]);
+            })
+            setActiveDevices(currentDevices)
             // setActiveDevices({ ...activeDevices, devices: currentDevices.devices.filter((device) => device.is_active) });
         })();
-    }, [sdk]);
+    }, [props.sdk, playerDevice?.device_id]);
 
     return (
         <>
-            {/* <iframe
-                src="https://open.spotify.com/embed/track/4JzCFEc3O2UEdjKzevvFH5?utm_source=generator&theme=0"
-                width="100%" height="352"
-                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                loading="lazy">
-            </iframe> */}
             <iframe
                 src={`https://open.spotify.com/embed/track/${currentTrack.id}?utm_source=generator&theme=0`}
                 width="100%" height="352"
@@ -251,9 +175,24 @@ export default function SpotifyPlayback(props: { clientId: string, redirectUrl: 
                 <Heading size='md'>Devices currently playing:</Heading>
                 <ul>
                     {activeDevices.devices ? activeDevices.devices.map(device => (
-                        <li key={device.id}>{device.name}</li>
+                        <li key={device.id}>
+                            {device.name}: {device.is_active ? "Active" : "Inactive"} | {device.type} | {device.id}
+                        </li>
                     )) : null}
                 </ul>
+            </div>
+            <Heading size='md'>Queue</Heading>
+            <div>
+                <div style={{ display: "flex", alignItems: "center" }}>
+                    <FormLabel>Add to Queue</FormLabel>
+                    <input
+                        type="text"
+                        value={trackId}
+                        onChange={(e) => setTrackId(e.target.value)}
+                        placeholder='Track ID'
+                    />
+                    <Button onClick={handleAddToQueue}>Add</Button>
+                </div>
             </div>
             <Heading size='md'>Current Queue</Heading>
             <div>
@@ -262,16 +201,15 @@ export default function SpotifyPlayback(props: { clientId: string, redirectUrl: 
                         <Tr>
                             <Th>Artist</Th>
                             <Th>Track Name</Th>
+                            <Th>Track ID</Th>
                         </Tr>
                     </Thead>
                     <Tbody>
                         {queue.map((track) => (
-                            <Tr key={track.queueId}>
-                                <Td>{track.track.artists[0].name}</Td>
-                                <Td>{track.track.name}</Td>
-                                <Td>
-                                    <Button onClick={() => handleRemoveFromQueue(track.queueId)}>Remove</Button>
-                                </Td>
+                            <Tr key={track.id}>
+                                <Td>{track.artists[0].name}</Td>
+                                <Td>{track.name}</Td>
+                                <Td>{track.id}</Td>
                             </Tr>
                         ))}
                     </Tbody>
@@ -295,7 +233,7 @@ export default function SpotifyPlayback(props: { clientId: string, redirectUrl: 
                             <Tr>
                                 <Th>Artists</Th>
                                 <Th>Track Name</Th>
-                                <Th>Queue</Th>
+                                <Th>Track ID</Th>
                             </Tr>
                         </Thead>
                         <Tbody>
@@ -303,16 +241,13 @@ export default function SpotifyPlayback(props: { clientId: string, redirectUrl: 
                                 <Tr key={track.id}>
                                     <Td>{track.artists[0].name}</Td>
                                     <Td>{track.name}</Td>
-                                    <Td>
-                                        <Button onClick={() => handleAddToQueue(track.id)}>Add</Button>
-                                    </Td>
+                                    <Td>{track.id}</Td>
                                 </Tr>
                             ))}
                         </Tbody>
                     </Table>
                 )}
             </div>
-            {/* <WebPlayback token={token} /> */}
         </>
     );
 }
