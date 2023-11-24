@@ -189,6 +189,9 @@ export class UserMusicPlayer {
   }
 }
 
+/**
+ * Class that handles the music session for all players
+ */
 export class MusicSessionController {
   private _userMusicPlayers: UserMusicPlayer[];
 

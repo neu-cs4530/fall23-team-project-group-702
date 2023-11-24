@@ -51,16 +51,6 @@ export default function SpotifyMain() {
 
         if (authorizationData && authorizationData.access_token) {
           setAccessToken(authorizationData);
-          const response2 = await fetch(
-            'http://localhost:3000/api/spotifyplayback?temp=accessToken',
-          );
-          if (response2.ok) {
-            const serverToken: AccessToken = await response2.json();
-            console.log(`In Main ${JSON.stringify(serverToken.access_token)}`);
-            setServerAccessToken(serverToken);
-            return;
-          }
-
           // set sdk in rest api
           const response = await fetch('http://localhost:3000/api/spotifyplayback', {
             method: 'POST',

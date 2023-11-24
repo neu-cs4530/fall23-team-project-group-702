@@ -15,7 +15,7 @@ export const SpotifyDetails: React.VFC<{ serverAccessToken: AccessToken }> = (pr
     async function activate() {
       if (playerDevice?.device_id === undefined || !props.serverAccessToken) return;
       const transferPlaybackResponse = await fetch(
-        `http://localhost:3000/api/spotifyplayback?temp=transferPlayback&deviceId=${playerDevice.device_id}`,
+        `http://localhost:3000/api/spotifyplayback?temp=transferPlayback&deviceId=${playerDevice.device_id}&accessToken=${props.serverAccessToken.access_token}`,
       );
       if (!transferPlaybackResponse.ok) {
         throw new Error('Unable to transfer playback to player device');
