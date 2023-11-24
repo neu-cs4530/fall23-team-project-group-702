@@ -14,26 +14,25 @@ export const SpotifyDetails: React.VFC<{ serverAccessToken: AccessToken }> = (pr
   useEffect(() => {
     async function activate() {
       if (playerDevice?.device_id === undefined || !props.serverAccessToken) return;
-      const response = await fetch(
+      const transferPlaybackResponse = await fetch(
         `http://localhost:3000/api/spotifyplayback?temp=transferPlayback&deviceId=${playerDevice.device_id}`,
       );
-      if (!response.ok) {
+      if (!transferPlaybackResponse.ok) {
         throw new Error('Unable to transfer playback to player device');
       }
+      console.log(`transferPlaybackResponse ok: ${transferPlaybackResponse.ok}`);
 
-      const response2 = await fetch(
-        'https://api.spotify.com/v1/me/player/play?device_id=' + playerDevice.device_id,
-        {
-          method: 'PUT',
-          body: JSON.stringify({ uris: ['spotify:track:1HYzRuWjmS9LXCkdVHi25K'] }),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${props.serverAccessToken.access_token}`,
-          },
-        },
-      );
-      console.log(`response2: ${response2.ok}`);
-      console.log(JSON.stringify(response2));
+      // const defaultTrackId = '1HYzRuWjmS9LXCkdVHi25K';
+      // const playSongResponse = await fetch(
+      //   `http://localhost:3000/api/spotifyplayback?temp=playSong&trackId=${defaultTrackId}`,
+      // );
+      // console.log(`playSongResponse ok: ${playSongResponse.ok}`);
+      // if (!playSongResponse.ok) {
+      //   const text = await playSongResponse.text();
+      //   throw new Error(
+      //     `Unable to play songs on all devices: ${text} || status: ${playSongResponse.status}`,
+      //   );
+      // }
     }
     activate();
   }, [playerDevice?.device_id, props.serverAccessToken]);

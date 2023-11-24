@@ -60,18 +60,22 @@ export class SpotifyPlayback {
   }
 
   /**
-   * Queries the Spotify API for the active devices playing for the current user's playback
-   * @returns - the active devices
+   * Queries the Spotify API for the available devices
+   * Sets the available devices and active devices
+   * @returns - all available devices
    */
   public async getDevices(): Promise<Devices> {
+    /* Get all devices */
     const devices = await this._sdk.player.getAvailableDevices();
-    console.log('all devices: ' + JSON.stringify(devices.devices));
-    this._allDevices = devices;
+
+    /* Set all devices */
+    const devicesDeepCopy = JSON.parse(JSON.stringify(devices));
+    this._allDevices = devicesDeepCopy;
+
+    /* filter and set active devices */
     devices.devices = devices.devices.filter(device => device.is_active);
     this._activeDevices = devices;
-    // console.log('active devices: ' + JSON.stringify(this._activeDevices.devices));
-    // console.log('all devices: ' + JSON.stringify(this._allDevices.devices));
-    return this._activeDevices;
+    return this._allDevices;
   }
 
   public async togglePlay(): Promise<boolean> {
@@ -82,7 +86,6 @@ export class SpotifyPlayback {
         return;
       }
 
-      // const state = await this._sdk.player.getPlaybackState(undefined);
       if (state && state.is_playing) {
         console.log('pausing playback');
         await this._sdk.player.pausePlayback(device.id as string);
@@ -93,7 +96,7 @@ export class SpotifyPlayback {
         return true;
       }
     });
-    // return false if there are no active devices
+    /* return false if there are no active devices */
     console.log('no active devices');
     return false;
   }
@@ -150,21 +153,35 @@ export class SpotifyPlayback {
    * @param deviceId - ID of the device to transfer playback to
    */
   public async transferPlayback(deviceId: string): Promise<void> {
-    /*
-    await this.getDevices();
-    if (!this._allDevices) {
-      throw new Error('no set');
-    }
-    const deviceStrings = this._allDevices.devices.map(device => {
-      if (!device.id) {
-        throw new Error('no set');
+    await this._sdk.player.transferPlayback([deviceId], false);
+  }
+
+  /**
+   * Plays a song on all devices
+   * @param trackId - ID of the song to play
+   */
+  public async playSong(trackId: string): Promise<void> {
+    const playerDevice = await this.getDevices();
+    for (const device of playerDevice.devices) {
+      const playSongResponse = await fetch(
+        'https://api.spotify.com/v1/me/player/play?device_id=' + device.id,
+        {
+          method: 'PUT',
+          body: JSON.stringify({ uris: [`spotify:track:${trackId}`] }),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${this._accessToken.access_token}`,
+          },
+        },
+      );
+      console.log(`name: ${device.name} || playSongResponse: ${playSongResponse.status}`);
+      if (!playSongResponse.ok) {
+        const text = await playSongResponse.text();
+        throw new Error(
+          `Unable to play songs on all devices: ${text} || status: ${playSongResponse.status}`,
+        );
       }
-      return device.id;
-    });
-    deviceStrings.push(deviceId);
-    console.log('devices to transfer to: ' + JSON.stringify(deviceStrings));
-    */
-    await this._sdk.player.transferPlayback([deviceId], true);
+    }
   }
 }
 
@@ -189,7 +206,6 @@ const handler: NextApiHandler = async (req, res) => {
     switch (temp) {
       case 'accessToken': {
         console.log('access token sent');
-        // console.log("access token: " + spotifyController.accessToken.access_token);
         if (!spotifyController.accessToken.access_token) {
           console.log('no access token');
           res.status(400).send('no access token');
@@ -226,6 +242,18 @@ const handler: NextApiHandler = async (req, res) => {
         res.status(200).json(searchResults);
         break;
       }
+      case 'playSong': {
+        const trackId = req.query.trackId;
+        if (!trackId) {
+          console.log('no track ID provided');
+          res.status(400).send('no track ID provided');
+          return;
+        }
+        await spotifyController.playSong(trackId as string);
+        console.log('playing song');
+        res.status(200).send('playing song');
+        break;
+      }
       case 'addQueue': {
         const trackId = req.query.trackId;
         if (!trackId) {
@@ -256,12 +284,8 @@ const handler: NextApiHandler = async (req, res) => {
         break;
     }
   } else if (req.method === 'POST') {
-    /*
-     * Creates a new SpotifyPlayback object for the user
-     */
+    /* Creates a new SpotifyPlayback object for the user */
     const userAccessToken: AccessToken = req.body.accessToken;
-
-    // console.log("user access token: " + JSON.stringify(userAccessToken));
 
     if (userAccessToken) {
       console.log('received access token. creating spotify playback object');

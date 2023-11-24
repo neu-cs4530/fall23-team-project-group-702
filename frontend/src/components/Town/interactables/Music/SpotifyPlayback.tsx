@@ -11,6 +11,7 @@ export default function SpotifyPlayback() {
   const [searchResults, setSearchResults] = useState<Track[]>([]);
   const [currentTrack, setCurrentTrack] = useState<Track>({} as Track);
   const [queue, setQueue] = useState<Track[]>([]);
+  const [playSong, setPlaySong] = useState('');
 
   const handleSearch = async () => {
     if (searchQuery === '') return;
@@ -45,6 +46,25 @@ export default function SpotifyPlayback() {
     setIsPlaying(currentlyPlaying);
   };
 
+  const handlePlaySong = async () => {
+    if (playSong === '') return;
+    // const defaultTrackId = '1HYzRuWjmS9LXCkdVHi25K';
+    const playSongResponse = await fetch(
+      `http://localhost:3000/api/spotifyplayback?temp=playSong&trackId=${playSong}`,
+    );
+    console.log(`playSongResponse ok: ${playSongResponse.ok}`);
+    if (!playSongResponse.ok) {
+      const text = await playSongResponse.text();
+      throw new Error(
+        `Unable to play songs on all devices: ${text} || status: ${playSongResponse.status}`,
+      );
+    }
+    const track = await playSongResponse.json();
+    console.log(`playSongResponse ok: ${playSongResponse.ok} || body: ${track}`);
+    setPlaySong('');
+    // setCurrentTrack(track);
+  };
+
   return (
     <>
       <iframe
@@ -53,6 +73,19 @@ export default function SpotifyPlayback() {
         height='352'
         allow='autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture'
         loading='lazy'></iframe>
+      <Heading size='md'>Play Song</Heading>
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <FormLabel>Play Song</FormLabel>
+          <input
+            type='text'
+            value={playSong}
+            onChange={e => setPlaySong(e.target.value)}
+            placeholder='Track ID'
+          />
+          <Button onClick={handlePlaySong}>Play</Button>
+        </div>
+      </div>
       <div>
         <Button onClick={handleTogglePlay}>{isPlaying ? 'Pause' : 'Play'}</Button>
         <Button
