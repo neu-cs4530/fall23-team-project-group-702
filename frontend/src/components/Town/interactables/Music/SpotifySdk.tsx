@@ -1,42 +1,38 @@
 import { Children, useCallback, useEffect } from "react";
 import { WebPlaybackSDK } from "react-spotify-web-playback-sdk";
-import SpotifyPlayer from "./SpotifyPlayer";
 import { SpotifyDetails } from "./SpotifyDetails";
-import { SpotifyApi } from "@spotify/web-api-ts-sdk";
 import SpotifyPlayback from "./SpotifyPlayback";
+import { AccessToken } from "@spotify/web-api-ts-sdk";
 
-type Props = {
-    userAccessToken: string,
-    sdk: SpotifyApi,
-    serverAccessToken: string,
-};
+// const response = await fetch (`https://localhost:3000/api/spotifyplayback?temp=transferPlayback&device_id=${playerDevice.device_id}`);
+// console.log(`ok: ${response.ok}`);
 
-const SpotifySdk: React.VFC<Props> = ({ userAccessToken, sdk, serverAccessToken }) => {
+const SpotifySdk: React.VFC<{ userAccessToken: AccessToken, serverAccessToken: AccessToken }> = ({ userAccessToken, serverAccessToken }) => {
     const getOAuthToken: Spotify.PlayerInit["getOAuthToken"] = useCallback(
-        callback => callback(userAccessToken),
+        callback => callback(userAccessToken.access_token),
         [userAccessToken],
     );
-
-    useEffect(() => {
-        console.log(`SpotifySdk: ${serverAccessToken} | UserAccesstoken: ${userAccessToken}`)
-    }, []);
-
-    return (
-        <WebPlaybackSDK
-            initialDeviceName="Covey Player"
-            getOAuthToken={getOAuthToken}
-            connectOnInitialized={true}
-            initialVolume={0.5}>
-            <div >
-                <div>
-                    <SpotifyDetails serverAccessToken={serverAccessToken} />
+    if (!userAccessToken || !serverAccessToken) {
+        return <div>Not logged in || Host web sdk object not created</div>;
+    } else {
+        return (
+            <WebPlaybackSDK
+                initialDeviceName="Covey Player"
+                getOAuthToken={getOAuthToken}
+                connectOnInitialized={true}
+                initialVolume={0.5}>
+                <div >
+                    <div>
+                        <SpotifyDetails serverAccessToken={serverAccessToken}/>
+                    </div>
+                    <div>
+                        {/* <SpotifyPlayer /> */}
+                        <SpotifyPlayback />
+                    </div>
                 </div>
-                <div>
-                    <SpotifyPlayer sdk={sdk} />
-                </div>
-            </div>
-        </WebPlaybackSDK>
-    );
+            </WebPlaybackSDK>
+        );
+    }
 };
 
 export default SpotifySdk;

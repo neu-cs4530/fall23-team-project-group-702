@@ -32,7 +32,7 @@ active devices for the SDK of the player
 
 */
 
-export default function SpotifyPlayback(props: { sdk: SpotifyApi }) {
+export default function SpotifyPlayback() {
     const [profile, setProfile] = useState({} as UserProfile);
     const [isPlaying, setIsPlaying] = useState(false);
     const [activeDevices, setActiveDevices] = useState({} as Devices);
@@ -42,117 +42,82 @@ export default function SpotifyPlayback(props: { sdk: SpotifyApi }) {
     const [currentTrack, setCurrentTrack] = useState<Track>({} as Track);
     const [queue, setQueue] = useState<Track[]>([]);
 
-    const playbackState = usePlaybackState(true, 100);
-    const playerDevice = usePlayerDevice();
-    const errorState = useErrorState();
-    const webPlaybackSDKReady = useWebPlaybackSDKReady();
-    const spotifyPlayer = useSpotifyPlayer();
-
     const handleSearch = async () => {
-        if (!props.sdk) {
-            return;
-        }
-
-        try {
-            const results = await props.sdk.search(searchQuery, ["track"]);
-            setSearchResults(results.tracks.items);
-        } catch (e) {
-            console.error(e);
-        }
+        // try {
+        //     const results = await props.sdk.search(searchQuery, ["track"]);
+        //     setSearchResults(results.tracks.items);
+        // } catch (e) {
+        //     console.error(e);
+        // }
     };
 
     const handlePlayClick = async () => {
-        if (!props.sdk) {
-            return;
-        }
-
-        try {
-            activeDevices.devices.forEach(async (device) => { await props.sdk.player.startResumePlayback(device.id as string); });
-            setIsPlaying(true);
-        } catch (e) {
-            console.error(e);
-        }
+        // try {
+        //     activeDevices.devices.forEach(async (device) => { await props.sdk.player.startResumePlayback(device.id as string); });
+        //     setIsPlaying(true);
+        // } catch (e) {
+        //     console.error(e);
+        // }
     };
 
     const handlePauseClick = async () => {
-        if (!props.sdk) {
-            return;
-        }
-
-        try {
-            activeDevices.devices.forEach(async (device) => { await props.sdk.player.pausePlayback(device.id as string); });
-            setIsPlaying(false);
-        } catch (e) {
-            console.error(e);
-        }
+        // try {
+        //     activeDevices.devices.forEach(async (device) => { await props.sdk.player.pausePlayback(device.id as string); });
+        //     setIsPlaying(false);
+        // } catch (e) {
+        //     console.error(e);
+        // }
     };
 
     const handleSkip = async () => {
-        if (!props.sdk) {
-            throw new Error('SDK not created');
-        }
-        if (queue.length < 1) {
-            return;
-        }
+        // if (queue.length < 1) {
+        //     return;
+        // }
 
-        const nextSong = queue[0];
-        await props.sdk.player.addItemToPlaybackQueue(`spotify:track:${nextSong.id}`);
-        await props.sdk.player.skipToNext(activeDevices.devices[0].id as string);
-        setCurrentTrack(nextSong);
-        const currentQueueWithoutFirst = queue.slice(1);
-        setQueue(currentQueueWithoutFirst);
+        // const nextSong = queue[0];
+        // await props.sdk.player.addItemToPlaybackQueue(`spotify:track:${nextSong.id}`);
+        // await props.sdk.player.skipToNext(activeDevices.devices[0].id as string);
+        // setCurrentTrack(nextSong);
+        // const currentQueueWithoutFirst = queue.slice(1);
+        // setQueue(currentQueueWithoutFirst);
     }
 
     const handleAddToQueue = async () => {
-        if (!props.sdk || !trackId) {
-            return;
-        }
-
-        try {
-            // await sdk.player.addItemToPlaybackQueue(`spotify:track:${trackId}`);
-            // const currentQueue = await sdk.player.getUsersQueue()
-            // setQueue(currentQueue.queue as Track[]);
-            const track = await props.sdk.tracks.get(trackId);
-            setQueue([...queue, track]);
-            setTrackId("");
-        } catch (e) {
-            throw new Error("Error adding track to queue");
-        }
+        // try {
+        //     // await sdk.player.addItemToPlaybackQueue(`spotify:track:${trackId}`);
+        //     // const currentQueue = await sdk.player.getUsersQueue()
+        //     // setQueue(currentQueue.queue as Track[]);
+        //     const track = await props.sdk.tracks.get(trackId);
+        //     setQueue([...queue, track]);
+        //     setTrackId("");
+        // } catch (e) {
+        //     throw new Error("Error adding track to queue");
+        // }
     };
 
-    useEffect(() => {
-        if (!props.sdk) {
-            return;
-        }
+    // useEffect(() => {
+    //     if (!props.sdk) {
+    //         return;
+    //     }
 
-        if (playerDevice?.device_id === undefined) return;
-
-
-        (async () => {
-
-            // await fetch(`https://api.spotify.com/v1/me/player`, {
-            //   method: "PUT",
-            //   body: JSON.stringify({ device_ids: [playerDevice.device_id], play: false }),
-            //   headers: {
-            //     "Content-Type": "application/json",
-            //     Authorization: `Bearer ${props.serverAccessToken}`,
-            //   },
-            // });
-            // await spotifyPlayer?.togglePlay();
+    //     if (playerDevice?.device_id === undefined) return;
 
 
-            const user = await props.sdk.currentUser.profile();
-            setProfile(user);
+    //     (async () => {
 
-            const currentDevices = await props.sdk.player.getAvailableDevices();
-            currentDevices.devices.forEach(async (device) => {
-                console.log("device: ", device.name, " is_active: ", device.is_active);
-                // props.sdk.player.transferPlayback([device.id as string]);
-            })
-            setActiveDevices(currentDevices)
-            // setActiveDevices({ ...activeDevices, devices: currentDevices.devices.filter((device) => device.is_active) });
-        })();
-    }, [props.sdk, playerDevice?.device_id]);
+
+    //         const user = await props.sdk.currentUser.profile();
+    //         setProfile(user);
+
+    //         const currentDevices = await props.sdk.player.getAvailableDevices();
+    //         // currentDevices.devices.forEach(async (device) => {
+    //             // console.log("device: ", device.name, " is_active: ", device.is_active);
+    //             // props.sdk.player.transferPlayback([device.id as string]);
+    //         // })
+    //         setActiveDevices(currentDevices)
+    //         // setActiveDevices({ ...activeDevices, devices: currentDevices.devices.filter((device) => device.is_active) });
+    //     })();
+    // }, [props.sdk, playerDevice?.device_id]);
 
     return (
         <>

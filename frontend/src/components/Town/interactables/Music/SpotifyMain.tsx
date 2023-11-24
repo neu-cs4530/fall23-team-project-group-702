@@ -7,18 +7,16 @@
 */
 
 // Spotify
-import { SpotifyApi } from '@spotify/web-api-ts-sdk';
+import { AccessToken } from '@spotify/web-api-ts-sdk';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import SpotifySdk from './SpotifySdk';
 
 import { client_id, client_secret, loginURL, redirect_uri, tokenURL } from '../../../../utilities/constants';
 
-
 export default function SpotifyMain() {
-  const [accessToken, setAccessToken] = useState("");
-  const [sdk, setSdk] = useState<SpotifyApi>(null as unknown as SpotifyApi);
-  const [sdkAccessToken, setSdkAccessToken] = useState("");
+  const [accessToken, setAccessToken] = useState(null as unknown as AccessToken);
+  const [serverAccessToken, setServerAccessToken] = useState(null as unknown as AccessToken);
   const router = useRouter();
 
   useEffect(() => {
@@ -43,46 +41,46 @@ export default function SpotifyMain() {
           client_id: client_id,
           client_secret: client_secret,
         });
-
         const authResponse = await fetch("https://accounts.spotify.com/api/token", {
           method: "POST",
           body: spotifyAccessTokenParams,
         });
         const authorizationData = await authResponse.json();
+        console.log(`In Frontend ${authorizationData.access_token}`)
 
         if (authorizationData && authorizationData.access_token) {
-          setAccessToken(authorizationData.access_token);
-        }
-        console.log(`client_id: ${client_id} client_secret: ${client_secret} loginURL: ${loginURL} tokenURL: ${tokenURL} redirect_uri: ${redirect_uri}`)
-        console.log(`user accessToken: ${JSON.stringify(authorizationData)}`)
+          // set sdk in rest api
+          const response = await fetch("http://localhost:3000/api/spotifyplayback", {
+            method: "POST",
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              accessToken: authorizationData
+            })
+          });
+          if (!response.ok) {
+            throw new Error("Unable to set Spotify access token");
+          }
+          setAccessToken(authorizationData);
+          setServerAccessToken(authorizationData);
 
-        const internalSdk = SpotifyApi.withAccessToken(client_id, authorizationData);
-        const response = await internalSdk.authenticate();
-        const internalAccessToken = response.accessToken;
-        setSdkAccessToken(internalAccessToken.access_token);
-        console.log(`Application accessToken: ${JSON.stringify(response)}`)
-        setSdk(internalSdk);
-        const test = await internalSdk.player.getAvailableDevices();
-        console.log(`Available Devices: ${JSON.stringify(test)}`)
+        } else {
+          throw new Error("Unable to get Spotify access token");
+        }
       }
     })();
   }, []);
 
   return (
     <>
-      {(sdk && accessToken != "") ?
+      {(!accessToken) ?
         <>
-          <SpotifySdk userAccessToken={accessToken} sdk={sdk} serverAccessToken={sdkAccessToken} />
+          Access Token Not Loaded
         </>
         :
         <>
-          SDK / Access Token Not Loaded
-          <div>
-            sdk is valid: {sdk !== null}
-          </div>
-          <div>
-            accessToken: {accessToken}
-          </div>
+          <SpotifySdk userAccessToken={accessToken} serverAccessToken={serverAccessToken}/>
         </>
       }
     </>
