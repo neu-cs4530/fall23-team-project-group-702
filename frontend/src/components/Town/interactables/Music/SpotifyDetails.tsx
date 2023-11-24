@@ -20,19 +20,6 @@ export const SpotifyDetails: React.VFC<{ serverAccessToken: AccessToken }> = (pr
       if (!transferPlaybackResponse.ok) {
         throw new Error('Unable to transfer playback to player device');
       }
-      console.log(`transferPlaybackResponse ok: ${transferPlaybackResponse.ok}`);
-
-      // const defaultTrackId = '1HYzRuWjmS9LXCkdVHi25K';
-      // const playSongResponse = await fetch(
-      //   `http://localhost:3000/api/spotifyplayback?temp=playSong&trackId=${defaultTrackId}`,
-      // );
-      // console.log(`playSongResponse ok: ${playSongResponse.ok}`);
-      // if (!playSongResponse.ok) {
-      //   const text = await playSongResponse.text();
-      //   throw new Error(
-      //     `Unable to play songs on all devices: ${text} || status: ${playSongResponse.status}`,
-      //   );
-      // }
     }
     activate();
   }, [playerDevice?.device_id, props.serverAccessToken]);

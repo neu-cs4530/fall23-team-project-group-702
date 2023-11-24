@@ -80,7 +80,7 @@ export default function SpotifyMain() {
         }
       }
     })();
-  }, []);
+  }, [accessToken, router.query]);
 
   return (
     <>

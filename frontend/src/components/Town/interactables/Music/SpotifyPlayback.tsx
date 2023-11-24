@@ -1,11 +1,11 @@
 import React from 'react';
-import { Devices, Track } from '@spotify/web-api-ts-sdk';
+import { Track } from '@spotify/web-api-ts-sdk';
 import { useState } from 'react';
 import { Button, FormLabel, Heading, Table, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/react';
 
 export default function SpotifyPlayback() {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [activeDevices, setActiveDevices] = useState({} as Devices);
+  // const [activeDevices, setActiveDevices] = useState({} as Devices);
   const [trackId, setTrackId] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Track[]>([]);
@@ -95,7 +95,7 @@ export default function SpotifyPlayback() {
           Skip
         </Button>
       </div>
-      <div>
+      {/* <div>
         <Heading size='md'>Devices currently playing:</Heading>
         <ul>
           {activeDevices.devices
@@ -107,7 +107,7 @@ export default function SpotifyPlayback() {
               ))
             : null}
         </ul>
-      </div>
+      </div> */}
 
       <Heading size='md'>Queue</Heading>
       <div>

@@ -1,6 +1,6 @@
 import { NextApiHandler } from 'next';
 
-let spotifyController: SpotifyPlayback;
+// let spotifyController: UserMusicPlayer;;
 
 import {
   SpotifyApi,
@@ -15,7 +15,7 @@ import {
  * A SpotifyPlayback object is created for each music session a host user starts
  * Authentication is performed with the Spotify API using the access token of the host user
  */
-export class SpotifyPlayback {
+export class UserMusicPlayer {
   private _queue: Array<Track>;
 
   private _activeDevices: Devices;
@@ -78,6 +78,10 @@ export class SpotifyPlayback {
     return this._allDevices;
   }
 
+  /**
+   * Plays/Pauses the current song.
+   * @returns - after the toggle, true if the song is playing, false if the song is paused
+   */
   public async togglePlay(): Promise<boolean> {
     await this.getDevices();
     const state = await this._sdk.player.getCurrentlyPlayingTrack();
@@ -185,6 +189,65 @@ export class SpotifyPlayback {
   }
 }
 
+export class MusicSessionController {
+  private _userMusicPlayers: UserMusicPlayer[];
+
+  constructor() {
+    this._userMusicPlayers = [];
+  }
+
+  public async addUserMusicPlayer(userAccessToken: AccessToken): Promise<void> {
+    const userMusicPlayer = new UserMusicPlayer(userAccessToken);
+    const confirmedAccessTokenTEMPORARY = await userMusicPlayer.authenticate();
+    if (!confirmedAccessTokenTEMPORARY) {
+      throw new Error('Unable to authenticate user');
+    }
+  }
+
+  public async addSongToQueue(trackId: string): Promise<void> {
+    for (const userMusicPlayer of this._userMusicPlayers) {
+      await userMusicPlayer.addQueue(trackId);
+    }
+  }
+
+  public async skip(): Promise<void> {
+    for (const userMusicPlayer of this._userMusicPlayers) {
+      await userMusicPlayer.skip();
+    }
+  }
+
+  public async togglePlay(): Promise<void> {
+    for (const userMusicPlayer of this._userMusicPlayers) {
+      await userMusicPlayer.togglePlay();
+    }
+  }
+
+  public async search(searchQuery: string): Promise<Required<Pick<PartialSearchResult, 'tracks'>>> {
+    if (!searchQuery) {
+      throw new Error('No search query provided');
+    }
+    if (this._userMusicPlayers.length < 1) {
+      throw new Error('No users in music session');
+    }
+    const response = await this._userMusicPlayers[0].search(searchQuery);
+    return response;
+  }
+
+  public async transferPlayback(deviceId: string, accessToken: string): Promise<void> {
+    if (!deviceId) {
+      throw new Error('No device ID provided');
+    }
+    if (this._userMusicPlayers.length < 1) {
+      throw new Error('No users in music session');
+    }
+    await this._userMusicPlayers
+      .find(userMusicPlayer => userMusicPlayer.accessToken.access_token === accessToken)
+      ?.transferPlayback(deviceId);
+  }
+}
+
+const musicSessionController: MusicSessionController = new MusicSessionController();
+
 /**
  * Handles the HTTP requests to the SpotifyPlayback API
  * @param req - the HTTP request
@@ -194,10 +257,10 @@ const handler: NextApiHandler = async (req, res) => {
   if (req.method === 'GET') {
     const temp = req.query.temp;
     /*
-     * If a SpotifyController has not been created, then a session has not been started
+     * If a MusicSessionController has not been created, then a session has not been started
      * In this scenario, do not allow any commands to be made
      */
-    if (!spotifyController) {
+    if (!musicSessionController) {
       console.log('no spotify player created');
 
       res.status(400).send('no spotify player created');
@@ -205,29 +268,30 @@ const handler: NextApiHandler = async (req, res) => {
     }
     switch (temp) {
       case 'accessToken': {
-        console.log('access token sent');
-        if (!spotifyController.accessToken.access_token) {
-          console.log('no access token');
-          res.status(400).send('no access token');
-          return;
-        }
-        res.status(200).json(spotifyController.accessToken);
+        // console.log('access token sent');
+        // if (!spotifyController.accessToken.access_token) {
+        //   console.log('no access token');
+        //   res.status(400).send('no access token');
+        //   return;
+        // }
+        // res.status(200).json(spotifyController.accessToken);
+        res.status(400).send('not implemented');
         break;
       }
       case 'skip': {
-        const currentlyPlayingSong = await spotifyController.skip();
-        if (!currentlyPlayingSong) {
-          console.log('no song to skip to');
-          res.status(400).send('no song to skip to');
-          return;
-        }
+        const currentlyPlayingSong = await musicSessionController.skip();
+        // if (!currentlyPlayingSong) {
+        //   console.log('no song to skip to');
+        //   res.status(400).send('no song to skip to');
+        //   return;
+        // }
         console.log('skipped');
         res.status(200).json(currentlyPlayingSong);
         break;
       }
       case 'togglePlay': {
-        const currentlyPlaying = await spotifyController.togglePlay();
-        res.status(200).json(currentlyPlaying);
+        await musicSessionController.togglePlay();
+        res.status(200);
         break;
       }
       case 'search': {
@@ -237,20 +301,20 @@ const handler: NextApiHandler = async (req, res) => {
           res.status(400).send('no search query provided');
           return;
         }
-        const searchResults = await spotifyController.search(searchQuery as string);
+        const searchResults = await musicSessionController.search(searchQuery as string);
         console.log('Search successful');
         res.status(200).json(searchResults);
         break;
       }
       case 'playSong': {
-        const trackId = req.query.trackId;
-        if (!trackId) {
-          console.log('no track ID provided');
-          res.status(400).send('no track ID provided');
-          return;
-        }
-        await spotifyController.playSong(trackId as string);
-        console.log('playing song');
+        // const trackId = req.query.trackId;
+        // if (!trackId) {
+        //   console.log('no track ID provided');
+        //   res.status(400).send('no track ID provided');
+        //   return;
+        // }
+        // await spotifyController.playSong(trackId as string);
+        // console.log('playing song');
         res.status(200).send('playing song');
         break;
       }
@@ -261,19 +325,21 @@ const handler: NextApiHandler = async (req, res) => {
           res.status(400).send('no track ID provided');
           return;
         }
-        const trackAdded = await spotifyController.addQueue(trackId as string);
+        await musicSessionController.addSongToQueue(trackId as string);
         console.log('added to queue');
-        res.status(200).json(trackAdded);
+        // res.status(200).json(trackAdded);
+        res.status(200).send('added to queue');
         break;
       }
       case 'transferPlayback': {
         const deviceId = req.query.deviceId;
+        const accessToken = req.query.accessToken;
         if (!deviceId) {
           console.log('no device ID provided');
           res.status(400).send('no device ID provided');
           return;
         }
-        await spotifyController.transferPlayback(deviceId as string);
+        await musicSessionController.transferPlayback(deviceId as string, accessToken as string);
         console.log('transferred playback');
         res.status(200).send('transferred playback');
         break;
@@ -289,9 +355,8 @@ const handler: NextApiHandler = async (req, res) => {
 
     if (userAccessToken) {
       console.log('received access token. creating spotify playback object');
-      spotifyController = new SpotifyPlayback(userAccessToken);
-      const confirmedAccessTokenTEMPORARY = await spotifyController.authenticate();
-      res.status(200).json(confirmedAccessTokenTEMPORARY);
+      const confirmedAccessToken = await musicSessionController.addUserMusicPlayer(userAccessToken);
+      res.status(200).json(confirmedAccessToken);
     } else {
       res.status(400).send('no access token provided');
     }
