@@ -1,4 +1,4 @@
-import { NextApiHandler } from "next";
+import { NextApiHandler } from 'next';
 
 let spotifyController: SpotifyPlayback;
 
@@ -20,6 +20,8 @@ export class SpotifyPlayback {
 
   private _activeDevices: Devices;
 
+  private _allDevices: Devices;
+
   private _sdk: SpotifyApi;
 
   private _accessToken: AccessToken;
@@ -31,6 +33,7 @@ export class SpotifyPlayback {
       accessToken,
     );
     this._activeDevices = {} as Devices;
+    this._allDevices = null as unknown as Devices;
     this._accessToken = {} as AccessToken;
   }
 
@@ -50,8 +53,8 @@ export class SpotifyPlayback {
    * @returns - the access token
    */
   get accessToken(): AccessToken {
-    if (!this._accessToken.access_token) {
-      throw new Error("Access Token not set");
+    if (this._accessToken === ({} as AccessToken)) {
+      return null as unknown as AccessToken;
     }
     return this._accessToken;
   }
@@ -60,42 +63,61 @@ export class SpotifyPlayback {
    * Queries the Spotify API for the active devices playing for the current user's playback
    * @returns - the active devices
    */
-  public async getActiveDevices(): Promise<Devices> {
+  public async getDevices(): Promise<Devices> {
     const devices = await this._sdk.player.getAvailableDevices();
+    console.log('all devices: ' + JSON.stringify(devices.devices));
+    this._allDevices = devices;
+    devices.devices = devices.devices.filter(device => device.is_active);
     this._activeDevices = devices;
+    // console.log('active devices: ' + JSON.stringify(this._activeDevices.devices));
+    // console.log('all devices: ' + JSON.stringify(this._allDevices.devices));
     return this._activeDevices;
   }
 
-  /**
-   * Plays the current song
-   */
-  public async play(): Promise<void> {
-    this._activeDevices.devices.forEach(async (device) => {
-      await this._sdk.player.startResumePlayback(device.id as string);
-    });
-  }
+  public async togglePlay(): Promise<boolean> {
+    await this.getDevices();
+    const state = await this._sdk.player.getCurrentlyPlayingTrack();
+    this._activeDevices.devices.forEach(async device => {
+      if (!device.is_active) {
+        return;
+      }
 
-  /**
-   * Pauses the current song
-   */
-  public async pause(): Promise<void> {
-    this._activeDevices.devices.forEach(async (device) => {
-      await this._sdk.player.pausePlayback(device.id as string);
+      // const state = await this._sdk.player.getPlaybackState(undefined);
+      if (state && state.is_playing) {
+        console.log('pausing playback');
+        await this._sdk.player.pausePlayback(device.id as string);
+        return false;
+      } else {
+        console.log('starting playback');
+        await this._sdk.player.startResumePlayback(device.id as string);
+        return true;
+      }
     });
+    // return false if there are no active devices
+    console.log('no active devices');
+    return false;
   }
 
   /*
-  * Skips to the next song in the queue
-  */
-  public async skip(): Promise<void> {
+   * Skips to the next song in the queue
+   * @returns - the song that was skipped to
+   */
+  public async skip(): Promise<Track | null> {
+    await this.getDevices();
+    console.log(`active devices at time of skip: ` + JSON.stringify(this._activeDevices.devices));
+    console.log(`all devices at time of skip: ` + JSON.stringify(this._allDevices.devices));
     if (this._queue.length < 1) {
-      return;
+      return null;
+    } else if (this._activeDevices.devices.length < 1) {
+      return null;
     }
 
     const nextSong = this._queue[0];
     await this._sdk.player.addItemToPlaybackQueue(`spotify:track:${nextSong.id}`);
     await this._sdk.player.skipToNext(this._activeDevices.devices[0].id as string);
-    this._queue.slice(1);
+    const currentlyPlaying = this._queue.slice(1)[0];
+    console.log('new queue after skip: ' + JSON.stringify(this._queue));
+    return currentlyPlaying;
   }
 
   /**
@@ -103,8 +125,8 @@ export class SpotifyPlayback {
    * @param searchQuery - the search query to search for
    * @returns - the search results
    */
-  public async search(searchQuery: string): Promise<Required<Pick<PartialSearchResult, "tracks">>> {
-    const results = await this._sdk.search(searchQuery, ["track"]);
+  public async search(searchQuery: string): Promise<Required<Pick<PartialSearchResult, 'tracks'>>> {
+    const results = await this._sdk.search(searchQuery, ['track']);
     return results;
   }
 
@@ -112,8 +134,15 @@ export class SpotifyPlayback {
    * Adds a song to the queue
    * @param trackId - ID of the song to add to the queue
    */
-  public async addQueue(trackId: string): Promise<void> {
-    await this._sdk.tracks.get(trackId);
+  public async addQueue(trackId: string): Promise<Track> {
+    try {
+      const track = await this._sdk.tracks.get(trackId);
+      this._queue = [...this._queue, track];
+      console.log('queue updated: ' + JSON.stringify(this._queue));
+      return track;
+    } catch (e) {
+      throw new Error('Error adding track to queue');
+    }
   }
 
   /**
@@ -121,7 +150,21 @@ export class SpotifyPlayback {
    * @param deviceId - ID of the device to transfer playback to
    */
   public async transferPlayback(deviceId: string): Promise<void> {
-    await this._sdk.player.transferPlayback([deviceId]);
+    /*
+    await this.getDevices();
+    if (!this._allDevices) {
+      throw new Error('no set');
+    }
+    const deviceStrings = this._allDevices.devices.map(device => {
+      if (!device.id) {
+        throw new Error('no set');
+      }
+      return device.id;
+    });
+    deviceStrings.push(deviceId);
+    console.log('devices to transfer to: ' + JSON.stringify(deviceStrings));
+    */
+    await this._sdk.player.transferPlayback([deviceId], true);
   }
 }
 
@@ -131,87 +174,105 @@ export class SpotifyPlayback {
  * @param res - the HTTP response
  */
 const handler: NextApiHandler = async (req, res) => {
-  if (req.method === "GET") {
+  if (req.method === 'GET') {
     const temp = req.query.temp;
+    /*
+     * If a SpotifyController has not been created, then a session has not been started
+     * In this scenario, do not allow any commands to be made
+     */
     if (!spotifyController) {
-      console.log("no spotify player created");
-      res.status(400).send("no spotify player created");
+      console.log('no spotify player created');
+
+      res.status(400).send('no spotify player created');
       return;
     }
     switch (temp) {
-      case "accessToken":
+      case 'accessToken': {
+        console.log('access token sent');
+        // console.log("access token: " + spotifyController.accessToken.access_token);
+        if (!spotifyController.accessToken.access_token) {
+          console.log('no access token');
+          res.status(400).send('no access token');
+          return;
+        }
         res.status(200).json(spotifyController.accessToken);
-        console.log("access token: " + spotifyController.accessToken.access_token);
         break;
-      case "play":
-        await spotifyController.play();
-        res.status(200).send("playing");
+      }
+      case 'skip': {
+        const currentlyPlayingSong = await spotifyController.skip();
+        if (!currentlyPlayingSong) {
+          console.log('no song to skip to');
+          res.status(400).send('no song to skip to');
+          return;
+        }
+        console.log('skipped');
+        res.status(200).json(currentlyPlayingSong);
         break;
-      case "pause":
-        await spotifyController.pause();
-        console.log("paused")
-        res.status(200).send("paused");
+      }
+      case 'togglePlay': {
+        const currentlyPlaying = await spotifyController.togglePlay();
+        res.status(200).json(currentlyPlaying);
         break;
-      case "skip":
-        await spotifyController.skip();
-        console.log("skipped")
-        res.status(200).send("skipped");
-        break;
-      case "search":
+      }
+      case 'search': {
         const searchQuery = req.query.searchQuery;
         if (!searchQuery) {
-          console.log("no search query provided");
-          res.status(400).send("no search query provided");
+          console.log('no search query provided');
+          res.status(400).send('no search query provided');
           return;
         }
         const searchResults = await spotifyController.search(searchQuery as string);
-        console.log(JSON.stringify(searchResults));
+        console.log('Search successful');
         res.status(200).json(searchResults);
         break;
-      case "addQueue":
+      }
+      case 'addQueue': {
         const trackId = req.query.trackId;
         if (!trackId) {
-          console.log("no track ID provided");
-          res.status(400).send("no track ID provided");
+          console.log('no track ID provided');
+          res.status(400).send('no track ID provided');
           return;
         }
-        await spotifyController.addQueue(trackId as string);
-        console.log("added to queue");
-        res.status(200).send("added to queue");
+        const trackAdded = await spotifyController.addQueue(trackId as string);
+        console.log('added to queue');
+        res.status(200).json(trackAdded);
         break;
-      case "transferPlayback":
+      }
+      case 'transferPlayback': {
         const deviceId = req.query.deviceId;
         if (!deviceId) {
-          console.log("no device ID provided");
-          res.status(400).send("no device ID provided");
+          console.log('no device ID provided');
+          res.status(400).send('no device ID provided');
           return;
         }
         await spotifyController.transferPlayback(deviceId as string);
-        console.log("transferred playback");
-        res.status(200).send("transferred playback");
+        console.log('transferred playback');
+        res.status(200).send('transferred playback');
         break;
+      }
       default:
-        console.log("invalid query");
-        res.status(400).send("invalid query");
+        console.log('invalid query');
+        res.status(400).send('invalid query');
         break;
     }
-  }
-  /*
-  * Creates a new SpotifyPlayback object for the user
-  */
-  else if (req.method === "POST") {
+  } else if (req.method === 'POST') {
+    /*
+     * Creates a new SpotifyPlayback object for the user
+     */
     const userAccessToken: AccessToken = req.body.accessToken;
-    console.log("user access token: " + JSON.stringify(userAccessToken));
+
+    // console.log("user access token: " + JSON.stringify(userAccessToken));
+
     if (userAccessToken) {
+      console.log('received access token. creating spotify playback object');
       spotifyController = new SpotifyPlayback(userAccessToken);
       const confirmedAccessTokenTEMPORARY = await spotifyController.authenticate();
       res.status(200).json(confirmedAccessTokenTEMPORARY);
     } else {
-      res.status(400).send("no access token provided");
+      res.status(400).send('no access token provided');
     }
-  }
-  else {
-    res.status(405).send("Method Not Allowed, must be GET request");
+  } else {
+    res.status(405).send('Method Not Allowed, must be GET request');
   }
 };
 

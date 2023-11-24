@@ -82,7 +82,7 @@ export default abstract class Interactable extends Phaser.GameObjects.Sprite {
         this._scene.cursorKeys.space.isDown &&
         !this.townController.paused
       ) {
-        console.log("b4 interact")
+        console.log('b4 interact');
         this.townController.interact(this);
         this.interact();
       }

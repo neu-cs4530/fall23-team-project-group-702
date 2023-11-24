@@ -24,7 +24,7 @@ export function isViewingArea(interactable: Interactable): interactable is Viewi
 /**
  * Test to see if an interactable is a music area
  */
- export function isMusicArea(interactable: Interactable): interactable is MusicArea {
+export function isMusicArea(interactable: Interactable): interactable is MusicArea {
   return interactable.type === 'MusicArea';
 }
 

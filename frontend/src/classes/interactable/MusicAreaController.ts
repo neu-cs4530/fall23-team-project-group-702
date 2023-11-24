@@ -1,7 +1,6 @@
 import { MusicArea as MusicAreaModel, Song, SongQueue } from '../../types/CoveyTownSocket';
 import InteractableAreaController, { BaseInteractableEventMap } from './InteractableAreaController';
 
-
 /**
  * The events that a ViewingAreaController can emit
  */
@@ -32,6 +31,7 @@ export default class MusicAreaController extends InteractableAreaController<
   MusicAreaModel
 > {
   private _model: MusicAreaModel;
+
   private _musicArea?: MusicAreaController;
 
   /**
@@ -68,7 +68,7 @@ export default class MusicAreaController extends InteractableAreaController<
     }
   }
 
-    /** TO FIX.
+  /** TO FIX.
    * The URL of the video assigned to this viewing area, or undefined if there is not one.
  
      public get queue() {
@@ -77,17 +77,17 @@ export default class MusicAreaController extends InteractableAreaController<
   
      */
 
-      /**
-       * The URL of the video assigned to this viewing area, or undefined if there is not one.
-       *
-       * Changing this value will emit a 'videoChange' event to listeners
-       */
-      public set queue(song: Song | undefined) {
-        if (this._model.song !== song) {
-          this._model.song = song;
-          this.emit('songChange', song);
-        }
-      }
+  /**
+   * The URL of the video assigned to this viewing area, or undefined if there is not one.
+   *
+   * Changing this value will emit a 'videoChange' event to listeners
+   */
+  public set queue(song: Song | undefined) {
+    if (this._model.song !== song) {
+      this._model.song = song;
+      this.emit('songChange', song);
+    }
+  }
 
   /**
    * The playback state - true indicating that the video is playing, false indicating

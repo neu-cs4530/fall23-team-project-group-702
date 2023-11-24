@@ -27,7 +27,12 @@ import {
   TownSettingsUpdate,
   ViewingArea as ViewingAreaModel,
 } from '../types/CoveyTownSocket';
-import { isConversationArea, isMusicArea, isTicTacToeArea, isViewingArea } from '../types/TypeUtils';
+import {
+  isConversationArea,
+  isMusicArea,
+  isTicTacToeArea,
+  isViewingArea,
+} from '../types/TypeUtils';
 import ConversationAreaController from './interactable/ConversationAreaController';
 import GameAreaController, { GameEventTypes } from './interactable/GameAreaController';
 import InteractableAreaController, {
@@ -344,7 +349,7 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
    * @param interactedObj
    */
   public interact<T extends Interactable>(interactedObj: T) {
-    console.log(interactedObj.getType())
+    console.log(interactedObj.getType());
     this._interactableEmitter.emit(interactedObj.getType(), interactedObj);
   }
 
@@ -667,13 +672,11 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
    *
    * @param newArea
    */
-  async createMusicArea(newArea: { id: InteractableID, occupants: Array<string> }) {
+  async createMusicArea(newArea: { id: InteractableID; occupants: Array<string> }) {
     await this._townsService.createMusicArea(this.townID, this.sessionToken, newArea);
   }
 
-  public getMusicAreaController(
-    musicArea: MusicArea,
-  ): MusicAreaController {
+  public getMusicAreaController(musicArea: MusicArea): MusicAreaController {
     const existingController = this._interactableControllers.find(
       eachExistingArea => eachExistingArea.id === musicArea.id,
     );
@@ -862,12 +865,12 @@ function samePlayers(a1: PlayerController[], a2: PlayerController[]) {
 export function useInteractable<T extends Interactable>(
   interactableType: T['name'],
 ): T | undefined {
-  console.log("interactable name " + interactableType)
+  console.log('interactable name ' + interactableType);
   const townController = useTownController();
   const [interactable, setInteractable] = useState<T | undefined>(undefined);
   useEffect(() => {
     const onInteract = (interactWith: T) => {
-      console.log("interacting")
+      console.log('interacting');
       setInteractable(interactWith);
     };
     const offInteract = () => {
