@@ -7,10 +7,13 @@ import {
   PartialSearchResult,
   PlaybackState,
 } from '@spotify/web-api-ts-sdk';
+import { uniqueId } from 'lodash';
 
-/*
-- need to move queue from UserMusicPlayer to MusicSessionController
-*/
+// Uniquely-identifiable Track added to a Spotify Playback Queue
+export interface QueuedTrack {
+  queueId: string;
+  track: Track;
+}
 
 /**
  * Class that handles the playback of music using the Spotify API
@@ -18,13 +21,11 @@ import {
  * Authentication is performed with the Spotify API using the access token of the host user
  */
 export class UserMusicPlayer {
-  private _queue: Array<Track>;
-
   private _activeDevices: Devices;
 
   private _allDevices: Devices;
 
-  private _sdk: SpotifyApi;
+  public _sdk: SpotifyApi;
 
   private _accessToken: AccessToken;
 
@@ -32,7 +33,6 @@ export class UserMusicPlayer {
   private _deviceId: string;
 
   constructor(accessToken: AccessToken) {
-    this._queue = [];
     this._sdk = SpotifyApi.withAccessToken(
       process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID as string,
       accessToken,
@@ -114,31 +114,22 @@ export class UserMusicPlayer {
   }
 
   /*
-   * Skips to the next song in the queue
-   * @returns - the song that was skipped to
+   * Skips to the next song provided.
+   * Adds to Spotifies queue for the user (on the cloud) then skips to that song
+   * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! This is effectively the same as playSongNow, but is potentially has less delay
+   * @param trackId - ID of the song to skip to
    */
-  public async skip(): Promise<Track | null> {
+  public async nextSong(trackId: string): Promise<void> {
     await this.getDevices();
     console.log(
       `active devices length at time of skip: ` +
         JSON.stringify(this._activeDevices.devices.length),
     );
-    if (this._queue.length < 1) {
-      return null;
-    } else if (this._activeDevices.devices.length < 1) {
-      return null;
+    if (this._activeDevices.devices.length < 1) {
+      return;
     }
-
-    const nextSong = this._queue[0];
-    await this._sdk.player.addItemToPlaybackQueue(`spotify:track:${nextSong.id}`);
+    await this._sdk.player.addItemToPlaybackQueue(`spotify:track:${trackId}`);
     await this._sdk.player.skipToNext(this._activeDevices.devices[0].id as string);
-    this._queue = this._queue.slice(1);
-
-    console.log('New queue after skip: ');
-    for (const track of this._queue) {
-      console.log('track: ' + track.name);
-    }
-    return nextSong;
   }
 
   /**
@@ -152,21 +143,13 @@ export class UserMusicPlayer {
   }
 
   /**
-   * Adds a song to the queue
-   * @param trackId - ID of the song to add to the queue
+   * Get track
+   * @param trackId - ID of the song to get
+   * @returns - the track
    */
-  public async addQueue(trackId: string): Promise<Track> {
-    try {
-      const track = await this._sdk.tracks.get(trackId);
-      this._queue = [...this._queue, track];
-      console.log('New queue after adding to queue: ');
-      for (const song of this._queue) {
-        console.log('track: ' + song.name);
-      }
-      return track;
-    } catch (e) {
-      throw new Error('Error adding track to queue');
-    }
+  public async getTrack(trackId: string): Promise<Track> {
+    const track = await this._sdk.tracks.get(trackId);
+    return track;
   }
 
   /**
@@ -271,8 +254,11 @@ export class UserMusicPlayer {
 export class MusicSessionController {
   private _userMusicPlayers: UserMusicPlayer[];
 
+  private _queue: Array<QueuedTrack>;
+
   constructor() {
     this._userMusicPlayers = [];
+    this._queue = [];
   }
 
   /**
@@ -305,29 +291,29 @@ export class MusicSessionController {
           hostUserState.progress_ms,
         )} || track name = ${JSON.stringify(hostUserState.item.name)}`,
       );
-      await userMusicPlayer.addQueue(hostUserState.item.id);
-      await userMusicPlayer.skip();
-
-      /* wait four seconds to allow for better synchronization */
-      // console.log('WAITING!!!!!!!!!!!!!!!');
-      // await new Promise(resolve => setTimeout(resolve, 1000));
-      // console.log('going to synchronize');
+      await userMusicPlayer.nextSong(hostUserState.item.id);
       await this.synchronize();
     }
   }
 
   /**
    * Synchronizes the music session if a song is playing
-   * Seeks all players to the same position of the host user
    * @throws - if there are no users in the music session
    */
   public async synchronize(): Promise<void> {
     const hostUserState = await this.getCurrentHostPlaybackState();
+    /* hostUserState is null if no song is currently playing */
     if (!hostUserState) {
       return;
     }
+    /* Song is currnetly playing, perform synchronization */
     const hostUserPosition = hostUserState.progress_ms;
     for (const userMusicPlayer of this._userMusicPlayers) {
+      const track = await userMusicPlayer.getCurrentlyPlayingTrack();
+      /* Checks that the user is playing the same song as the host */
+      if (track?.item.id !== hostUserState.item.id) {
+        await userMusicPlayer.nextSong(hostUserState.item.id);
+      }
       await userMusicPlayer.seekToPosition(hostUserPosition);
     }
   }
@@ -346,22 +332,67 @@ export class MusicSessionController {
   }
 
   /**
-   * Adds a song to all users' queues
+   * Adds a song to queue
    * @param trackId - ID of the song to add to the queue
+   * @returns - the updated queue
    */
-  public async addSongToQueue(trackId: string): Promise<void> {
-    for (const userMusicPlayer of this._userMusicPlayers) {
-      await userMusicPlayer.addQueue(trackId);
+  public async addSongToQueue(trackId: string): Promise<QueuedTrack[]> {
+    if (this._userMusicPlayers.length < 1) {
+      throw new Error('No users in music session');
     }
+    const newTrack = await this._userMusicPlayers[0].getTrack(trackId);
+    const queuedTrack: QueuedTrack = {
+      queueId: uniqueId(),
+      track: newTrack,
+    };
+    this._queue = [...this._queue, queuedTrack];
+
+    console.log('New queue after adding to queue: ');
+    for (const track of this._queue) {
+      console.log('track: ' + track.track.name);
+    }
+    return this._queue;
+  }
+
+  /**
+   * Removes a song from the queue
+   * @param queueId - queue ID of the song to remove from the queue (we generate queueID)
+   * @returns - the updated queue
+   */
+  public async removeFromQueue(queueId: string): Promise<QueuedTrack[]> {
+    if (this._userMusicPlayers.length < 1) {
+      throw new Error('No users in music session');
+    }
+    this._queue = this._queue.filter(track => track.queueId !== queueId);
+    /* Debugging */
+    console.log('New queue after remove: ');
+    for (const track of this._queue) {
+      console.log('track: ' + track.track.name);
+    }
+    return this._queue;
   }
 
   /**
    * Skips to the next song in the queue for all users
+   * @returns - the updated queue
    */
-  public async skip(): Promise<void> {
-    for (const userMusicPlayer of this._userMusicPlayers) {
-      await userMusicPlayer.skip();
+  public async skip(): Promise<QueuedTrack[]> {
+    if (this._queue.length < 1) {
+      return [];
     }
+    const nextSong = this._queue[0];
+    this._queue = this._queue.slice(1);
+    for (const userMusicPlayer of this._userMusicPlayers) {
+      await userMusicPlayer.nextSong(nextSong.track.id);
+    }
+
+    /* Debugging */
+    console.log('New queue after skip: ');
+    for (const track of this._queue) {
+      console.log('track: ' + track.track.name);
+    }
+
+    return this._queue;
   }
 
   /**
@@ -375,6 +406,10 @@ export class MusicSessionController {
     await this.synchronize();
   }
 
+  /**
+   * Plays a song for all users
+   * @param trackId - ID of the song to play
+   */
   public async playSongNow(trackId: string): Promise<void> {
     for (const userMusicPlayer of this._userMusicPlayers) {
       await userMusicPlayer.playSongNow(trackId);
@@ -438,9 +473,9 @@ const handler: NextApiHandler = async (req, res) => {
     }
     switch (temp) {
       case 'skip': {
-        await musicSessionController.skip();
+        const updatedQueue = await musicSessionController.skip();
         console.log('skipped');
-        res.status(200).json('skipped');
+        res.status(200).json(updatedQueue);
         break;
       }
       case 'togglePlay': {
@@ -478,9 +513,21 @@ const handler: NextApiHandler = async (req, res) => {
           res.status(400).send('no track ID provided');
           return;
         }
-        await musicSessionController.addSongToQueue(trackId as string);
+        const updatedQueue = await musicSessionController.addSongToQueue(trackId as string);
         console.log('added to queue');
-        res.status(200).send('added to queue');
+        res.status(200).json(updatedQueue);
+        break;
+      }
+      case 'removeFromQueue': {
+        const queueId = req.query.queueId;
+        if (!queueId) {
+          console.log('no track ID provided');
+          res.status(400).send('no track ID provided');
+          return;
+        }
+        const updatedQueue = musicSessionController.removeFromQueue(queueId as string);
+        console.log('removed from queue');
+        res.status(200).json(updatedQueue);
         break;
       }
       default:

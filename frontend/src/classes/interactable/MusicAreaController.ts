@@ -1,4 +1,5 @@
-import { MusicArea as MusicAreaModel, Song, SongQueue } from '../../types/CoveyTownSocket';
+import { MusicArea as MusicAreaModel, Song } from '../../types/CoveyTownSocket';
+// import { SongQueue } from '../../types/CoveyTownSocket';
 import InteractableAreaController, { BaseInteractableEventMap } from './InteractableAreaController';
 
 /**

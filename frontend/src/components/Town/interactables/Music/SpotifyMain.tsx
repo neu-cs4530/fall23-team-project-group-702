@@ -11,7 +11,7 @@ import { AccessToken } from '@spotify/web-api-ts-sdk';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import SpotifySdk from './SpotifySdk';
-import { client_id, client_secret, redirect_uri, tokenURL } from '../../../../utilities/constants';
+import { CLIENT_ID, CLIENT_SECRET, REDIRECT_URI, TOKEN_URL } from '../../../../utilities/constants';
 
 export default function SpotifyMain() {
   const [accessToken, setAccessToken] = useState(null as unknown as AccessToken);
@@ -35,11 +35,11 @@ export default function SpotifyMain() {
         const spotifyAccessTokenParams = new URLSearchParams({
           grant_type: 'authorization_code',
           code: params.code as string,
-          redirect_uri: redirect_uri,
-          client_id: client_id,
-          client_secret: client_secret,
+          redirect_uri: REDIRECT_URI,
+          client_id: CLIENT_ID,
+          client_secret: CLIENT_SECRET,
         });
-        const authResponse = await fetch(tokenURL, {
+        const authResponse = await fetch(TOKEN_URL, {
           method: 'POST',
           body: spotifyAccessTokenParams,
         });

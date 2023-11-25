@@ -1,28 +1,15 @@
 import React from 'react';
 import { Track } from '@spotify/web-api-ts-sdk';
 import { useState } from 'react';
-import {
-  Box,
-  Button,
-  FormLabel,
-  Heading,
-  Input,
-  Table,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr,
-} from '@chakra-ui/react';
+import { Box, Button, Heading, Input, Table, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/react';
+import { QueuedTrack } from '../../../../../pages/api/spotifyplayback';
 
 export default function SpotifyPlayback() {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [trackId, setTrackId] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Track[]>([]);
   const [currentTrack, setCurrentTrack] = useState<Track>({} as Track);
-  const [queue, setQueue] = useState<Track[]>([]);
-  const [playSong, setPlaySong] = useState('');
+  const [queue, setQueue] = useState<QueuedTrack[]>([]);
 
   const handleSearch = async () => {
     if (searchQuery === '') return;
@@ -42,39 +29,26 @@ export default function SpotifyPlayback() {
     setCurrentTrack(result);
   };
 
-  const handleAddToQueue = async () => {
-    if (trackId === '') return;
+  const handleAddToQueue = async (trackId: string) => {
     const response = await fetch(
       `http://localhost:3000/api/spotifyplayback?temp=addQueue&trackId=${trackId}`,
     );
-    const track = await response.json();
-    setQueue([...queue, track]);
-    setTrackId('');
+    const updatedQueue = await response.json();
+    setQueue(updatedQueue);
+  };
+
+  const handleRemoveFromQueue = async (queueId: string) => {
+    const response = await fetch(
+      `http://localhost:3000/api/spotifyplayback?temp=removeFromQueue&queueId=${queueId}`,
+    );
+    const updatedQueue = await response.json();
+    setQueue(updatedQueue);
   };
 
   const handleTogglePlay = async () => {
     const response = await fetch(`http://localhost:3000/api/spotifyplayback?temp=togglePlay`);
     const currentlyPlaying = await response.json();
     setIsPlaying(currentlyPlaying);
-  };
-
-  const handlePlaySong = async () => {
-    if (playSong === '') return;
-    // const defaultTrackId = '1HYzRuWjmS9LXCkdVHi25K';
-    const playSongResponse = await fetch(
-      `http://localhost:3000/api/spotifyplayback?temp=playSong&trackId=${playSong}`,
-    );
-    console.log(`playSongResponse ok: ${playSongResponse.ok}`);
-    if (!playSongResponse.ok) {
-      const text = await playSongResponse.text();
-      throw new Error(
-        `Unable to play songs on all devices: ${text} || status: ${playSongResponse.status}`,
-      );
-    }
-    const track = await playSongResponse.json();
-    console.log(`playSongResponse ok: ${playSongResponse.ok} || body: ${track}`);
-    setPlaySong('');
-    // setCurrentTrack(track);
   };
 
   return (
@@ -87,42 +61,11 @@ export default function SpotifyPlayback() {
         loading='lazy'
         style={{ borderRadius: '8px' }}
       />
-      <Box my={4}>
-        <Heading size='md' mb={2}>
-          Play Song
-        </Heading>
-        <Box display='flex' alignItems='center' gridGap={2}>
-          <Input
-            id='playSong'
-            type='text'
-            value={playSong}
-            onChange={e => setPlaySong(e.target.value)}
-            placeholder='Paste Track ID here'
-          />
-          <Button onClick={handlePlaySong}>Play now</Button>
-        </Box>
-      </Box>
 
       <Box my={4}>
         <Box display='flex' alignItems='center' gridGap={2}>
           <Button onClick={handleTogglePlay}>{isPlaying ? 'Toggle Pause' : 'Toggle Play'}</Button>
           <Button onClick={handleSkip}>Skip</Button>
-        </Box>
-      </Box>
-
-      <Box my={4}>
-        <Heading size='md' mb={2}>
-          Queue
-        </Heading>
-        <Box display='flex' alignItems='center' gridGap={2}>
-          <Input
-            id='addQueue'
-            type='text'
-            value={trackId}
-            onChange={e => setTrackId(e.target.value)}
-            placeholder='Paste Track ID here'
-          />
-          <Button onClick={handleAddToQueue}>Add</Button>
         </Box>
       </Box>
 
@@ -136,17 +79,20 @@ export default function SpotifyPlayback() {
               <Tr>
                 <Th>Artist</Th>
                 <Th>Track Name</Th>
-                <Th>Track ID</Th>
               </Tr>
             </Thead>
             <Tbody>
-              {queue.map(track => (
-                <Tr key={track.id}>
-                  <Td>{track.artists[0].name}</Td>
-                  <Td>{track.name}</Td>
-                  <Td>{track.id}</Td>
-                </Tr>
-              ))}
+              {queue
+                ? queue.map(track => (
+                    <Tr key={track.queueId}>
+                      <Td>{track.track.artists[0].name}</Td>
+                      <Td>{track.track.name}</Td>
+                      <Td>
+                        <Button onClick={() => handleRemoveFromQueue(track.queueId)}>Remove</Button>
+                      </Td>
+                    </Tr>
+                  ))
+                : null}
             </Tbody>
           </Table>
         </Box>
@@ -178,9 +124,11 @@ export default function SpotifyPlayback() {
             <Tbody>
               {searchResults.map(track => (
                 <Tr key={track.id}>
-                  <Td>{track.artists.map(artist => artist.name).join(', ')}</Td>
+                  <Td>{track.artists[0].name}</Td>
                   <Td>{track.name}</Td>
-                  <Td>{track.id}</Td>
+                  <Td>
+                    <Button onClick={() => handleAddToQueue(track.id)}>Add</Button>
+                  </Td>
                 </Tr>
               ))}
             </Tbody>
