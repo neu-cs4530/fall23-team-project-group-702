@@ -83,11 +83,11 @@ export default function SpotifyPlayback() {
             onChange={e => setPlaySong(e.target.value)}
             placeholder='Track ID'
           />
-          <Button onClick={handlePlaySong}>Play</Button>
+          <Button onClick={handlePlaySong}>Play Song Now</Button>
         </div>
       </div>
       <div>
-        <Button onClick={handleTogglePlay}>{isPlaying ? 'Pause' : 'Play'}</Button>
+        <Button onClick={handleTogglePlay}>{isPlaying ? 'Toggle Pause' : 'Toggle Play'}</Button>
         <Button
           onClick={async () => {
             await handleSkip();

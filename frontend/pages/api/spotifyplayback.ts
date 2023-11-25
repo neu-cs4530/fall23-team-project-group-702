@@ -164,7 +164,7 @@ export class UserMusicPlayer {
    * Plays a song on all devices
    * @param trackId - ID of the song to play
    */
-  public async playSong(trackId: string): Promise<void> {
+  public async playSongNow(trackId: string): Promise<void> {
     const playerDevice = await this.getDevices();
     for (const device of playerDevice.devices) {
       const playSongResponse = await fetch(
@@ -205,6 +205,7 @@ export class MusicSessionController {
     if (!confirmedAccessTokenTEMPORARY) {
       throw new Error('Unable to authenticate user');
     }
+    this._userMusicPlayers.push(userMusicPlayer)
   }
 
   public async addSongToQueue(trackId: string): Promise<void> {
@@ -222,6 +223,12 @@ export class MusicSessionController {
   public async togglePlay(): Promise<void> {
     for (const userMusicPlayer of this._userMusicPlayers) {
       await userMusicPlayer.togglePlay();
+    }
+  }
+
+  public async playSongNow(trackId: string): Promise<void> {
+    for (const userMusicPlayer of this._userMusicPlayers) {
+      await userMusicPlayer.playSongNow(trackId);
     }
   }
 
@@ -259,6 +266,7 @@ const musicSessionController: MusicSessionController = new MusicSessionControlle
 const handler: NextApiHandler = async (req, res) => {
   if (req.method === 'GET') {
     const temp = req.query.temp;
+    console.log("[GET] A request was made to spotifyplayback...")
     /*
      * If a MusicSessionController has not been created, then a session has not been started
      * In this scenario, do not allow any commands to be made
@@ -294,7 +302,7 @@ const handler: NextApiHandler = async (req, res) => {
       }
       case 'togglePlay': {
         await musicSessionController.togglePlay();
-        res.status(200);
+        res.status(200).send('Altered playback state');
         break;
       }
       case 'search': {
@@ -310,14 +318,13 @@ const handler: NextApiHandler = async (req, res) => {
         break;
       }
       case 'playSong': {
-        // const trackId = req.query.trackId;
-        // if (!trackId) {
-        //   console.log('no track ID provided');
-        //   res.status(400).send('no track ID provided');
-        //   return;
-        // }
-        // await spotifyController.playSong(trackId as string);
-        // console.log('playing song');
+         const trackId = req.query.trackId;
+         if (!trackId) {
+           console.log('no track ID provided');
+           res.status(400).send('no track ID provided');
+           return;
+         }
+        await musicSessionController.playSongNow(trackId as string);
         res.status(200).send('playing song');
         break;
       }
@@ -337,6 +344,8 @@ const handler: NextApiHandler = async (req, res) => {
       case 'transferPlayback': {
         const deviceId = req.query.deviceId;
         const accessToken = req.query.accessToken;
+        console.log('[TP] transfer id: ' + deviceId)
+        console.log('[TP] accessToken id: ' + accessToken)
         if (!deviceId) {
           console.log('no device ID provided');
           res.status(400).send('no device ID provided');
@@ -361,9 +370,11 @@ const handler: NextApiHandler = async (req, res) => {
       const confirmedAccessToken = await musicSessionController.addUserMusicPlayer(userAccessToken);
       res.status(200).json(confirmedAccessToken);
     } else {
+      console.log('400, should not reach')
       res.status(400).send('no access token provided');
     }
   } else {
+    console.log('405 should not reach')
     res.status(405).send('Method Not Allowed, must be GET request');
   }
 };
