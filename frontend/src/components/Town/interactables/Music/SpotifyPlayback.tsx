@@ -1,7 +1,19 @@
 import React from 'react';
 import { Track } from '@spotify/web-api-ts-sdk';
 import { useState } from 'react';
-import { Box, Button, FormLabel, Heading, Input, Table, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/react';
+import {
+  Box,
+  Button,
+  FormLabel,
+  Heading,
+  Input,
+  Table,
+  Tbody,
+  Td,
+  Th,
+  Thead,
+  Tr,
+} from '@chakra-ui/react';
 
 export default function SpotifyPlayback() {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -114,29 +126,31 @@ export default function SpotifyPlayback() {
         </Box>
       </Box>
 
-      <Box my={4}>
-        <Heading size='md' mb={2}>
-          Current Queue
-        </Heading>
-        <Table variant='simple'>
-          <Thead>
-            <Tr>
-              <Th>Artist</Th>
-              <Th>Track Name</Th>
-              <Th>Track ID</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {queue.map(track => (
-              <Tr key={track.id}>
-                <Td>{track.artists[0].name}</Td>
-                <Td>{track.name}</Td>
-                <Td>{track.id}</Td>
+      {queue.length > 0 && (
+        <Box my={4}>
+          <Heading size='md' mb={2}>
+            Current Queue
+          </Heading>
+          <Table variant='simple'>
+            <Thead>
+              <Tr>
+                <Th>Artist</Th>
+                <Th>Track Name</Th>
+                <Th>Track ID</Th>
               </Tr>
-            ))}
-          </Tbody>
-        </Table>
-      </Box>
+            </Thead>
+            <Tbody>
+              {queue.map(track => (
+                <Tr key={track.id}>
+                  <Td>{track.artists[0].name}</Td>
+                  <Td>{track.name}</Td>
+                  <Td>{track.id}</Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        </Box>
+      )}
 
       <Box my={4}>
         <Heading size='md' mb={2}>
