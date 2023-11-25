@@ -1,7 +1,4 @@
 import { NextApiHandler } from 'next';
-
-// let spotifyController: UserMusicPlayer;;
-
 import {
   SpotifyApi,
   Devices,
@@ -122,9 +119,13 @@ export class UserMusicPlayer {
     const nextSong = this._queue[0];
     await this._sdk.player.addItemToPlaybackQueue(`spotify:track:${nextSong.id}`);
     await this._sdk.player.skipToNext(this._activeDevices.devices[0].id as string);
-    const currentlyPlaying = this._queue.slice(1)[0];
-    console.log('new queue after skip: ' + JSON.stringify(this._queue));
-    return currentlyPlaying;
+    this._queue = this._queue.slice(1);
+
+    console.log('New queue after skip: ');
+    for (const track of this._queue) {
+      console.log('track: ' + track.name);
+    }
+    return nextSong;
   }
 
   /**
@@ -145,7 +146,10 @@ export class UserMusicPlayer {
     try {
       const track = await this._sdk.tracks.get(trackId);
       this._queue = [...this._queue, track];
-      console.log('queue updated: ' + JSON.stringify(this._queue));
+      console.log('New queue after adding to queue: ');
+      for (const song of this._queue) {
+        console.log('track: ' + song.name);
+      }
       return track;
     } catch (e) {
       throw new Error('Error adding track to queue');
@@ -205,7 +209,7 @@ export class MusicSessionController {
     if (!confirmedAccessTokenTEMPORARY) {
       throw new Error('Unable to authenticate user');
     }
-    this._userMusicPlayers.push(userMusicPlayer)
+    this._userMusicPlayers.push(userMusicPlayer);
   }
 
   public async addSongToQueue(trackId: string): Promise<void> {
@@ -266,7 +270,7 @@ const musicSessionController: MusicSessionController = new MusicSessionControlle
 const handler: NextApiHandler = async (req, res) => {
   if (req.method === 'GET') {
     const temp = req.query.temp;
-    console.log("[GET] A request was made to spotifyplayback...")
+    console.log('[GET] A request was made to spotifyplayback...');
     /*
      * If a MusicSessionController has not been created, then a session has not been started
      * In this scenario, do not allow any commands to be made
@@ -278,26 +282,10 @@ const handler: NextApiHandler = async (req, res) => {
       return;
     }
     switch (temp) {
-      case 'accessToken': {
-        // console.log('access token sent');
-        // if (!spotifyController.accessToken.access_token) {
-        //   console.log('no access token');
-        //   res.status(400).send('no access token');
-        //   return;
-        // }
-        // res.status(200).json(spotifyController.accessToken);
-        res.status(400).send('not implemented');
-        break;
-      }
       case 'skip': {
-        const currentlyPlayingSong = await musicSessionController.skip();
-        // if (!currentlyPlayingSong) {
-        //   console.log('no song to skip to');
-        //   res.status(400).send('no song to skip to');
-        //   return;
-        // }
+        await musicSessionController.skip();
         console.log('skipped');
-        res.status(200).json(currentlyPlayingSong);
+        res.status(200).json('skipped');
         break;
       }
       case 'togglePlay': {
@@ -318,12 +306,12 @@ const handler: NextApiHandler = async (req, res) => {
         break;
       }
       case 'playSong': {
-         const trackId = req.query.trackId;
-         if (!trackId) {
-           console.log('no track ID provided');
-           res.status(400).send('no track ID provided');
-           return;
-         }
+        const trackId = req.query.trackId;
+        if (!trackId) {
+          console.log('no track ID provided');
+          res.status(400).send('no track ID provided');
+          return;
+        }
         await musicSessionController.playSongNow(trackId as string);
         res.status(200).send('playing song');
         break;
@@ -337,15 +325,14 @@ const handler: NextApiHandler = async (req, res) => {
         }
         await musicSessionController.addSongToQueue(trackId as string);
         console.log('added to queue');
-        // res.status(200).json(trackAdded);
         res.status(200).send('added to queue');
         break;
       }
       case 'transferPlayback': {
         const deviceId = req.query.deviceId;
         const accessToken = req.query.accessToken;
-        console.log('[TP] transfer id: ' + deviceId)
-        console.log('[TP] accessToken id: ' + accessToken)
+        console.log('[TP] transfer id: ' + deviceId);
+        console.log('[TP] accessToken id: ' + accessToken);
         if (!deviceId) {
           console.log('no device ID provided');
           res.status(400).send('no device ID provided');
@@ -370,11 +357,11 @@ const handler: NextApiHandler = async (req, res) => {
       const confirmedAccessToken = await musicSessionController.addUserMusicPlayer(userAccessToken);
       res.status(200).json(confirmedAccessToken);
     } else {
-      console.log('400, should not reach')
+      console.log('400, should not reach');
       res.status(400).send('no access token provided');
     }
   } else {
-    console.log('405 should not reach')
+    console.log('405 should not reach');
     res.status(405).send('Method Not Allowed, must be GET request');
   }
 };

@@ -15,7 +15,6 @@ import { client_id, client_secret, redirect_uri, tokenURL } from '../../../../ut
 
 export default function SpotifyMain() {
   const [accessToken, setAccessToken] = useState(null as unknown as AccessToken);
-  const [serverAccessToken, setServerAccessToken] = useState(null as unknown as AccessToken);
   const router = useRouter();
 
   useEffect(() => {
@@ -50,7 +49,6 @@ export default function SpotifyMain() {
         const authorizationData = await authResponse.json();
 
         if (authorizationData && authorizationData.access_token) {
-          setAccessToken(authorizationData);
           // set sdk in rest api
           const response = await fetch('http://localhost:3000/api/spotifyplayback', {
             method: 'POST',
@@ -64,7 +62,7 @@ export default function SpotifyMain() {
           if (!response.ok) {
             throw new Error('Unable to set Spotify access token');
           }
-          setServerAccessToken(authorizationData);
+          setAccessToken(authorizationData);
         } else {
           throw new Error('Unable to get Spotify access token');
         }
@@ -74,11 +72,11 @@ export default function SpotifyMain() {
 
   return (
     <>
-      {!accessToken || !serverAccessToken ? (
-        <>User/Server Access Tokens Not Loaded</>
+      {!accessToken ? (
+        <>User Access Tokens Not Loaded</>
       ) : (
         <>
-          <SpotifySdk userAccessToken={accessToken} serverAccessToken={serverAccessToken} />
+          <SpotifySdk userAccessToken={accessToken} />
         </>
       )}
     </>

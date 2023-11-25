@@ -6,27 +6,30 @@ import { usePlayerDevice } from 'react-spotify-web-playback-sdk';
   Every player should have their own playback device upon entering Covey.Town. We should move this logic
   out of the component eventually.
 */
-export const SpotifyDetails: React.VFC<{ serverAccessToken: AccessToken }> = (props: {
-  serverAccessToken: AccessToken;
+export const SpotifyDetails: React.VFC<{ userAccessToken: AccessToken }> = (props: {
+  userAccessToken: AccessToken;
 }) => {
   const playerDevice = usePlayerDevice();
 
   useEffect(() => {
     async function activate() {
-      if (playerDevice?.device_id === undefined || !props.serverAccessToken) return;
-      console.log("Activating device in details... with device_id" + playerDevice.device_id)
-      console.log("Activating with device_id (part 2) with accessToken: " + props.serverAccessToken.access_token)
+      if (playerDevice?.device_id === undefined || !props.userAccessToken) return;
+      console.log('Activating device in details... with device_id' + playerDevice.device_id);
+      console.log(
+        'Activating with device_id (part 2) with accessToken: ' +
+          props.userAccessToken.access_token,
+      );
       const transferPlaybackResponse = await fetch(
-        `http://localhost:3000/api/spotifyplayback?temp=transferPlayback&deviceId=${playerDevice.device_id}&accessToken=${props.serverAccessToken.access_token}`,
+        `http://localhost:3000/api/spotifyplayback?temp=transferPlayback&deviceId=${playerDevice.device_id}&accessToken=${props.userAccessToken.access_token}`,
         {
-          method: "GET"
-        }
+          method: 'GET',
+        },
       );
       if (!transferPlaybackResponse.ok) {
         throw new Error('Unable to transfer playback to player device');
       }
     }
     activate();
-  }, [playerDevice?.device_id, props.serverAccessToken]);
+  }, [playerDevice?.device_id, props.userAccessToken]);
   return null;
 };
