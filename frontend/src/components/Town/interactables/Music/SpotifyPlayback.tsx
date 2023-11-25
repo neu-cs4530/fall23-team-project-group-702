@@ -1,7 +1,7 @@
 import React from 'react';
 import { Track } from '@spotify/web-api-ts-sdk';
 import { useState } from 'react';
-import { Button, FormLabel, Heading, Table, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/react';
+import { Box, Button, FormLabel, Heading, Input, Table, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/react';
 
 export default function SpotifyPlayback() {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -66,53 +66,59 @@ export default function SpotifyPlayback() {
   };
 
   return (
-    <>
+    <Box p={4} bg='white' boxShadow='md' borderRadius='md' my={4}>
       <iframe
         src={`https://open.spotify.com/embed/track/${currentTrack.id}?utm_source=generator&theme=0`}
         width='100%'
         height='352'
         allow='autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture'
-        loading='lazy'></iframe>
-      <Heading size='md'>Play Song</Heading>
-      <div>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <FormLabel>Play Song</FormLabel>
-          <input
+        loading='lazy'
+        style={{ borderRadius: '8px' }}
+      />
+      <Box my={4}>
+        <Heading size='md' mb={2}>
+          Play Song
+        </Heading>
+        <Box display='flex' alignItems='center' gridGap={2}>
+          <Input
+            id='playSong'
             type='text'
             value={playSong}
             onChange={e => setPlaySong(e.target.value)}
-            placeholder='Track ID'
+            placeholder='Paste Track ID here'
           />
-          <Button onClick={handlePlaySong}>Play song now</Button>
-        </div>
-      </div>
-      <div>
-        <Button onClick={handleTogglePlay}>{isPlaying ? 'Toggle Pause' : 'Toggle Play'}</Button>
-        <Button
-          onClick={async () => {
-            await handleSkip();
-          }}>
-          Skip
-        </Button>
-      </div>
+          <Button onClick={handlePlaySong}>Play now</Button>
+        </Box>
+      </Box>
 
-      <Heading size='md'>Queue</Heading>
-      <div>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <FormLabel>Add to Queue</FormLabel>
-          <input
+      <Box my={4}>
+        <Box display='flex' alignItems='center' gridGap={2}>
+          <Button onClick={handleTogglePlay}>{isPlaying ? 'Toggle Pause' : 'Toggle Play'}</Button>
+          <Button onClick={handleSkip}>Skip</Button>
+        </Box>
+      </Box>
+
+      <Box my={4}>
+        <Heading size='md' mb={2}>
+          Queue
+        </Heading>
+        <Box display='flex' alignItems='center' gridGap={2}>
+          <Input
+            id='addQueue'
             type='text'
             value={trackId}
             onChange={e => setTrackId(e.target.value)}
-            placeholder='Track ID'
+            placeholder='Paste Track ID here'
           />
           <Button onClick={handleAddToQueue}>Add</Button>
-        </div>
-      </div>
+        </Box>
+      </Box>
 
-      <Heading size='md'>Current Queue</Heading>
-      <div>
-        <Table>
+      <Box my={4}>
+        <Heading size='md' mb={2}>
+          Current Queue
+        </Heading>
+        <Table variant='simple'>
           <Thead>
             <Tr>
               <Th>Artist</Th>
@@ -130,22 +136,24 @@ export default function SpotifyPlayback() {
             ))}
           </Tbody>
         </Table>
-      </div>
+      </Box>
 
-      <Heading size='md'>Search</Heading>
-      <div>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <FormLabel>Search Tracks</FormLabel>
-          <input
+      <Box my={4}>
+        <Heading size='md' mb={2}>
+          Search
+        </Heading>
+        <Box display='flex' alignItems='center' gridGap={2}>
+          <Input
+            id='searchTracks'
             type='text'
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            placeholder='Search query'
+            placeholder='Search for songs or artist'
           />
           <Button onClick={handleSearch}>Search</Button>
-        </div>
+        </Box>
         {searchResults.length > 0 && (
-          <Table>
+          <Table variant='simple' mt={3}>
             <Thead>
               <Tr>
                 <Th>Artists</Th>
@@ -156,7 +164,7 @@ export default function SpotifyPlayback() {
             <Tbody>
               {searchResults.map(track => (
                 <Tr key={track.id}>
-                  <Td>{track.artists[0].name}</Td>
+                  <Td>{track.artists.map(artist => artist.name).join(', ')}</Td>
                   <Td>{track.name}</Td>
                   <Td>{track.id}</Td>
                 </Tr>
@@ -164,7 +172,7 @@ export default function SpotifyPlayback() {
             </Tbody>
           </Table>
         )}
-      </div>
-    </>
+      </Box>
+    </Box>
   );
 }
