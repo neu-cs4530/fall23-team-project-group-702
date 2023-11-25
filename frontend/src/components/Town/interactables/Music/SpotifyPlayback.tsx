@@ -5,7 +5,6 @@ import { Button, FormLabel, Heading, Table, Tbody, Td, Th, Thead, Tr } from '@ch
 
 export default function SpotifyPlayback() {
   const [isPlaying, setIsPlaying] = useState(false);
-  // const [activeDevices, setActiveDevices] = useState({} as Devices);
   const [trackId, setTrackId] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Track[]>([]);
@@ -38,6 +37,7 @@ export default function SpotifyPlayback() {
     );
     const track = await response.json();
     setQueue([...queue, track]);
+    setTrackId('');
   };
 
   const handleTogglePlay = async () => {
@@ -95,19 +95,6 @@ export default function SpotifyPlayback() {
           Skip
         </Button>
       </div>
-      {/* <div>
-        <Heading size='md'>Devices currently playing:</Heading>
-        <ul>
-          {activeDevices.devices
-            ? activeDevices.devices.map(device => (
-                <li key={device.id}>
-                  {device.name}: {device.is_active ? 'Active' : 'Inactive'} | {device.type} |{' '}
-                  {device.id}
-                </li>
-              ))
-            : null}
-        </ul>
-      </div> */}
 
       <Heading size='md'>Queue</Heading>
       <div>
@@ -122,6 +109,7 @@ export default function SpotifyPlayback() {
           <Button onClick={handleAddToQueue}>Add</Button>
         </div>
       </div>
+
       <Heading size='md'>Current Queue</Heading>
       <div>
         <Table>
@@ -143,6 +131,7 @@ export default function SpotifyPlayback() {
           </Tbody>
         </Table>
       </div>
+
       <Heading size='md'>Search</Heading>
       <div>
         <div style={{ display: 'flex', alignItems: 'center' }}>

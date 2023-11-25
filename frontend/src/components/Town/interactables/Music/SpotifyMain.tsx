@@ -20,8 +20,8 @@ export default function SpotifyMain() {
   useEffect(() => {
     const params = router.query;
     (async () => {
-      // if no code, redirect to spotify login
       if (!params.code) {
+        /* redirect user to spotify login */
         const loginResponse = await fetch('http://localhost:3000/api/login', {
           method: 'GET',
         });
@@ -31,7 +31,7 @@ export default function SpotifyMain() {
         }
         window.location.href = loginData;
       } else if (!accessToken) {
-        // get user access token
+        /* get user access token using login info */
         const spotifyAccessTokenParams = new URLSearchParams({
           grant_type: 'authorization_code',
           code: params.code as string,
@@ -46,22 +46,11 @@ export default function SpotifyMain() {
         if (!authResponse.ok) {
           throw new Error('Unable to get Spotify access token using code');
         }
+        /* the access token for the current user */
         const authorizationData = await authResponse.json();
 
+        /* set access token if a valid access token object */
         if (authorizationData && authorizationData.access_token) {
-          // set sdk in rest api
-          const response = await fetch('http://localhost:3000/api/spotifyplayback', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              accessToken: authorizationData,
-            }),
-          });
-          if (!response.ok) {
-            throw new Error('Unable to set Spotify access token');
-          }
           setAccessToken(authorizationData);
         } else {
           throw new Error('Unable to get Spotify access token');

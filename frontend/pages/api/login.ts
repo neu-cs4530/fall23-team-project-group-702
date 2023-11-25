@@ -1,8 +1,8 @@
 import { NextApiHandler } from 'next';
 
-const client_id = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID as string;
-const loginURL = process.env.NEXT_PUBLIC_AUTHORIZATION_URL as string;
-const redirect_uri = process.env.NEXT_PUBLIC_SPOTIFY_REDIRECT_URI as string;
+const CLIENT_ID = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID as string;
+const LOGIN_URL = process.env.NEXT_PUBLIC_AUTHORIZATION_URL as string;
+const REDIRECT_URI = process.env.NEXT_PUBLIC_SPOTIFY_REDIRECT_URI as string;
 
 export const SPOTIFY_SCOPES = [
   'ugc-image-upload',
@@ -25,7 +25,7 @@ export const SPOTIFY_SCOPES = [
   'user-read-email',
   'user-read-private',
 ] as const;
-const singleStringScope = SPOTIFY_SCOPES.join(' ');
+const SINGLE_STRING_SCOPE = SPOTIFY_SCOPES.join(' ');
 
 const generateRandomString = function (length: number) {
   let text = '';
@@ -42,12 +42,12 @@ const handler: NextApiHandler = async (req, res) => {
     const state = generateRandomString(16);
     const redirectParams = new URLSearchParams({
       response_type: 'code',
-      client_id: client_id,
-      scope: singleStringScope,
-      redirect_uri: redirect_uri,
+      client_id: CLIENT_ID,
+      scope: SINGLE_STRING_SCOPE,
+      redirect_uri: REDIRECT_URI,
       state: state,
     });
-    const url = `${loginURL}?${redirectParams.toString()}`;
+    const url = `${LOGIN_URL}?${redirectParams.toString()}`;
     res.json(url);
   } else {
     res.status(405).send('Method Not Allowed, must be GET request');

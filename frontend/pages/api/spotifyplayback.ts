@@ -5,7 +5,12 @@ import {
   Track,
   AccessToken,
   PartialSearchResult,
+  PlaybackState,
 } from '@spotify/web-api-ts-sdk';
+
+/*
+- need to move queue from UserMusicPlayer to MusicSessionController
+*/
 
 /**
  * Class that handles the playback of music using the Spotify API
@@ -23,6 +28,9 @@ export class UserMusicPlayer {
 
   private _accessToken: AccessToken;
 
+  /* The ID of the device that the user is currently playing music on (helps avoid conflicts with other user devices) */
+  private _deviceId: string;
+
   constructor(accessToken: AccessToken) {
     this._queue = [];
     this._sdk = SpotifyApi.withAccessToken(
@@ -30,8 +38,10 @@ export class UserMusicPlayer {
       accessToken,
     );
     this._activeDevices = {} as Devices;
-    this._allDevices = null as unknown as Devices;
+    // eslint-disable-next-line prettier/prettier
+    this._allDevices = (null as unknown) as Devices;
     this._accessToken = {} as AccessToken;
+    this._deviceId = '';
   }
 
   /**
@@ -51,7 +61,8 @@ export class UserMusicPlayer {
    */
   get accessToken(): AccessToken {
     if (this._accessToken === ({} as AccessToken)) {
-      return null as unknown as AccessToken;
+      // eslint-disable-next-line prettier/prettier
+      return (null as unknown) as AccessToken;
     }
     return this._accessToken;
   }
@@ -108,8 +119,10 @@ export class UserMusicPlayer {
    */
   public async skip(): Promise<Track | null> {
     await this.getDevices();
-    console.log(`active devices at time of skip: ` + JSON.stringify(this._activeDevices.devices));
-    console.log(`all devices at time of skip: ` + JSON.stringify(this._allDevices.devices));
+    console.log(
+      `active devices length at time of skip: ` +
+        JSON.stringify(this._activeDevices.devices.length),
+    );
     if (this._queue.length < 1) {
       return null;
     } else if (this._activeDevices.devices.length < 1) {
@@ -162,34 +175,93 @@ export class UserMusicPlayer {
    */
   public async transferPlayback(deviceId: string): Promise<void> {
     await this._sdk.player.transferPlayback([deviceId], false);
+    this._deviceId = deviceId;
+    /* wait until device transfer is complete
+       very good forumn: https://community.spotify.com/t5/Spotify-for-Developers/Cannot-Transfer-Playback-Descriptor-ID/td-p/5351203
+       description: 
+       the device transfer is not complete until the device is in the active devices list
+       spotify will return status code 202 to indicate the command was a success but the transfer is pending
+       this also applies to when using the playNow method (when using play song web api route)
+     */
+    let deviceTransferComplete = false;
+    while (!deviceTransferComplete) {
+      await this.getDevices();
+      for (const device of this._activeDevices.devices) {
+        if (device.id === deviceId) {
+          deviceTransferComplete = true;
+        }
+      }
+      if (!deviceTransferComplete) {
+        console.log('LOOPING');
+        console.log(new Date());
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        console.log(new Date());
+      }
+    }
+    console.log(
+      `transfer complete. active devices length: ` +
+        JSON.stringify(this._activeDevices.devices.length),
+    );
   }
 
   /**
-   * Plays a song on all devices
+   * Plays a song
    * @param trackId - ID of the song to play
+   * @throws - if the device has not been transferred to the web sdk yet
+   * @throws - if unable to play song on the device
    */
   public async playSongNow(trackId: string): Promise<void> {
+    if (!this._deviceId || this._deviceId === '') {
+      throw new Error('Device has not been transferred to the web sdk yet.');
+    }
     const playerDevice = await this.getDevices();
     for (const device of playerDevice.devices) {
-      const playSongResponse = await fetch(
-        'https://api.spotify.com/v1/me/player/play?device_id=' + device.id,
-        {
-          method: 'PUT',
-          body: JSON.stringify({ uris: [`spotify:track:${trackId}`] }),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${this._accessToken.access_token}`,
+      if (device.id === this._deviceId) {
+        const playSongResponse = await fetch(
+          'https://api.spotify.com/v1/me/player/play?device_id=' + device.id,
+          {
+            method: 'PUT',
+            body: JSON.stringify({ uris: [`spotify:track:${trackId}`] }),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${this._accessToken.access_token}`,
+            },
           },
-        },
-      );
-      console.log(`name: ${device.name} || playSongResponse: ${playSongResponse.status}`);
-      if (!playSongResponse.ok) {
-        const text = await playSongResponse.text();
-        throw new Error(
-          `Unable to play songs on all devices: ${text} || status: ${playSongResponse.status}`,
         );
+        const text = await playSongResponse.text();
+        console.log(
+          `name: ${device.name} || playSongResponse: ${playSongResponse.status} || text: ${text}`,
+        );
+        if (!playSongResponse.ok) {
+          throw new Error(`Unable to play song on device - Error: ${text}`);
+        }
       }
     }
+  }
+
+  /**
+   * Skips to a position in the song
+   * @param positionMs - the position in milliseconds to seek to
+   */
+  public async seekToPosition(positionMs: number): Promise<void> {
+    console.log('seeking to position: ' + positionMs);
+    await this.getDevices();
+    console.log(
+      `num active devices at time of seek: ` + JSON.stringify(this._activeDevices.devices.length),
+    );
+    await this._sdk.player.seekToPosition(positionMs);
+  }
+
+  /**
+   * Gets the current playback state
+   * @returns - null if no song is playing, otherwise the current playback state
+   */
+  public async getCurrentlyPlayingTrack(): Promise<PlaybackState | null> {
+    const response = await this._sdk.player.getCurrentlyPlayingTrack();
+    if (!response) {
+      return null;
+    }
+    return response;
   }
 }
 
@@ -203,31 +275,104 @@ export class MusicSessionController {
     this._userMusicPlayers = [];
   }
 
-  public async addUserMusicPlayer(userAccessToken: AccessToken): Promise<void> {
+  /**
+   * Adds a user to the music session.
+   * Creates a new SpotifyPlayback object for the user
+   * If there is a song playing, plays a song and synchronizes the music session
+   * @param deviceId - the ID of the device to transfer playback
+   * @param userAccessToken - the access token of the user hosting the music session
+   * @returns - the access token of the user
+   */
+  public async addUserMusicPlayer(deviceId: string, userAccessToken: AccessToken): Promise<void> {
+    /* Create music player and transfer playback to websdk */
     const userMusicPlayer = new UserMusicPlayer(userAccessToken);
-    const confirmedAccessTokenTEMPORARY = await userMusicPlayer.authenticate();
-    if (!confirmedAccessTokenTEMPORARY) {
+    const confirmedAccessToken = await userMusicPlayer.authenticate();
+    if (
+      !confirmedAccessToken ||
+      confirmedAccessToken.access_token !== userAccessToken.access_token
+    ) {
       throw new Error('Unable to authenticate user');
     }
     this._userMusicPlayers.push(userMusicPlayer);
+    await this.transferPlayback(deviceId, confirmedAccessToken.access_token);
+    const hostUserState = await this.getCurrentHostPlaybackState();
+    /* If song is currently playing, added check for players > 1 because we don't need to auto-play if only host */
+    if (hostUserState && this._userMusicPlayers.length > 1) {
+      console.log(
+        `in add music player - host user state: currently playing item = ${JSON.stringify(
+          hostUserState.item.id,
+        )} || progress_ms = ${JSON.stringify(
+          hostUserState.progress_ms,
+        )} || track name = ${JSON.stringify(hostUserState.item.name)}`,
+      );
+      await userMusicPlayer.addQueue(hostUserState.item.id);
+      await userMusicPlayer.skip();
+
+      /* wait four seconds to allow for better synchronization */
+      // console.log('WAITING!!!!!!!!!!!!!!!');
+      // await new Promise(resolve => setTimeout(resolve, 1000));
+      // console.log('going to synchronize');
+      await this.synchronize();
+    }
   }
 
+  /**
+   * Synchronizes the music session if a song is playing
+   * Seeks all players to the same position of the host user
+   * @throws - if there are no users in the music session
+   */
+  public async synchronize(): Promise<void> {
+    const hostUserState = await this.getCurrentHostPlaybackState();
+    if (!hostUserState) {
+      return;
+    }
+    const hostUserPosition = hostUserState.progress_ms;
+    for (const userMusicPlayer of this._userMusicPlayers) {
+      await userMusicPlayer.seekToPosition(hostUserPosition);
+    }
+  }
+
+  /**
+   * Gets the current playback state of the host user
+   * @returns - the current playback state of the host user
+   */
+  public async getCurrentHostPlaybackState(): Promise<PlaybackState | null> {
+    if (this._userMusicPlayers.length < 1) {
+      throw new Error('No users in music session');
+    }
+    const hostUserMusicPlayer = this._userMusicPlayers[0];
+    const hostUserState = await hostUserMusicPlayer.getCurrentlyPlayingTrack();
+    return hostUserState;
+  }
+
+  /**
+   * Adds a song to all users' queues
+   * @param trackId - ID of the song to add to the queue
+   */
   public async addSongToQueue(trackId: string): Promise<void> {
     for (const userMusicPlayer of this._userMusicPlayers) {
       await userMusicPlayer.addQueue(trackId);
     }
   }
 
+  /**
+   * Skips to the next song in the queue for all users
+   */
   public async skip(): Promise<void> {
     for (const userMusicPlayer of this._userMusicPlayers) {
       await userMusicPlayer.skip();
     }
   }
 
+  /**
+   * Toggles the playback state for all users
+   * Synchronizes the music session after toggling the playback state
+   */
   public async togglePlay(): Promise<void> {
     for (const userMusicPlayer of this._userMusicPlayers) {
       await userMusicPlayer.togglePlay();
     }
+    await this.synchronize();
   }
 
   public async playSongNow(trackId: string): Promise<void> {
@@ -236,6 +381,11 @@ export class MusicSessionController {
     }
   }
 
+  /**
+   * Conducts a search for songs using the Spotify API
+   * @param searchQuery - the search query to search for
+   * @returns the search results
+   */
   public async search(searchQuery: string): Promise<Required<Pick<PartialSearchResult, 'tracks'>>> {
     if (!searchQuery) {
       throw new Error('No search query provided');
@@ -247,9 +397,14 @@ export class MusicSessionController {
     return response;
   }
 
+  /**
+   * Transfers playback of device to web sdk
+   * @param deviceId the ID of the device to transfer playback
+   * @param accessToken the access token of the user hosting the music session
+   */
   public async transferPlayback(deviceId: string, accessToken: string): Promise<void> {
-    if (!deviceId) {
-      throw new Error('No device ID provided');
+    if (!deviceId || !accessToken || accessToken === '' || deviceId === '') {
+      throw new Error('No deviceID/accessToken provided');
     }
     if (this._userMusicPlayers.length < 1) {
       throw new Error('No users in music session');
@@ -328,21 +483,6 @@ const handler: NextApiHandler = async (req, res) => {
         res.status(200).send('added to queue');
         break;
       }
-      case 'transferPlayback': {
-        const deviceId = req.query.deviceId;
-        const accessToken = req.query.accessToken;
-        console.log('[TP] transfer id: ' + deviceId);
-        console.log('[TP] accessToken id: ' + accessToken);
-        if (!deviceId) {
-          console.log('no device ID provided');
-          res.status(400).send('no device ID provided');
-          return;
-        }
-        await musicSessionController.transferPlayback(deviceId as string, accessToken as string);
-        console.log('transferred playback');
-        res.status(200).send('transferred playback');
-        break;
-      }
       default:
         console.log('invalid query');
         res.status(400).send('invalid query');
@@ -351,14 +491,18 @@ const handler: NextApiHandler = async (req, res) => {
   } else if (req.method === 'POST') {
     /* Creates a new SpotifyPlayback object for the user */
     const userAccessToken: AccessToken = req.body.accessToken;
+    const deviceId: string = req.body.deviceId;
 
-    if (userAccessToken) {
+    if (userAccessToken && deviceId) {
       console.log('received access token. creating spotify playback object');
-      const confirmedAccessToken = await musicSessionController.addUserMusicPlayer(userAccessToken);
+      const confirmedAccessToken = await musicSessionController.addUserMusicPlayer(
+        deviceId,
+        userAccessToken,
+      );
       res.status(200).json(confirmedAccessToken);
     } else {
       console.log('400, should not reach');
-      res.status(400).send('no access token provided');
+      res.status(400).send('no access token/device ID provided');
     }
   } else {
     console.log('405 should not reach');

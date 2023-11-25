@@ -19,14 +19,19 @@ export const SpotifyDetails: React.VFC<{ userAccessToken: AccessToken }> = (prop
         'Activating with device_id (part 2) with accessToken: ' +
           props.userAccessToken.access_token,
       );
-      const transferPlaybackResponse = await fetch(
-        `http://localhost:3000/api/spotifyplayback?temp=transferPlayback&deviceId=${playerDevice.device_id}&accessToken=${props.userAccessToken.access_token}`,
-        {
-          method: 'GET',
+      // set sdk in rest api
+      const response = await fetch('http://localhost:3000/api/spotifyplayback', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      );
-      if (!transferPlaybackResponse.ok) {
-        throw new Error('Unable to transfer playback to player device');
+        body: JSON.stringify({
+          accessToken: props.userAccessToken,
+          deviceId: playerDevice.device_id,
+        }),
+      });
+      if (!response.ok) {
+        throw new Error('Unable to set Spotify access token');
       }
     }
     activate();
