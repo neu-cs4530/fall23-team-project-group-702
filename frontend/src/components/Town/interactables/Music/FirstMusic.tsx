@@ -75,7 +75,11 @@ export default function FirstMusic(): JSX.Element {
                   />
                 </FormControl>
               </form>
-              <Button colorScheme='pink' w='50%' alignSelf='center'>
+              <Button
+                colorScheme='pink'
+                w='50%'
+                alignSelf='center'
+                onClick={handleStartMusicSession}>
                 Create session
               </Button>
             </VStack>
