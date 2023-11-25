@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  Box,
   Button,
   FormControl,
   FormLabel,
@@ -9,6 +10,7 @@ import {
   ModalContent,
   ModalHeader,
   ModalOverlay,
+  VStack,
 } from '@chakra-ui/react';
 import { useInteractable } from '../../../../classes/TownController';
 import useTownController from '../../../../hooks/useTownController';
@@ -50,35 +52,33 @@ export default function FirstMusic(): JSX.Element {
     console.log('Rendering first music');
     if (!sessionActive) {
       return (
-        <Modal
-          isOpen={isOpen}
-          onClose={() => {
-            closeModal();
-            townController.unPause();
-          }}
-          closeOnOverlayClick={false}>
+        <Modal isOpen={isOpen} onClose={closeModal} closeOnOverlayClick={false}>
           <ModalOverlay />
-
           <ModalContent>
-            <ModalHeader> Start a Music Session</ModalHeader>
+            <ModalHeader>Start a Music Session</ModalHeader>
             <ModalCloseButton />
-            <p>Open Lounge Jukebox 1</p> {/* should be replaced with jukebox item name */}
-            <form>
-              <FormControl>
-                <FormLabel htmlFor='topic'>Name of Music Session</FormLabel>
-                <Input
-                  id='name'
-                  placeholder='What are the vibes'
-                  name='name'
-                  value={sessionName}
-                  onChange={e => setSessionName(e.target.value)}
-                />
-              </FormControl>
-            </form>
-            <Button colorScheme='blue' mr={3} onClick={handleStartMusicSession}>
-              Create
-            </Button>
-            <Button>Cancel</Button>
+            <VStack spacing={3} align='stretch' p={3}>
+              <Box textAlign='center'>Open Lounge Jukebox 1</Box>
+              <form>
+                <FormControl display='flex' flexDirection='column' alignItems='center'>
+                  {' '}
+                  <FormLabel htmlFor='name' mb={2}>
+                    Name of Music Session
+                  </FormLabel>{' '}
+                  <Input
+                    id='name'
+                    placeholder='What are the vibes?'
+                    name='name'
+                    value={sessionName}
+                    onChange={e => setSessionName(e.target.value)}
+                    w='70%'
+                  />
+                </FormControl>
+              </form>
+              <Button colorScheme='pink' w='50%' alignSelf='center'>
+                Create session
+              </Button>
+            </VStack>
           </ModalContent>
         </Modal>
       );

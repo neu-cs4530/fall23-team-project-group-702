@@ -83,7 +83,7 @@ export default function SpotifyPlayback() {
             onChange={e => setPlaySong(e.target.value)}
             placeholder='Track ID'
           />
-          <Button onClick={handlePlaySong}>Play Song Now</Button>
+          <Button onClick={handlePlaySong}>Play song now</Button>
         </div>
       </div>
       <div>
