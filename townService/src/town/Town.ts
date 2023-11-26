@@ -23,7 +23,7 @@ import { logError } from '../Utils';
 import ConversationArea from './ConversationArea';
 import GameAreaFactory from './games/GameAreaFactory';
 import InteractableArea from './InteractableArea';
-import MusicArea from './MusicArea';
+import MusicArea from './music/MusicArea';
 import ViewingArea from './ViewingArea';
 
 /**

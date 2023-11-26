@@ -1,7 +1,6 @@
 import React, { useCallback } from 'react';
 import { WebPlaybackSDK } from 'react-spotify-web-playback-sdk';
 import { SpotifyDetails } from './SpotifyDetails';
-import SpotifyPlayback from './SpotifyPlayback';
 import { AccessToken } from '@spotify/web-api-ts-sdk';
 
 const SpotifySdk: React.VFC<{
@@ -23,9 +22,6 @@ const SpotifySdk: React.VFC<{
         <div>
           <div>
             <SpotifyDetails userAccessToken={props.userAccessToken} />
-          </div>
-          <div>
-            <SpotifyPlayback />
           </div>
         </div>
       </WebPlaybackSDK>

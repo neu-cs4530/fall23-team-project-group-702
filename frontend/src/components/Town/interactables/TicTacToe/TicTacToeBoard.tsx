@@ -70,7 +70,7 @@ export default function TicTacToeBoard({ gameAreaController }: TicTacToeGameProp
   }, [gameAreaController]);
   return (
     <StyledTicTacToeBoard aria-label='Tic-Tac-Toe Board'>
-        <iframe
+      <iframe
         src={`https://open.spotify.com/embed/track/4mn5HdatHKN7iFGDes9G8i?utm_source=generator&theme=0`}
         width='100%'
         height='200'

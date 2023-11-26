@@ -115,6 +115,7 @@ export default class MusicAreaController extends InteractableAreaController<
    * @returns ViewingAreaModel that represents the current state of this ViewingAreaController
    */
   public toInteractableAreaModel(): MusicAreaModel {
+    console.log('inside toInteractableAreaModel');
     return this._model;
   }
 

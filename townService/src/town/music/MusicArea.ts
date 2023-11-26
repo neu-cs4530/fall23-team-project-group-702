@@ -1,18 +1,22 @@
+/* eslint-disable no-console */
 import { ITiledMapObject } from '@jonbell/tiled-map-type-guard';
-import InvalidParametersError from '../lib/InvalidParametersError';
-import Player from '../lib/Player';
+import InvalidParametersError from '../../lib/InvalidParametersError';
+import Player from '../../lib/Player';
 import {
   BoundingBox,
   MusicArea as MusicAreaModel,
   InteractableCommand,
   InteractableCommandReturnType,
   TownEmitter,
-} from '../types/CoveyTownSocket';
-import InteractableArea from './InteractableArea';
+} from '../../types/CoveyTownSocket';
+import InteractableArea from '../InteractableArea';
+import SpotifyController from './SpotifyController';
 
 export default class MusicArea extends InteractableArea {
   /* The topic of the conversation area, or undefined if it is not set */
   public topic?: string;
+
+  private _musicSessionController: SpotifyController;
 
   /** The conversation area is "active" when there are players inside of it  */
   public get isActive(): boolean {
@@ -33,6 +37,8 @@ export default class MusicArea extends InteractableArea {
   ) {
     super(id, coordinates, townEmitter);
     this.topic = topic;
+    console.log('MusicArea constructor');
+    this._musicSessionController = new SpotifyController();
   }
 
   /**
@@ -44,7 +50,9 @@ export default class MusicArea extends InteractableArea {
    * @param player
    */
   public remove(player: Player) {
+    console.log(`players before remove:${JSON.stringify(this._occupants)}`);
     super.remove(player);
+    console.log('removed');
     if (this._occupants.length === 0) {
       this.topic = undefined;
       this._emitAreaChanged();

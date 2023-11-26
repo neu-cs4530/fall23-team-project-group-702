@@ -138,7 +138,17 @@ export class UserMusicPlayer {
    * @returns - the search results
    */
   public async search(searchQuery: string): Promise<Required<Pick<PartialSearchResult, 'tracks'>>> {
-    const results = await this._sdk.search(searchQuery, ['track']);
+    const response = await fetch(
+      'https://api.spotify.com/v1/search?q=' + searchQuery + '&type=track',
+      {
+        method: 'GET',
+        headers: {
+          Authorization: 'Bearer ' + this._accessToken.access_token,
+        },
+      },
+    );
+    const results: Required<Pick<PartialSearchResult, 'tracks'>> = await response.json();
+
     return results;
   }
 
@@ -386,7 +396,7 @@ export class MusicSessionController {
    */
   public async skip(): Promise<[Track | null, QueuedTrack[]]> {
     if (this._queue.length < 1) {
-      return [null , []];
+      return [null, []];
     }
     const nextQueuedTrack = this._queue[0];
     this._queue = this._queue.slice(1);
@@ -500,7 +510,7 @@ const handler: NextApiHandler = async (req, res) => {
       case 'skip': {
         const results = await musicSessionController.skip();
         console.log('skipped');
-        res.status(200).json({currentSong: results[0], updatedQueue: results[1]});
+        res.status(200).json({ currentSong: results[0], updatedQueue: results[1] });
         break;
       }
       case 'togglePlay': {
@@ -557,7 +567,7 @@ const handler: NextApiHandler = async (req, res) => {
       }
       case 'getCurrentPlayback': {
         const queue = musicSessionController.queue;
-        
+
         console.log('got queue');
         res.status(200).json(queue);
         break;

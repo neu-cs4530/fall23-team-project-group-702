@@ -12,6 +12,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import SpotifySdk from './SpotifySdk';
 import { CLIENT_ID, CLIENT_SECRET, REDIRECT_URI, TOKEN_URL } from '../../../../utilities/constants';
+import SpotifyPlayback from './SpotifyPlayback';
 
 export default function SpotifyMain() {
   // eslint-disable-next-line prettier/prettier
@@ -79,7 +80,12 @@ export default function SpotifyMain() {
         <>User Access Tokens Not Loaded</>
       ) : (
         <>
-          <SpotifySdk userAccessToken={accessToken} />
+          <div>
+            <SpotifyPlayback />
+          </div>
+          <div>
+            <SpotifySdk userAccessToken={accessToken} />
+          </div>
         </>
       )}
     </>

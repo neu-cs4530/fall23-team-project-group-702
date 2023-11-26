@@ -27,7 +27,7 @@ export const SPOTIFY_SCOPES = [
 ] as const;
 const SINGLE_STRING_SCOPE = SPOTIFY_SCOPES.join(' ');
 
-const generateRandomString = function (length: number) {
+export const generateRandomString = function (length: number) {
   let text = '';
   const possibleChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 

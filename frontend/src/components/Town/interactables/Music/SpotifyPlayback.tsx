@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Track } from '@spotify/web-api-ts-sdk';
 import { useState } from 'react';
-import { Box, Button, Heading, Input, Table, Tbody, Td, Th, Thead, Tr, VisuallyHidden, ResponsiveValue } from '@chakra-ui/react';
+import { Box, Button, Heading, Input, Table, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/react';
 import { QueuedTrack } from '../../../../../pages/api/spotifyplayback';
 
 export default function SpotifyPlayback() {
@@ -27,7 +27,7 @@ export default function SpotifyPlayback() {
     }
     const result = await response.json();
     setCurrentTrack(result.currentSong);
-    setQueue(result.updatedQueue)
+    setQueue(result.updatedQueue);
   };
 
   const handleAddToQueue = async (trackId: string) => {
@@ -54,7 +54,7 @@ export default function SpotifyPlayback() {
 
   useEffect(() => {
     console.log(JSON.stringify(currentTrack));
-  }, [currentTrack])
+  }, [currentTrack]);
 
   return (
     <Box p={4} bg='white' boxShadow='md' borderRadius='md' my={4}>
@@ -86,19 +86,19 @@ export default function SpotifyPlayback() {
             </Tr>
           </Thead>
           <Tbody>
-            {queue.length > 0
-              ? queue.map(track => (
-                  <Tr key={track.queueId}>
-                    <Td>{track.track.artists[0].name}</Td>
-                    <Td>{track.track.name}</Td>
-                    <Td>
-                      <Button onClick={() => handleRemoveFromQueue(track.queueId)}>Remove</Button>
-                    </Td>
-                  </Tr>
-                ))
-              : <p>
-                Blah
-                </p>}
+            {queue.length > 0 ? (
+              queue.map(track => (
+                <Tr key={track.queueId}>
+                  <Td>{track.track.artists[0].name}</Td>
+                  <Td>{track.track.name}</Td>
+                  <Td>
+                    <Button onClick={() => handleRemoveFromQueue(track.queueId)}>Remove</Button>
+                  </Td>
+                </Tr>
+              ))
+            ) : (
+              <p>Blah</p>
+            )}
           </Tbody>
         </Table>
       </Box>

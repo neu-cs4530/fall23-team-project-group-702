@@ -48,6 +48,7 @@ export default class MusicArea extends Interactable {
   overlapExit(): void {
     this._labelText?.setVisible(false);
     if (this._isInteracting) {
+      console.log('interaction ended');
       this.townController.interactableEmitter.emit('endInteraction', this);
       this._isInteracting = false;
     }
