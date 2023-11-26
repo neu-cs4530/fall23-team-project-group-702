@@ -8,7 +8,7 @@
         "heroku-postbuild": "cd townService && npm install && npm run build",
         "run-townservice": "heroku local -p 3001 web",
         "lint": "cd townService && npm run-script lint && cd ../frontend && npm run-script lint && cd ../shared && npm run-script lint",
-        "zip": "npm-pack-zip"
+		"zip": "npm-pack-zip"
     },
     "repository": {
         "type": "git",
@@ -30,17 +30,15 @@
         "eslint-plugin-react-hooks": "^4.2.0",
         "npm-pack-zip": "^1.3.0",
         "prettier": "^2.1.2",
-        "typescript": "^4.9.5",
-        "eslint-plugin-prettier" : "^5.0.0"
+        "prettier-plugin-organize-imports": "^1.1.1",
+        "typescript": "^4.9.5"
     },
     "engines": {
         "node": "18.x.x",
         "npm": "9.x.x"
     },
     "dependencies": {
-        "@spotify/web-api-ts-sdk": "^1.1.2",
         "@types/ramda": "^0.27.34",
-        "prettier-plugin-organize-imports": "^2.3.4",
         "ramda": "^0.27.1",
         "typescript-is": "^0.17.0"
     },
@@ -50,5 +48,5 @@
         "frontend/src/components/Town/interactables/TicTacToe/TicTacToeArea.tsx",
         "frontend/src/components/Town/interactables/TicTacToe/TicTacToeBoard.tsx",
         "frontend/src/components/Town/interactables/Leaderboard.tsx"
-    ]
+        ]
 }
