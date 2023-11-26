@@ -294,6 +294,10 @@ export class MusicSessionController {
       await userMusicPlayer.nextSong(hostUserState.item.id);
       await this.synchronize();
     }
+    console.log('Current users in music session: ');
+    for (const player of this._userMusicPlayers) {
+      console.log('user: ' + player.accessToken.access_token);
+    }
   }
 
   /**
@@ -448,6 +452,23 @@ export class MusicSessionController {
       .find(userMusicPlayer => userMusicPlayer.accessToken.access_token === accessToken)
       ?.transferPlayback(deviceId);
   }
+
+  /**
+   * Remove a user from the music session
+   * @param accessToken - the access token of the user to remove
+   */
+  public async removeUser(accessToken: string): Promise<void> {
+    if (!accessToken || accessToken === '') {
+      throw new Error('No accessToken provided');
+    }
+    this._userMusicPlayers = this._userMusicPlayers.filter(
+      userMusicPlayer => userMusicPlayer.accessToken.access_token !== accessToken,
+    );
+    console.log('Current users in music session: ');
+    for (const userMusicPlayer of this._userMusicPlayers) {
+      console.log('user: ' + userMusicPlayer.accessToken.access_token);
+    }
+  }
 }
 
 const musicSessionController: MusicSessionController = new MusicSessionController();
@@ -551,6 +572,16 @@ const handler: NextApiHandler = async (req, res) => {
       console.log('400, should not reach');
       res.status(400).send('no access token/device ID provided');
     }
+  } else if (req.method === 'DELETE') {
+    const accessToken = req.query.accessToken;
+    if (!accessToken) {
+      console.log('no access token provided');
+      res.status(400).send('no access token provided');
+      return;
+    }
+    await musicSessionController.removeUser(accessToken as string);
+    console.log('removed user');
+    res.status(200).send('removed user');
   } else {
     console.log('405 should not reach');
     res.status(405).send('Method Not Allowed, must be GET request');

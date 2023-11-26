@@ -14,7 +14,8 @@ import SpotifySdk from './SpotifySdk';
 import { CLIENT_ID, CLIENT_SECRET, REDIRECT_URI, TOKEN_URL } from '../../../../utilities/constants';
 
 export default function SpotifyMain() {
-  const [accessToken, setAccessToken] = useState(null as unknown as AccessToken);
+  // eslint-disable-next-line prettier/prettier
+  const [accessToken, setAccessToken] = useState((null as unknown) as AccessToken);
   const router = useRouter();
 
   useEffect(() => {
@@ -57,6 +58,19 @@ export default function SpotifyMain() {
         }
       }
     })();
+    window.addEventListener('beforeunload', async (ev: BeforeUnloadEvent) => {
+      if (!accessToken) {
+        return;
+      }
+      // ev.preventDefault();
+      await fetch(
+        `http://localhost:3000/api/spotifyplayback?accessToken=${accessToken.access_token}`,
+        {
+          method: 'DELETE',
+        },
+      );
+      // return (ev.returnValue = 'Are you sure you want to close?');
+    });
   }, [accessToken, router.query]);
 
   return (
