@@ -41,6 +41,7 @@ export default function FirstMusic(): JSX.Element {
   const closeModal = useCallback(() => {
     if (musicArea) {
       townController.interactEnd(musicArea);
+      // setIsVisible(false);
     }
   }, [townController, musicArea]);
 
@@ -52,7 +53,7 @@ export default function FirstMusic(): JSX.Element {
     console.log('Rendering first music');
     if (!sessionActive) {
       return (
-        <Modal isOpen={isOpen} onClose={closeModal} closeOnOverlayClick={false}>
+      <Modal isOpen={isOpen} onClose={closeModal} closeOnOverlayClick={false}>
           <ModalOverlay />
           <ModalContent>
             <ModalHeader>Start a Music Session</ModalHeader>

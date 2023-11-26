@@ -261,6 +261,10 @@ export class MusicSessionController {
     this._queue = [];
   }
 
+  public get queue(): Array<QueuedTrack> {
+    return this._queue;
+  }
+
   /**
    * Adds a user to the music session.
    * Creates a new SpotifyPlayback object for the user
@@ -380,23 +384,23 @@ export class MusicSessionController {
    * Skips to the next song in the queue for all users
    * @returns - the updated queue
    */
-  public async skip(): Promise<QueuedTrack[]> {
+  public async skip(): Promise<[Track | null, QueuedTrack[]]> {
     if (this._queue.length < 1) {
-      return [];
+      return [null , []];
     }
-    const nextSong = this._queue[0];
+    const nextQueuedTrack = this._queue[0];
     this._queue = this._queue.slice(1);
     for (const userMusicPlayer of this._userMusicPlayers) {
-      await userMusicPlayer.nextSong(nextSong.track.id);
+      await userMusicPlayer.nextSong(nextQueuedTrack.track.id);
     }
 
     /* Debugging */
-    console.log('New queue after skip: ');
-    for (const track of this._queue) {
-      console.log('track: ' + track.track.name);
-    }
+    console.log('New queue after skip length: ' + this._queue.length);
+    // for (const track of this._queue) {
+    //   console.log('track: ' + track.track.name);
+    // }
 
-    return this._queue;
+    return [nextQueuedTrack.track, this._queue];
   }
 
   /**
@@ -494,9 +498,9 @@ const handler: NextApiHandler = async (req, res) => {
     }
     switch (temp) {
       case 'skip': {
-        const updatedQueue = await musicSessionController.skip();
+        const results = await musicSessionController.skip();
         console.log('skipped');
-        res.status(200).json(updatedQueue);
+        res.status(200).json({currentSong: results[0], updatedQueue: results[1]});
         break;
       }
       case 'togglePlay': {
@@ -546,9 +550,16 @@ const handler: NextApiHandler = async (req, res) => {
           res.status(400).send('no track ID provided');
           return;
         }
-        const updatedQueue = musicSessionController.removeFromQueue(queueId as string);
+        const updatedQueue = await musicSessionController.removeFromQueue(queueId as string);
         console.log('removed from queue');
         res.status(200).json(updatedQueue);
+        break;
+      }
+      case 'getCurrentPlayback': {
+        const queue = musicSessionController.queue;
+        
+        console.log('got queue');
+        res.status(200).json(queue);
         break;
       }
       default:

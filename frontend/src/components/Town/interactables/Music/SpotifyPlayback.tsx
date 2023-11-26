@@ -1,15 +1,15 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Track } from '@spotify/web-api-ts-sdk';
 import { useState } from 'react';
-import { Box, Button, Heading, Input, Table, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/react';
+import { Box, Button, Heading, Input, Table, Tbody, Td, Th, Thead, Tr, VisuallyHidden, ResponsiveValue } from '@chakra-ui/react';
 import { QueuedTrack } from '../../../../../pages/api/spotifyplayback';
 
 export default function SpotifyPlayback() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Track[]>([]);
-  const [currentTrack, setCurrentTrack] = useState<Track>({} as Track);
-  const [queue, setQueue] = useState<QueuedTrack[]>([]);
+  const [currentTrack, setCurrentTrack] = useState<Track>({} as Track); // pull from backend instead of {}
+  const [queue, setQueue] = useState<QueuedTrack[]>([]); // pull from backend instead of []
 
   const handleSearch = async () => {
     if (searchQuery === '') return;
@@ -26,7 +26,8 @@ export default function SpotifyPlayback() {
       return;
     }
     const result = await response.json();
-    setCurrentTrack(result);
+    setCurrentTrack(result.currentSong);
+    setQueue(result.updatedQueue)
   };
 
   const handleAddToQueue = async (trackId: string) => {
@@ -51,12 +52,16 @@ export default function SpotifyPlayback() {
     setIsPlaying(currentlyPlaying);
   };
 
+  useEffect(() => {
+    console.log(JSON.stringify(currentTrack));
+  }, [currentTrack])
+
   return (
     <Box p={4} bg='white' boxShadow='md' borderRadius='md' my={4}>
       <iframe
         src={`https://open.spotify.com/embed/track/${currentTrack.id}?utm_source=generator&theme=0`}
         width='100%'
-        height='352'
+        height='200'
         allow='autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture'
         loading='lazy'
         style={{ borderRadius: '8px' }}
@@ -69,34 +74,34 @@ export default function SpotifyPlayback() {
         </Box>
       </Box>
 
-      {queue.length > 0 && (
-        <Box my={4}>
-          <Heading size='md' mb={2}>
-            Current Queue
-          </Heading>
-          <Table variant='simple'>
-            <Thead>
-              <Tr>
-                <Th>Artist</Th>
-                <Th>Track Name</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {queue
-                ? queue.map(track => (
-                    <Tr key={track.queueId}>
-                      <Td>{track.track.artists[0].name}</Td>
-                      <Td>{track.track.name}</Td>
-                      <Td>
-                        <Button onClick={() => handleRemoveFromQueue(track.queueId)}>Remove</Button>
-                      </Td>
-                    </Tr>
-                  ))
-                : null}
-            </Tbody>
-          </Table>
-        </Box>
-      )}
+      <Box my={4}>
+        <Heading size='md' mb={2}>
+          Current Queue
+        </Heading>
+        <Table variant='simple'>
+          <Thead>
+            <Tr>
+              <Th>Artist</Th>
+              <Th>Track Name</Th>
+            </Tr>
+          </Thead>
+          <Tbody>
+            {queue.length > 0
+              ? queue.map(track => (
+                  <Tr key={track.queueId}>
+                    <Td>{track.track.artists[0].name}</Td>
+                    <Td>{track.track.name}</Td>
+                    <Td>
+                      <Button onClick={() => handleRemoveFromQueue(track.queueId)}>Remove</Button>
+                    </Td>
+                  </Tr>
+                ))
+              : <p>
+                Blah
+                </p>}
+          </Tbody>
+        </Table>
+      </Box>
 
       <Box my={4}>
         <Heading size='md' mb={2}>
