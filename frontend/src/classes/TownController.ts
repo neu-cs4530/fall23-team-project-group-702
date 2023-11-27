@@ -519,7 +519,7 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
           if (response.error) {
             reject(response.error);
           } else {
-            resolve(response.payload);
+            resolve(response.payload); // cewbfj
           }
         }
       };

@@ -31,8 +31,8 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
   const router = useRouter();
 
   const [accessToken, setAccessToken] = useState(null as unknown as AccessToken);
-  const [sessionName, setSessionName] = useState<string>(musicAreaController.topic);
-  const [sessionActive, setSessionActive] = useState<boolean>(
+  const [sessionName, setSessionName] = useState<string | undefined>(musicAreaController.topic);
+  const [sessionActive, setSessionActive] = useState<boolean | undefined>(
     musicAreaController.sessionInProgress,
   );
 
@@ -79,10 +79,22 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
     login();
   }, [accessToken, router.query]);
 
+  useEffect(() => {
+    musicAreaController.addListener('topicChange', setSessionName);
+    musicAreaController.addListener('sessionInProgressChange', setSessionActive);
+    return () => {
+      musicAreaController.removeListener('topicChange', setSessionName);
+      musicAreaController.removeListener('sessionInProgressChange', setSessionActive);
+    };
+  }, [musicAreaController]);
+
   // mocking what start music session, should acc use gameAreaController to send interactableCommand to backend
   const handleStartMusicSession = async () => {
     // townController.sendInteractableCommand;
-    await musicAreaController.sendSpotifyCommand({} as MusicArea);
+    const musicAreaState = await musicAreaController.sendSpotifyCommand({
+      commandType: 'createSession',
+      topic: sessionName,
+    } as MusicArea);
     setSessionActive(true); // backend call townController.sendInteract
   };
 
@@ -93,6 +105,10 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
   if (!sessionActive) {
     return (
       <div>
+        <div>
+          {JSON.stringify(sessionActive)}
+        </div>
+
         <b>Start a Music Session</b>
         <VStack spacing={3} align='stretch' p={3}>
           <Box textAlign='center'>Open Lounge Jukebox 1</Box>
@@ -119,9 +135,15 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
       </div>
     );
   } else {
+    if (sessionActive == undefined) {
+      console.log('session active is undefined');
+      console.log(sessionActive);
+    }
     return (
       <div>
-        {sessionName}
+        {sessionName} <br/>
+        {typeof sessionActive}<br/>
+        {typeof undefined}<br/>
         <SpotifyMain accessToken={accessToken} />
       </div>
     );

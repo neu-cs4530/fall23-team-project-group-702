@@ -78,7 +78,7 @@ export default class SpotifyArea extends InteractableArea {
       type: 'MusicArea',
       topic: this.topic,
       sessionInProgress: this.sessionInProgress,
-      songQueue: [],
+      songQueue: this._musicSessionController.queue,
     };
   }
 
@@ -118,21 +118,25 @@ export default class SpotifyArea extends InteractableArea {
     command: CommandType,
   ): Promise<InteractableCommandReturnType<CommandType>> {
     if (command.type === 'MusicAreaCommand') {
-      const musicArea = command as MusicAreaCommand;
-      this.updateModel(musicArea.payload);
-      switch (musicArea.payload.commandType) {
-        case 'topic': {
-          const { topic } = musicArea.payload;
-          const { sessionInProgress } = musicArea.payload;
-          if (!topic || !sessionInProgress) {
-            console.log('no topic provided');
+      const newMusicArea = command as MusicAreaCommand;
+      switch (newMusicArea.payload.commandType) {
+        case 'createSession': {
+          const { topic } = newMusicArea.payload;
+          if (!topic) {
+            console.log('topic was undefined');
             return {} as InteractableCommandReturnType<CommandType>;
           }
+          // Update with new topic
           this.topic = topic as string;
-          console.log('topic updated');
-          return {
-            payload: { topic, sessionInProgress },
-          } as InteractableCommandReturnType<CommandType>;
+
+          console.log(`topic updated: ${this.topic}`);
+
+          // Update session in progress
+          this.sessionInProgress = true;
+
+          // Emit to other frontend MusicAreaControllers to update their state
+          this._emitAreaChanged();
+          return {} as InteractableCommandReturnType<CommandType>;
         }
         case 'skip': {
           const results = await this._musicSessionController.skip();
@@ -147,7 +151,7 @@ export default class SpotifyArea extends InteractableArea {
           return {} as InteractableCommandReturnType<CommandType>;
         }
         case 'search': {
-          const { searchQuery } = musicArea.payload;
+          const { searchQuery } = newMusicArea.payload;
           if (!searchQuery) {
             console.log('no search query provided');
             return {} as InteractableCommandReturnType<CommandType>;
@@ -159,7 +163,7 @@ export default class SpotifyArea extends InteractableArea {
           } as InteractableCommandReturnType<CommandType>;
         }
         case 'playSong': {
-          const { trackId } = musicArea.payload;
+          const { trackId } = newMusicArea.payload;
           if (!trackId) {
             console.log('no track ID provided');
             return {} as InteractableCommandReturnType<CommandType>;
@@ -168,7 +172,7 @@ export default class SpotifyArea extends InteractableArea {
           return {} as InteractableCommandReturnType<CommandType>;
         }
         case 'addQueue': {
-          const { trackId } = musicArea.payload;
+          const { trackId } = newMusicArea.payload;
           if (!trackId) {
             console.log('no track ID provided');
             return {} as InteractableCommandReturnType<CommandType>;
@@ -180,7 +184,7 @@ export default class SpotifyArea extends InteractableArea {
           } as InteractableCommandReturnType<CommandType>;
         }
         case 'removeFromQueue': {
-          const { queueId } = musicArea.payload;
+          const { queueId } = newMusicArea.payload;
           if (!queueId) {
             console.log('no track ID provided');
             return {} as InteractableCommandReturnType<CommandType>;
@@ -199,8 +203,8 @@ export default class SpotifyArea extends InteractableArea {
           return { payload: { songQueue: queue } } as InteractableCommandReturnType<CommandType>;
         }
         case 'addUserToSession': {
-          const userAccessToken: AccessToken = musicArea.payload.accessToken;
-          const { deviceId } = musicArea.payload;
+          const userAccessToken: AccessToken = newMusicArea.payload.accessToken;
+          const { deviceId } = newMusicArea.payload;
 
           if (userAccessToken && deviceId) {
             console.log('received access token. creating spotify playback object');

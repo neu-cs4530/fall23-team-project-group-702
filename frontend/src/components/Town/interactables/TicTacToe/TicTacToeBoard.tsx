@@ -70,14 +70,6 @@ export default function TicTacToeBoard({ gameAreaController }: TicTacToeGameProp
   }, [gameAreaController]);
   return (
     <StyledTicTacToeBoard aria-label='Tic-Tac-Toe Board'>
-      <iframe
-        src={`https://open.spotify.com/embed/track/4mn5HdatHKN7iFGDes9G8i?utm_source=generator&theme=0`}
-        width='100%'
-        height='200'
-        allow='autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture'
-        loading='lazy'
-        style={{ borderRadius: '8px' }}
-      />
       {board.map((row, rowIndex) => {
         return row.map((cell, colIndex) => {
           return (

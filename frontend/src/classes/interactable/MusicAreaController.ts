@@ -109,15 +109,17 @@ export default class MusicAreaController extends InteractableAreaController<
    * Sends a command to the backend to update the state of the music area
    * @param payload information to send
    */
-  public async sendSpotifyCommand(payload: MusicArea) {
+  public async sendSpotifyCommand(payload: MusicArea): Promise<MusicArea> {
     const instanceID = this.id;
     if (!instanceID) {
-      throw new Error("instanceID doesn't exist");
+      throw new Error('instanceID undefined');
     }
     const response = await this._townController.sendInteractableCommand(this.id, {
       type: 'MusicAreaCommand',
       payload: payload,
     });
     console.log('response from sendSpotifyCommand ', response);
+    const musicAreaState = response.payload as MusicArea;
+    return musicAreaState;
   }
 }
