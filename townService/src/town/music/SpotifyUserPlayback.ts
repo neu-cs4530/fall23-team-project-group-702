@@ -186,7 +186,7 @@ export class SpotifyUserPlayback {
         }
       }
       if (!deviceTransferComplete) {
-        console.log('LOOPING');
+        console.log('LOOPING FROM SPOTIFYUSERPLAYBACK.TS');
         console.log(new Date());
         // eslint-disable-next-line no-await-in-loop, no-promise-executor-return
         await new Promise(resolve => setTimeout(resolve, 1000));

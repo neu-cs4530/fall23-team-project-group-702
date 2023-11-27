@@ -35,17 +35,25 @@ export default function SpotifyPlayback({
   const handleSkip = async () => {
     // Song Skip
     // We expect the properties 'currentSong' and 'songQueue' to change
-    await musicController.sendSpotifyCommand({
+    const response = await musicController.sendSpotifyCommand({
       commandType: 'skip',
-      songQueue: musicController.currentQueue
     } as MusicArea);
+
+    if(response.currentSong) {
+      setCurrentTrack(response.currentSong)
+    }
+    if(response.songQueue) {
+      setQueue(response.songQueue)
+    }
   };
 
   const handleAddToQueue = async (trackId: string) => {
-    await musicController.sendSpotifyCommand({
+    const response = await musicController.sendSpotifyCommand({
       commandType: 'addQueue',
       trackId,
     } as MusicArea);
+    if(response.songQueue)
+    setQueue(response.songQueue)
   };
 
   const handleRemoveFromQueue = async (queueId: string) => {
