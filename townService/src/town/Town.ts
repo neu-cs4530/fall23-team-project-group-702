@@ -166,46 +166,77 @@ export default class Town {
 
     // Set up a listener to process commands to interactables.
     // Dispatches commands to the appropriate interactable and sends the response back to the client
-    socket.on('interactableCommand', (command: InteractableCommand & InteractableCommandBase) => {
-      const interactable = this._interactables.find(
-        eachInteractable => eachInteractable.id === command.interactableID,
-      );
-      if (interactable) {
-        try {
-          const payload = interactable.handleCommand(command, newPlayer);
+    socket.on(
+      'interactableCommand',
+      async (command: InteractableCommand & InteractableCommandBase) => {
+        const interactable = this._interactables.find(
+          eachInteractable => eachInteractable.id === command.interactableID,
+        );
+        if (interactable && interactable.toModel().type === 'MusicArea') {
+          try {
+            const musicInteractable = interactable as SpotifyArea;
+            const payload = musicInteractable.handleSpotifyCommand(command);
+            socket.emit('commandResponse', {
+              commandID: command.commandID,
+              interactableID: command.interactableID,
+              isOK: true,
+              payload,
+            });
+          } catch (err) {
+            if (err instanceof InvalidParametersError) {
+              socket.emit('commandResponse', {
+                commandID: command.commandID,
+                interactableID: command.interactableID,
+                isOK: false,
+                error: err.message,
+              });
+            } else {
+              logError(err);
+              socket.emit('commandResponse', {
+                commandID: command.commandID,
+                interactableID: command.interactableID,
+                isOK: false,
+                error: 'Unknown error',
+              });
+            }
+          }
+        } else if (interactable) {
+          try {
+            const payload = interactable.handleCommand(command, newPlayer);
+            socket.emit('commandResponse', {
+              commandID: command.commandID,
+              interactableID: command.interactableID,
+              isOK: true,
+              payload,
+            });
+          } catch (err) {
+            if (err instanceof InvalidParametersError) {
+              socket.emit('commandResponse', {
+                commandID: command.commandID,
+                interactableID: command.interactableID,
+                isOK: false,
+                error: err.message,
+              });
+            } else {
+              logError(err);
+              socket.emit('commandResponse', {
+                commandID: command.commandID,
+                interactableID: command.interactableID,
+                isOK: false,
+                error: 'Unknown error',
+              });
+            }
+          }
+        } else {
           socket.emit('commandResponse', {
             commandID: command.commandID,
             interactableID: command.interactableID,
-            isOK: true,
-            payload,
+            isOK: false,
+            error: `No such interactable ${command.interactableID}`,
           });
-        } catch (err) {
-          if (err instanceof InvalidParametersError) {
-            socket.emit('commandResponse', {
-              commandID: command.commandID,
-              interactableID: command.interactableID,
-              isOK: false,
-              error: err.message,
-            });
-          } else {
-            logError(err);
-            socket.emit('commandResponse', {
-              commandID: command.commandID,
-              interactableID: command.interactableID,
-              isOK: false,
-              error: 'Unknown error',
-            });
-          }
         }
-      } else {
-        socket.emit('commandResponse', {
-          commandID: command.commandID,
-          interactableID: command.interactableID,
-          isOK: false,
-          error: `No such interactable ${command.interactableID}`,
-        });
-      }
-    });
+      },
+    );
     return newPlayer;
   }
 
