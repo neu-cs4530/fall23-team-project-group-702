@@ -12,8 +12,6 @@ import FirstMusicWrapper from './interactables/Music/FirstMusic';
 
 export default function TownMap(): JSX.Element {
   const coveyTownController = useTownController();
-  // const router = useRouter();
-  // const [accessToken, setAccessToken] = useState<AccessToken | undefined>(undefined);
 
   useEffect(() => {
     const config = {
@@ -50,44 +48,6 @@ export default function TownMap(): JSX.Element {
       game.destroy(true);
     };
   }, [coveyTownController]);
-
-  // useEffect(() => {
-  //   const params = router.query;
-  //   async function login() {
-  //     if (params.code) {
-  //       /* get user access token using login info */
-  //       const spotifyAccessTokenParams = new URLSearchParams({
-  //         grant_type: 'authorization_code',
-  //         code: params.code as string,
-  //         redirect_uri: REDIRECT_URI,
-  //         client_id: CLIENT_ID,
-  //         client_secret: CLIENT_SECRET,
-  //       });
-  //       const authResponse = await fetch(TOKEN_URL, {
-  //         method: 'POST',
-  //         body: spotifyAccessTokenParams,
-  //       });
-  //       if (!authResponse.ok) {
-  //         const body = await authResponse.json();
-  //         throw new Error(
-  //           `Unable to set Spotify access token. Error message: ${JSON.stringify(
-  //             body,
-  //           )}. error message ${authResponse.statusText}`,
-  //         );
-  //       }
-  //       /* the access token for the current user */
-  //       const authorizationData: AccessToken = await authResponse.json();
-
-  //       /* set access token if a valid access token object */
-  //       if (authorizationData && authorizationData.access_token) {
-  //         setAccessToken(authorizationData);
-  //       } else {
-  //         throw new Error('Unable to get Spotify access token');
-  //       }
-  //     }
-  //   }
-  //   login();
-  // }, [accessToken, router.query]);
 
   return (
     <div id='app-container'>

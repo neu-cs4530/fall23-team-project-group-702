@@ -98,8 +98,6 @@ export default class SpotifyArea extends InteractableArea {
    * transporting over a socket to a client.
    */
   public toModel(): MusicAreaModel {
-    console.log('sending sessionInPorrgreis:');
-    console.log(this._sessionInProgress);
     return {
       id: this.id,
       occupants: this.occupantsByID,

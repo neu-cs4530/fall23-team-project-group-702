@@ -53,7 +53,10 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
         }
         // Redirects user's page to Spotify login page
         window.location.href = spotifyLoginPageURL;
-      } else if (accessToken === undefined) {
+      } else {
+        if (accessToken !== undefined) {
+          return;
+        }
         /* get user access token using login info */
         const spotifyAccessTokenParams = new URLSearchParams({
           grant_type: 'authorization_code',
@@ -93,7 +96,7 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
       }
     }
     login();
-  }, [accessToken, router.query]);
+  }, [accessToken, router.query, townController]);
 
   useEffect(() => {
     musicAreaController.addListener('topicChange', setSessionName);
