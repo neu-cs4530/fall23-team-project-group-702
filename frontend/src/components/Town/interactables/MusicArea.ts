@@ -5,6 +5,8 @@ import Interactable, { KnownInteractableTypes } from '../Interactable';
 export default class MusicArea extends Interactable {
   private _labelText?: Phaser.GameObjects.Text;
 
+  private _infoTextBox?: Phaser.GameObjects.Text;
+
   private _defaultSong?: Song;
 
   private _musicArea?: MusicAreaController;
@@ -24,29 +26,39 @@ export default class MusicArea extends Interactable {
     this.setAlpha(0.3);
 
     this._defaultSong = this.getData('song');
-    this._labelText = this.scene.add.text(
+    this.scene.add.text(
       this.x - this.displayWidth / 2,
-      this.y - this.displayHeight / 2,
-      `Press space to start listening to the song: ${this._defaultSong?.name}`,
+      this.y + this.displayHeight / 2,
+      this.name,
       { color: '#FFFFFF', backgroundColor: '#000000' },
     );
     this._musicArea = this.townController.getMusicAreaController(this);
-    this._labelText.setVisible(false);
     this.setDepth(-1);
   }
 
   overlap(): void {
-    if (!this._labelText) {
-      throw new Error('Should not be able to overlap with this interactable before added to scene');
+    this._showInfoBox();
+  }
+
+  private _showInfoBox() {
+    if (!this._infoTextBox) {
+      this._infoTextBox = this.scene.add
+        .text(
+          this.scene.scale.width / 2,
+          this.scene.scale.height / 2,
+          "You've found an empty music area!\nPress spacebar to login to Spotify and start jamming!",
+          { color: '#000000', backgroundColor: '#FFFFFF' },
+        )
+        .setScrollFactor(0)
+        .setDepth(30);
     }
-    const location = this.townController.ourPlayer.location;
-    this._labelText.setX(location.x);
-    this._labelText.setY(location.y);
-    this._labelText.setVisible(true);
+    this._infoTextBox.setVisible(true);
+    this._infoTextBox.x = this.scene.scale.width / 2 - this._infoTextBox.width / 2;
   }
 
   overlapExit(): void {
     this._labelText?.setVisible(false);
+    this._infoTextBox?.setVisible(false);
     if (this._isInteracting) {
       console.log('interaction ended');
       this.townController.interactableEmitter.emit('endInteraction', this);
