@@ -17,11 +17,9 @@ import MusicAreaInteractable from '../MusicArea';
 import { useCallback, useEffect, useState } from 'react';
 import { InteractableID, MusicArea } from '../../../../types/CoveyTownSocket';
 import MusicAreaController from '../../../../classes/interactable/MusicAreaController';
-import { useRouter } from 'next/router';
 import { AccessToken } from '@spotify/web-api-ts-sdk';
-import { CLIENT_ID, CLIENT_SECRET, REDIRECT_URI, TOKEN_URL } from '../../../../utilities/constants';
 import SpotifyPlayback from './SpotifyPlayback';
-import SpotifySdk from './SpotifySdk';
+import { SpotifyDetails } from './SpotifyDetails';
 
 /**
  * Jukebox Interface Component that handles rendering the join/create music session modal and the music playback interface modal.
@@ -29,7 +27,6 @@ import SpotifySdk from './SpotifySdk';
 function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX.Element {
   const musicAreaController = useInteractableAreaController<MusicAreaController>(interactableID);
   const townController = useTownController();
-  const router = useRouter();
 
   const [accessToken, setAccessToken] = useState<AccessToken | undefined>(
     townController.spotifyAccessToken,
@@ -38,65 +35,6 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
   const [sessionActive, setSessionActive] = useState<boolean | undefined>(
     musicAreaController.sessionInProgress,
   );
-
-  useEffect(() => {
-    const params = router.query;
-    async function login() {
-      if (!params.code) {
-        /* redirect user to spotify login */
-        const loginResponse = await fetch('http://localhost:3000/api/login', {
-          method: 'GET',
-        });
-        const spotifyLoginPageURL = await loginResponse.json();
-        if (!spotifyLoginPageURL) {
-          throw new Error('Unable to get Spotify login URL');
-        }
-        // Redirects user's page to Spotify login page
-        window.location.href = spotifyLoginPageURL;
-      } else {
-        if (accessToken !== undefined) {
-          return;
-        }
-        /* get user access token using login info */
-        const spotifyAccessTokenParams = new URLSearchParams({
-          grant_type: 'authorization_code',
-          code: params.code as string,
-          redirect_uri: REDIRECT_URI,
-          client_id: CLIENT_ID,
-          client_secret: CLIENT_SECRET,
-        });
-        const authResponse = await fetch(TOKEN_URL, {
-          method: 'POST',
-          body: spotifyAccessTokenParams,
-        });
-        if (!authResponse.ok) {
-          const body = await authResponse.json();
-          throw new Error(
-            `Unable to set Spotify access token. Error message: ${JSON.stringify(
-              body,
-            )}. error message ${authResponse.statusText}`,
-          );
-        }
-        /* the access token for the current user */
-        const authorizationData: AccessToken = await authResponse.json();
-
-        townController.spotifyAccessToken = authorizationData;
-        // // Post new access token to backend
-        // await musicAreaController.sendSpotifyCommand({
-        //   commandType: 'updateAccessToken',
-        //   accessToken: authorizationData,
-        // } as MusicArea);
-
-        /* set access token if a valid access token object */
-        if (authorizationData && authorizationData.access_token) {
-          setAccessToken(authorizationData);
-        } else {
-          throw new Error('Unable to get Spotify access token');
-        }
-      }
-    }
-    login();
-  }, [accessToken, router.query, townController]);
 
   useEffect(() => {
     musicAreaController.addListener('topicChange', setSessionName);
@@ -156,17 +94,15 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
       <div>
         <div>{sessionName}</div>
         <>
-          {!accessToken ? (
-            <>User Access Tokens Not Loaded</>
-          ) : (
+          {accessToken ? (
             <>
               <div>
                 <SpotifyPlayback musicController={musicAreaController} />
               </div>
-              <div>
-                <SpotifySdk musicController={musicAreaController} userAccessToken={accessToken} />
-              </div>
+              <SpotifyDetails userAccessToken={accessToken} musicController={musicAreaController} />
             </>
+          ) : (
+            <>User Access Tokens Not Loaded</>
           )}
         </>
       </div>

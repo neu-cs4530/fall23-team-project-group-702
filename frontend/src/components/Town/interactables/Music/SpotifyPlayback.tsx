@@ -28,8 +28,7 @@ export default function SpotifyPlayback({
     );
     const results = await response2.json();
     */
-    if(response.searchResults)
-    setSearchResults(response.searchResults);
+    if (response.searchResults) setSearchResults(response.searchResults);
   };
 
   const handleSkip = async () => {
@@ -39,11 +38,11 @@ export default function SpotifyPlayback({
       commandType: 'skip',
     } as MusicArea);
 
-    if(response.currentSong) {
-      setCurrentTrack(response.currentSong)
+    if (response.currentSong) {
+      setCurrentTrack(response.currentSong);
     }
-    if(response.songQueue) {
-      setQueue(response.songQueue)
+    if (response.songQueue) {
+      setQueue(response.songQueue);
     }
   };
 
@@ -52,8 +51,7 @@ export default function SpotifyPlayback({
       commandType: 'addQueue',
       trackId,
     } as MusicArea);
-    if(response.songQueue)
-    setQueue(response.songQueue)
+    if (response.songQueue) setQueue(response.songQueue);
   };
 
   const handleRemoveFromQueue = async (queueId: string) => {
@@ -80,32 +78,31 @@ export default function SpotifyPlayback({
        currentQueueChange: (queue: QueuedTrack[] | undefined) => void;
    */
   useEffect(() => {
-
-    const trackSetter = (song : Track | null) => {
-        if(song !== null) {
-          setCurrentTrack(song);
-        }
-    }
-      musicController.addListener('currentQueueChange', setQueue);
-      musicController.addListener('currentSongChange', trackSetter);
-      return () => {
-        musicController.removeListener('currentQueueChange', setQueue);
-        musicController.removeListener('currentSongChange', trackSetter);
-      };
-  }, [musicController])
+    const trackSetter = (song: Track | null) => {
+      if (song !== null) {
+        setCurrentTrack(song);
+      }
+    };
+    musicController.addListener('currentQueueChange', setQueue);
+    musicController.addListener('currentSongChange', trackSetter);
+    return () => {
+      musicController.removeListener('currentQueueChange', setQueue);
+      musicController.removeListener('currentSongChange', trackSetter);
+    };
+  }, [musicController]);
 
   return (
     <Box p={4} bg='white' boxShadow='md' borderRadius='md' my={4}>
-    { currentTrack &&
-      <iframe
-        src={`https://open.spotify.com/embed/track/${currentTrack.id}?utm_source=generator&theme=0`}
-        width='100%'
-        height='200'
-        allow='autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture'
-        loading='lazy'
-        style={{ borderRadius: '8px' }}
-      />
-    }
+      {currentTrack && (
+        <iframe
+          src={`https://open.spotify.com/embed/track/${currentTrack.id}?utm_source=generator&theme=0`}
+          width='100%'
+          height='200'
+          allow='autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture'
+          loading='lazy'
+          style={{ borderRadius: '8px' }}
+        />
+      )}
 
       <Box my={4}>
         <Box display='flex' alignItems='center' justifyContent='center' gridGap={2}>

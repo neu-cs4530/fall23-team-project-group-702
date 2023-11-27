@@ -8,10 +8,10 @@ import { MusicArea } from '../../../../types/CoveyTownSocket';
   Every player should have their own playback device upon entering Covey.Town. We should move this logic
   out of the component eventually.
 */
-export const SpotifyDetails: React.VFC<{ userAccessToken: AccessToken, musicController: MusicAreaController }> = (props: {
+export const SpotifyDetails: React.VFC<{
   userAccessToken: AccessToken;
   musicController: MusicAreaController;
-}) => {
+}> = (props: { userAccessToken: AccessToken; musicController: MusicAreaController }) => {
   const playerDevice = usePlayerDevice();
 
   useEffect(() => {

@@ -1,6 +1,6 @@
 import assert from 'assert';
 import EventEmitter from 'events';
-import _ from 'lodash';
+import _, { String } from 'lodash';
 import { nanoid } from 'nanoid';
 import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
@@ -215,6 +215,11 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
    */
   private _spotifyAccessToken?: AccessToken;
 
+  /**
+   * Spotify playback device ID for this player
+   */
+  private _playbackDeviceId?: string;
+
   public constructor({ userName, townID, loginController }: ConnectionProperties) {
     super();
     this._townID = townID;
@@ -260,6 +265,14 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
 
   public set spotifyAccessToken(accessToken: AccessToken | undefined) {
     this._spotifyAccessToken = accessToken;
+  }
+
+  public get playbackDeviceId() {
+    return this._playbackDeviceId;
+  }
+
+  public set playbackDeviceId(playbackDeviceId: string | undefined) {
+    this._playbackDeviceId = playbackDeviceId;
   }
 
   public get providerVideoToken() {
