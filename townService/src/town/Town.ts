@@ -491,9 +491,17 @@ export default class Town {
       );
     }
     // Make sure that there are no overlapping objects
+
     for (const interactable of this._interactables) {
       for (const otherInteractable of this._interactables) {
-        if (interactable !== otherInteractable && interactable.overlaps(otherInteractable)) {
+        if (
+          interactable !== otherInteractable &&
+          interactable.overlaps(otherInteractable) &&
+          !(
+            interactable.toModel().type == 'MusicArea' ||
+            otherInteractable.toModel().type == 'MusicArea'
+          )
+        ) {
           throw new Error(
             `Expected interactables not to overlap, but found overlap between ${interactable.id} and ${otherInteractable.id}`,
           );

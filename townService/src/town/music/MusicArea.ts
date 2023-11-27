@@ -202,6 +202,7 @@ export default class SpotifyArea extends InteractableArea {
           console.log('got queue');
           return { payload: { songQueue: queue } } as InteractableCommandReturnType<CommandType>;
         }
+        /*
         case 'addUserToSession': {
           const userAccessToken: AccessToken = newMusicArea.payload.accessToken;
           const { deviceId } = newMusicArea.payload;
@@ -219,6 +220,7 @@ export default class SpotifyArea extends InteractableArea {
           console.log('400, should not reach');
           return {} as InteractableCommandReturnType<CommandType>;
         }
+        */
         default:
           console.log('invalid query');
           break;
