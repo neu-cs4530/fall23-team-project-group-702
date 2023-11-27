@@ -1,5 +1,5 @@
-import { AccessToken } from '@spotify/web-api-ts-sdk';
-import { MusicArea, MusicArea as MusicAreaModel, Song } from '../../types/CoveyTownSocket';
+import { AccessToken, Track } from '@spotify/web-api-ts-sdk';
+import { MusicArea, MusicArea as MusicAreaModel, QueuedTrack, Song } from '../../types/CoveyTownSocket';
 import TownController from '../TownController';
 // import { SongQueue } from '../../types/CoveyTownSocket';
 import InteractableAreaController, { BaseInteractableEventMap } from './InteractableAreaController';
@@ -18,7 +18,8 @@ export type MusicAreaEvents = BaseInteractableEventMap & {
    * Listeners are passed the new video, which is either a string (the URL to a video), or
    * the value `undefined` to indicate that there is no video set.
    */
-  // songChange: (song: Song | undefined) => void;
+  currentSongChange: (song: Track | undefined) => void;
+  currentQueueChange: (queue: QueuedTrack[] | undefined) => void;
   sessionInProgressChange: (sessionInProgress: boolean | undefined) => void;
   accessTokenChange: (accessToken: AccessToken | undefined) => void;
 };
@@ -85,6 +86,24 @@ export default class MusicAreaController extends InteractableAreaController<
     }
   }
 
+  get currentSong(): any {
+    return this._model.currentSong;
+  }
+
+  public set currentSong(currentSong: any) {
+    this._model.currentSong = currentSong;
+    this.emit('currentSongChange', currentSong);
+  }
+
+  get currentQueue(): any {
+    return this._model.songQueue;
+  }
+
+  public set currentQueue(currentQueue: any) {
+    this._model.songQueue = currentQueue;
+    this.emit('currentQueueChange', currentQueue);
+  }
+
   public isActive(): boolean {
     return this._model.sessionInProgress !== undefined;
   }
@@ -105,6 +124,7 @@ export default class MusicAreaController extends InteractableAreaController<
    */
   protected _updateFrom(updatedModel: MusicAreaModel): void {
     console.log('inside _updateFrom');
+    // Invokes setters, which have emit()
     this.topic = updatedModel.topic;
     this.sessionInProgress = updatedModel.sessionInProgress;
   }

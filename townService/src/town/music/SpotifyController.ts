@@ -173,7 +173,6 @@ export default class SpotifyController {
     // for (const track of this._queue) {
     //   console.log('track: ' + track.track.name);
     // }
-
     return [nextQueuedTrack.track, this._queue];
   }
 

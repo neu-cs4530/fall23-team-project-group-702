@@ -165,7 +165,7 @@ export default class SpotifyArea extends InteractableArea {
         }
         case 'skip': {
           const results = await this._musicSessionController.skip();
-          console.log('skipped');
+          console.log(' post spotify controller skip confirmation ');
           return {
             payload: { currentSong: results[0], songQueue: results[1] } as MusicArea,
           } as InteractableCommandReturnType<CommandType>;

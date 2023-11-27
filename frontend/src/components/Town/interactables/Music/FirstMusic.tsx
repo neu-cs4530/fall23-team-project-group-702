@@ -112,7 +112,7 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
   // mocking what start music session, should acc use gameAreaController to send interactableCommand to backend
   const handleStartMusicSession = async () => {
     // townController.sendInteractableCommand;
-    const musicAreaState = await musicAreaController.sendSpotifyCommand({
+    await musicAreaController.sendSpotifyCommand({
       commandType: 'createSession',
       topic: sessionName,
     } as MusicArea);
@@ -161,7 +161,7 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
           ) : (
             <>
               <div>
-                <SpotifyPlayback />
+                <SpotifyPlayback musicController={musicAreaController} />
               </div>
               <div>
                 <SpotifySdk userAccessToken={accessToken} />

@@ -2,9 +2,14 @@ import React, { useEffect } from 'react';
 import { Track } from '@spotify/web-api-ts-sdk';
 import { useState } from 'react';
 import { Box, Button, Heading, Input, Table, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/react';
-import { QueuedTrack } from '../../../../types/CoveyTownSocket';
+import { MusicArea, QueuedTrack } from '../../../../types/CoveyTownSocket';
+import MusicAreaController from '../../../../classes/interactable/MusicAreaController';
 
-export default function SpotifyPlayback() {
+export default function SpotifyPlayback({
+  musicController,
+}: {
+  musicController: MusicAreaController;
+}) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Track[]>([]);
@@ -21,6 +26,7 @@ export default function SpotifyPlayback() {
   };
 
   const handleSkip = async () => {
+    /*
     const response = await fetch(`http://localhost:3000/api/spotifyplayback?temp=skip`);
     if (response.status === 204) {
       return;
@@ -28,6 +34,22 @@ export default function SpotifyPlayback() {
     const result = await response.json();
     setCurrentTrack(result.currentSong);
     setQueue(result.updatedQueue);
+    */
+
+    // Song Skip
+    const musicAreaState = await musicController.sendSpotifyCommand({
+      commandType: 'skip',
+    } as MusicArea);
+
+    console.log(musicAreaState.currentSong);
+    console.log(musicAreaState.songQueue);
+
+    setCurrentTrack(musicAreaState.currentSong);
+    if (musicAreaState.songQueue) {
+      setQueue(musicAreaState.songQueue);
+    } else {
+      setQueue([]);
+    }
   };
 
   const handleAddToQueue = async (trackId: string) => {
@@ -57,7 +79,7 @@ export default function SpotifyPlayback() {
   }, [currentTrack]);
 
   return (
-    <Box p={4} bg='white' boxShadow='md' borderRadius='md' my={2}>
+    <Box p={4} bg='white' boxShadow='md' borderRadius='md' my={4}>
       <iframe
         src={`https://open.spotify.com/embed/track/${currentTrack.id}?utm_source=generator&theme=0`}
         width='100%'
