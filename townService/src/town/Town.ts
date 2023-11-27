@@ -23,7 +23,7 @@ import { logError } from '../Utils';
 import ConversationArea from './ConversationArea';
 import GameAreaFactory from './games/GameAreaFactory';
 import InteractableArea from './InteractableArea';
-import MusicArea from './music/MusicArea';
+import SpotifyArea from './music/MusicArea';
 import ViewingArea from './ViewingArea';
 
 /**
@@ -321,7 +321,7 @@ export default class Town {
    * with the specified ID
    */
   public addMusicArea(musicArea: MusicAreaModel): boolean {
-    const area = this._interactables.find(eachArea => eachArea.id === musicArea.id) as MusicArea;
+    const area = this._interactables.find(eachArea => eachArea.id === musicArea.id) as SpotifyArea;
     if (!area || !musicArea.topic || area.topic) {
       return false;
     }
@@ -436,7 +436,7 @@ export default class Town {
 
     const musicAreas = objectLayer.objects
       .filter(eachObject => eachObject.type === 'MusicArea')
-      .map(eachGameAreaObj => MusicArea.fromMapObject(eachGameAreaObj, this._broadcastEmitter));
+      .map(eachGameAreaObj => SpotifyArea.fromMapObject(eachGameAreaObj, this._broadcastEmitter));
 
     this._interactables = this._interactables
       .concat(viewingAreas)

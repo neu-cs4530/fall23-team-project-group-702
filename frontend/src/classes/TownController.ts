@@ -617,7 +617,7 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
           } else if (isViewingArea(eachInteractable)) {
             this._interactableControllers.push(new ViewingAreaController(eachInteractable));
           } else if (isMusicArea(eachInteractable)) {
-            this._interactableControllers.push(new MusicAreaController(eachInteractable));
+            this._interactableControllers.push(new MusicAreaController(eachInteractable, this));
           } else if (isTicTacToeArea(eachInteractable)) {
             this._interactableControllers.push(
               new TicTacToeAreaController(eachInteractable.id, eachInteractable, this),
@@ -786,8 +786,17 @@ export function useTownSettings() {
  */
 export function useInteractableAreaController<T>(interactableAreaID: string): T {
   const townController = useTownController();
-  const interactableAreaController = townController.gameAreas.find(
-    eachArea => eachArea.id == interactableAreaID,
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const temp: any = townController.gameAreas;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const temp2: any = townController.musicAreas;
+  const joined = temp.concat(temp2);
+
+  const interactableAreaController = joined.find(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (eachArea: any) => eachArea.id == interactableAreaID,
   );
   if (!interactableAreaController) {
     throw new Error(`Requested interactable area ${interactableAreaID} does not exist`);

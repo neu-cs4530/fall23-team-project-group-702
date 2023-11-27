@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Track } from '@spotify/web-api-ts-sdk';
 import { useState } from 'react';
 import { Box, Button, Heading, Input, Table, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/react';
-import { QueuedTrack } from '../../../../../pages/api/spotifyplayback';
+import { QueuedTrack } from '../../../../types/CoveyTownSocket';
 
 export default function SpotifyPlayback() {
   const [isPlaying, setIsPlaying] = useState(false);

@@ -1,6 +1,4 @@
 /* eslint-disable no-console */
-/* eslint-disable no-promise-executor-return */
-/* eslint-disable no-await-in-loop */
 import {
   SpotifyApi,
   Devices,
@@ -8,6 +6,7 @@ import {
   AccessToken,
   PartialSearchResult,
   PlaybackState,
+  // Device,
 } from '@spotify/web-api-ts-sdk';
 
 // Uniquely-identifiable Track added to a Spotify Playback Queue
@@ -179,6 +178,7 @@ export class SpotifyUserPlayback {
      */
     let deviceTransferComplete = false;
     while (!deviceTransferComplete) {
+      // eslint-disable-next-line no-await-in-loop
       await this.getDevices();
       for (const device of this._activeDevices.devices) {
         if (device.id === deviceId) {
@@ -188,10 +188,33 @@ export class SpotifyUserPlayback {
       if (!deviceTransferComplete) {
         console.log('LOOPING');
         console.log(new Date());
+        // eslint-disable-next-line no-await-in-loop, no-promise-executor-return
         await new Promise(resolve => setTimeout(resolve, 1000));
         console.log(new Date());
       }
     }
+    // await this.getDevices();
+    // async function checkDeviceTransfer(
+    //   id: string,
+    //   devices: Device[],
+    //   playback: SpotifyUserPlayback,
+    // ) {
+    //   const updatedDevices = await playback.getDevices();
+    //   for (const device of devices) {
+    //     if (device.id === id) {
+    //       return;
+    //     }
+    //   }
+    //   console.log('LOOPING');
+    //   console.log(new Date());
+    //   // eslint-disable-next-line no-promise-executor-return
+    //   await new Promise(resolve => setTimeout(resolve, 1000));
+    //   console.log(new Date());
+    //   await checkDeviceTransfer(id, updatedDevices.devices, playback);
+    // }
+
+    // checkDeviceTransfer(deviceId, this._activeDevices.devices, this);
+
     console.log(
       `transfer complete. active devices length: ${JSON.stringify(
         this._activeDevices.devices.length,
@@ -210,7 +233,7 @@ export class SpotifyUserPlayback {
       throw new Error('Device has not been transferred to the web sdk yet.');
     }
     const playerDevice = await this.getDevices();
-    for (const device of playerDevice.devices) {
+    playerDevice.devices.forEach(async device => {
       if (device.id === this._deviceId) {
         const playSongResponse = await fetch(
           `https://api.spotify.com/v1/me/player/play?device_id=${device.id}`,
@@ -231,7 +254,7 @@ export class SpotifyUserPlayback {
           throw new Error(`Unable to play song on device - Error: ${text}`);
         }
       }
-    }
+    });
   }
 
   /**

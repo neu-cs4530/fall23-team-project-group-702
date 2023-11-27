@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 import { ITiledMapObject } from '@jonbell/tiled-map-type-guard';
+import { Track } from '@spotify/web-api-ts-sdk';
 import InvalidParametersError from '../../lib/InvalidParametersError';
 import Player from '../../lib/Player';
 import {
@@ -8,13 +9,17 @@ import {
   InteractableCommand,
   InteractableCommandReturnType,
   TownEmitter,
+  MusicAreaCommand,
+  MusicArea,
 } from '../../types/CoveyTownSocket';
 import InteractableArea from '../InteractableArea';
 import SpotifyController from './SpotifyController';
 
-export default class MusicArea extends InteractableArea {
+export default class SpotifyArea extends InteractableArea {
   /* The topic of the conversation area, or undefined if it is not set */
   public topic?: string;
+
+  public sessionInProgress?: boolean;
 
   private _musicSessionController: SpotifyController;
 
@@ -37,7 +42,10 @@ export default class MusicArea extends InteractableArea {
   ) {
     super(id, coordinates, townEmitter);
     this.topic = topic;
-    console.log('MusicArea constructor');
+    this.sessionInProgress = false;
+    console.log(
+      `created music area topic: ${this.topic} | sessionInProgress: ${this.sessionInProgress}`,
+    );
     this._musicSessionController = new SpotifyController();
   }
 
@@ -67,10 +75,10 @@ export default class MusicArea extends InteractableArea {
     return {
       id: this.id,
       occupants: this.occupantsByID,
-      topic: this.topic,
       type: 'MusicArea',
-      isPlaying: false,
-      queue: undefined,
+      topic: this.topic,
+      sessionInProgress: this.sessionInProgress,
+      songQueue: [],
     };
   }
 
@@ -83,18 +91,134 @@ export default class MusicArea extends InteractableArea {
   public static fromMapObject(
     mapObject: ITiledMapObject,
     broadcastEmitter: TownEmitter,
-  ): MusicArea {
+  ): SpotifyArea {
     const { name, width, height } = mapObject;
     if (!width || !height) {
       throw new Error(`Malformed music area ${name}`);
     }
     const rect: BoundingBox = { x: mapObject.x, y: mapObject.y, width, height };
-    return new MusicArea({ id: name, occupants: [], isPlaying: false }, rect, broadcastEmitter);
+    return new SpotifyArea(
+      { id: name, occupants: [], topic: 'JASON IS THE BEST', sessionInProgress: false },
+      rect,
+      broadcastEmitter,
+    );
   }
 
-  public handleCommand<
-    CommandType extends InteractableCommand,
-  >(): InteractableCommandReturnType<CommandType> {
-    throw new InvalidParametersError('Unknown command type');
+  /**
+   * Updates the state of this ViewingArea, setting the video, isPlaying and progress properties
+   *
+   * @param musicArea updated model
+   */
+  public updateModel({ topic, sessionInProgress }: MusicAreaModel) {
+    this.topic = topic;
+    this.sessionInProgress = sessionInProgress;
+  }
+
+  public handleCommand<CommandType extends InteractableCommand>(
+    command: CommandType,
+  ): InteractableCommandReturnType<CommandType> {
+    if (command.type === 'MusicAreaCommand') {
+      const musicArea = command as MusicAreaCommand;
+      this.updateModel(musicArea.payload);
+      let response: InteractableCommandReturnType<CommandType>;
+      this._musicSessionController
+        .skip()
+        .then(results => {
+          // console.log('skipped');
+          // res.status(200).json({ currentSong: results[0], updatedQueue: results[1] });
+          response = {
+            payload: { songQueue: results[1] },
+          } as InteractableCommandReturnType<CommandType>;
+          return response;
+        })
+        .catch(err => {
+          throw new Error(err);
+        });
+      /*
+      switch (payload.commandType) {
+        case 'skip': {
+          this._musicSessionController.skip().then(results => {
+            console.log('skipped');
+            // res.status(200).json({ currentSong: results[0], updatedQueue: results[1] });
+          });
+          break;
+        }
+        case 'togglePlay': {
+          this._musicSessionController.togglePlay().then(results => {
+            console.log('toggled play');
+            // res.status(200).json({ currentSong: results[0], updatedQueue: results[1] });
+          });
+          break;
+        }
+        case 'search': {
+          const { searchQuery } = req.query;
+          if (!searchQuery) {
+            console.log('no search query provided');
+            // res.status(400).send('no search query provided');
+            break;
+          }
+          this._musicSessionController.search(searchQuery as string).then(results => {
+            console.log('search successful');
+            // res.status(200).json(results);
+          });
+          console.log('Search successful');
+          // res.status(200).json(searchResults);
+          break;
+        }
+        case 'playSong': {
+          const { trackId } = req.query;
+          if (!trackId) {
+            console.log('no track ID provided');
+            // res.status(400).send('no track ID provided');
+            break;
+          }
+          this._musicSessionController.playSongNow(trackId as string).then(() => {
+            console.log('playing song');
+          });
+          // res.status(200).send('playing song');
+          break;
+        }
+        case 'addQueue': {
+          const { trackId } = req.query;
+          if (!trackId) {
+            console.log('no track ID provided');
+            // res.status(400).send('no track ID provided');
+            return {} as InteractableCommandReturnType<CommandType>;
+          }
+          const updatedQueue = await this._musicSessionController.addSongToQueue(trackId as string);
+          console.log('added to queue');
+          // res.status(200).json(updatedQueue);
+          break;
+        }
+        case 'removeFromQueue': {
+          const { queueId } = req.query;
+          if (!queueId) {
+            console.log('no track ID provided');
+            // res.status(400).send('no track ID provided');
+            break;
+          }
+          const updatedQueue = await this._musicSessionController.removeFromQueue(
+            queueId as string,
+          );
+          console.log('removed from queue');
+          // res.status(200).json(updatedQueue);
+          break;
+        }
+        case 'getCurrentPlayback': {
+          const { queue } = this._musicSessionController;
+
+          console.log('got queue');
+          // res.status(200).json(queue);
+          const responsePayload = { songQueue: queue } as MusicArea;
+          return { payload: responsePayload } as InteractableCommandReturnType<CommandType>;
+        }
+        default:
+          console.log('invalid query');
+          break;
+      }
+      */
+    } else {
+      throw new InvalidParametersError('Unknown command type');
+    }
   }
 }

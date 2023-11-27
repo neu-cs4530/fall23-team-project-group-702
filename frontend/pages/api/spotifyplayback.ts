@@ -9,11 +9,7 @@ import {
 } from '@spotify/web-api-ts-sdk';
 import { uniqueId } from 'lodash';
 
-// Uniquely-identifiable Track added to a Spotify Playback Queue
-export interface QueuedTrack {
-  queueId: string;
-  track: Track;
-}
+import { QueuedTrack } from '../../../shared/types/CoveyTownSocket';
 
 /**
  * Class that handles the playback of music using the Spotify API

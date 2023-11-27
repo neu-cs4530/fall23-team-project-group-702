@@ -35,6 +35,10 @@ export default class SpotifyController {
     return this._queue;
   }
 
+  public get userMusicPlayers(): SpotifyUserPlayback[] {
+    return this._userMusicPlayers;
+  }
+
   /**
    * Adds a user to the music session.
    * Creates a new SpotifyPlayback object for the user

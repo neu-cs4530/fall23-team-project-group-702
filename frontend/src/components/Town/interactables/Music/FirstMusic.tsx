@@ -8,27 +8,82 @@ import {
   Modal,
   ModalCloseButton,
   ModalContent,
-  ModalHeader,
   ModalOverlay,
   VStack,
 } from '@chakra-ui/react';
-import { useInteractable } from '../../../../classes/TownController';
+import { useInteractable, useInteractableAreaController } from '../../../../classes/TownController';
 import useTownController from '../../../../hooks/useTownController';
 import MusicAreaInteractable from '../MusicArea';
 import { useCallback, useEffect, useState } from 'react';
 import SpotifyMain from './SpotifyMain';
+import { InteractableID } from '../../../../types/CoveyTownSocket';
+import MusicAreaController from '../../../../classes/interactable/MusicAreaController';
 
 /**
  * Jukebox Interface Component that handles rendering the join/create music session modal and the music playback interface modal.
  */
-export default function FirstMusic(): JSX.Element {
-  const musicArea = useInteractable<MusicAreaInteractable>('musicArea');
+function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX.Element {
+  const musicAreaController = useInteractableAreaController<MusicAreaController>(interactableID);
   const townController = useTownController();
 
-  const [sessionName, setSessionName] = useState<string>('');
-  const [sessionActive, setSessionActive] = useState<boolean>(false); // TODO should use environment by default
+  const [sessionName, setSessionName] = useState<string>(musicAreaController.topic);
+  const [sessionActive, setSessionActive] = useState<boolean>(
+    musicAreaController.sessionInProgress,
+  );
 
-  const isOpen = musicArea !== undefined;
+  // mocking what start music session, should acc use gameAreaController to send interactableCommand to backend
+  const handleStartMusicSession = () => {
+    // townController.sendInteractableCommand;
+    setSessionActive(true); // backend call townController.sendInteract
+  };
+
+  if (!sessionActive) {
+    return (
+      <div>
+        Start a Music Session
+        <VStack spacing={3} align='stretch' p={3}>
+          <Box textAlign='center'>Open Lounge Jukebox 1</Box>
+          <form>
+            <FormControl display='flex' flexDirection='column' alignItems='center'>
+              {' '}
+              <FormLabel htmlFor='name' mb={2}>
+                Name of Music Session
+              </FormLabel>{' '}
+              <Input
+                id='name'
+                placeholder='What are the vibes?'
+                name='name'
+                value={sessionName}
+                onChange={e => setSessionName(e.target.value)}
+                w='70%'
+              />
+            </FormControl>
+          </form>
+          <Button colorScheme='pink' w='50%' alignSelf='center' onClick={handleStartMusicSession}>
+            Create session
+          </Button>
+        </VStack>
+      </div>
+    );
+  } else {
+    return (
+      <div>
+        {sessionName}
+        <SpotifyMain />
+      </div>
+    );
+  }
+}
+
+/**
+ * A wrapper component for the TicTacToeArea component.
+ * Determines if the player is currently in a tic tac toe area on the map, and if so,
+ * renders the TicTacToeArea component in a modal.
+ *
+ */
+export default function FirstMusicWrapper(): JSX.Element {
+  const musicArea = useInteractable<MusicAreaInteractable>('musicArea');
+  const townController = useTownController();
 
   useEffect(() => {
     if (musicArea) {
@@ -45,67 +100,17 @@ export default function FirstMusic(): JSX.Element {
     }
   }, [townController, musicArea]);
 
-  const handleStartMusicSession = () => {
-    setSessionActive(true);
-  };
-
   if (musicArea && musicArea.getType() === 'musicArea') {
     console.log('Rendering first music');
-    if (!sessionActive) {
-      return (
-        <Modal isOpen={isOpen} onClose={closeModal} closeOnOverlayClick={false}>
-          <ModalOverlay />
-          <ModalContent>
-            <ModalHeader>Start a Music Session</ModalHeader>
-            <ModalCloseButton />
-            <VStack spacing={3} align='stretch' p={3}>
-              <Box textAlign='center'>Open Lounge Jukebox 1</Box>
-              <form>
-                <FormControl display='flex' flexDirection='column' alignItems='center'>
-                  {' '}
-                  <FormLabel htmlFor='name' mb={2}>
-                    Name of Music Session
-                  </FormLabel>{' '}
-                  <Input
-                    id='name'
-                    placeholder='What are the vibes?'
-                    name='name'
-                    value={sessionName}
-                    onChange={e => setSessionName(e.target.value)}
-                    w='70%'
-                  />
-                </FormControl>
-              </form>
-              <Button
-                colorScheme='pink'
-                w='50%'
-                alignSelf='center'
-                onClick={handleStartMusicSession}>
-                Create session
-              </Button>
-            </VStack>
-          </ModalContent>
-        </Modal>
-      );
-    } else {
-      return (
-        <Modal
-          isOpen={isOpen}
-          onClose={() => {
-            closeModal();
-            setSessionActive(false); // TODO should be based on when owner closes
-            townController.unPause();
-          }}
-          closeOnOverlayClick={false}>
-          <ModalOverlay />
-          <ModalContent>
-            <ModalHeader>{sessionName}</ModalHeader>
-            <ModalCloseButton />
-            <SpotifyMain />
-          </ModalContent>
-        </Modal>
-      );
-    }
+    return (
+      <Modal isOpen={true} onClose={closeModal} closeOnOverlayClick={false}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalCloseButton />
+          <FirstMusic interactableID={musicArea.id} />;
+        </ModalContent>
+      </Modal>
+    );
   }
   return <></>;
 }
