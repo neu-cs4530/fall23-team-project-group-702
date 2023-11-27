@@ -1,13 +1,16 @@
 import { AccessToken } from '@spotify/web-api-ts-sdk';
 import { useEffect } from 'react';
 import { usePlayerDevice } from 'react-spotify-web-playback-sdk';
+import MusicAreaController from '../../../../classes/interactable/MusicAreaController';
+import { MusicArea } from '../../../../types/CoveyTownSocket';
 
 /*
   Every player should have their own playback device upon entering Covey.Town. We should move this logic
   out of the component eventually.
 */
-export const SpotifyDetails: React.VFC<{ userAccessToken: AccessToken }> = (props: {
+export const SpotifyDetails: React.VFC<{ userAccessToken: AccessToken, musicController: MusicAreaController }> = (props: {
   userAccessToken: AccessToken;
+  musicController: MusicAreaController;
 }) => {
   const playerDevice = usePlayerDevice();
 
@@ -21,7 +24,14 @@ export const SpotifyDetails: React.VFC<{ userAccessToken: AccessToken }> = (prop
       );
       // add user to sessio
       // set sdk in rest api
-      const response = await fetch('http://localhost:3000/api/spotifyplayback', {
+      const response = await props.musicController.sendSpotifyCommand({
+        commandType: 'addUserToSession',
+        accessToken: props.userAccessToken,
+        deviceId: playerDevice.device_id,
+      } as MusicArea);
+
+      /*
+      const response2 = await fetch('http://localhost:3000/api/spotifyplayback', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -31,10 +41,7 @@ export const SpotifyDetails: React.VFC<{ userAccessToken: AccessToken }> = (prop
           deviceId: playerDevice.device_id,
         }),
       });
-      if (!response.ok) {
-        const body = await response.json();
-        throw new Error(`Unable to set Spotify access token. Error message: ${JSON.stringify(body)}. error message ${response.statusText}`);
-      }
+      */
     }
     activate();
   }, [playerDevice?.device_id, props.userAccessToken]);

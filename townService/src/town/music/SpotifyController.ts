@@ -26,13 +26,20 @@ export default class SpotifyController {
 
   private _queue: Array<QueuedTrack>;
 
+  private _songNowPlaying: Track | null;
+
   constructor() {
     this._userMusicPlayers = [];
     this._queue = [];
+    this._songNowPlaying = null;
   }
 
   public get queue(): Array<QueuedTrack> {
     return this._queue;
+  }
+
+  public get songNowPlaying(): Track | null {
+    return this._songNowPlaying;
   }
 
   public get userMusicPlayers(): SpotifyUserPlayback[] {
@@ -76,6 +83,7 @@ export default class SpotifyController {
     for (const player of this._userMusicPlayers) {
       console.log(`user: ${player.accessToken.access_token}`);
     }
+    console.log('~~REGISTERED USER IN THE BACKEND~~');
   }
 
   /**
@@ -160,9 +168,11 @@ export default class SpotifyController {
    */
   public async skip(): Promise<[Track | null, QueuedTrack[]]> {
     if (this._queue.length < 1) {
+      console.log('empty queue, returning null and empty data...');
       return [null, []];
     }
     const nextQueuedTrack = this._queue[0];
+    this._songNowPlaying = nextQueuedTrack.track;
     this._queue = this._queue.slice(1);
     for (const userMusicPlayer of this._userMusicPlayers) {
       await userMusicPlayer.nextSong(nextQueuedTrack.track.id);

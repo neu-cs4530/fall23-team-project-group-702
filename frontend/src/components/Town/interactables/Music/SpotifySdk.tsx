@@ -2,10 +2,12 @@ import React, { useCallback, useEffect } from 'react';
 import { WebPlaybackSDK } from 'react-spotify-web-playback-sdk';
 import { SpotifyDetails } from './SpotifyDetails';
 import { AccessToken } from '@spotify/web-api-ts-sdk';
+import MusicAreaController from '../../../../classes/interactable/MusicAreaController';
 
 const SpotifySdk: React.VFC<{
   userAccessToken: AccessToken;
-}> = (props: { userAccessToken: AccessToken }) => {
+  musicController: MusicAreaController;
+}> = (props: { userAccessToken: AccessToken, musicController : MusicAreaController }) => {
   const getOAuthToken: Spotify.PlayerInit['getOAuthToken'] = useCallback(
     callback => callback(props.userAccessToken.access_token),
     [props.userAccessToken],
@@ -25,7 +27,7 @@ const SpotifySdk: React.VFC<{
         initialVolume={0.5}>
         <div>
           <div>
-            <SpotifyDetails userAccessToken={props.userAccessToken} />
+            <SpotifyDetails musicController={props.musicController} userAccessToken={props.userAccessToken} />
           </div>
         </div>
       </WebPlaybackSDK>

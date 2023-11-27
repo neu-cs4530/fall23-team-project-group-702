@@ -13,24 +13,19 @@ export type MusicAreaEvents = BaseInteractableEventMap & {
    * Listeners are passed the new state in the parameter `isPlaying`
    */
   topicChange: (topic: string | undefined) => void;
-  /**
-   * A videoChange event indicates that the video selected for this viewing area has changed.
-   * Listeners are passed the new video, which is either a string (the URL to a video), or
-   * the value `undefined` to indicate that there is no video set.
-   */
-  currentSongChange: (song: Track | undefined) => void;
-  currentQueueChange: (queue: QueuedTrack[] | undefined) => void;
+  currentSongChange: (song: Track | null) => void;
+  currentQueueChange: (queue: QueuedTrack[]) => void;
   sessionInProgressChange: (sessionInProgress: boolean | undefined) => void;
   accessTokenChange: (accessToken: AccessToken | undefined) => void;
 };
 
 /**
- * A ViewingAreaController manages the state for a ViewingArea in the frontend app, serving as a bridge between the video
+ * A MusicAreaController manages the state for a ViewingArea in the frontend app, serving as a bridge between the video
  * that is playing in the user's browser and the backend TownService, ensuring that all players watching the same video
  * are synchronized in their playback.
  *
- * The ViewingAreaController implements callbacks that handle events from the video player in this browser window, and
- * emits updates when the state is updated, @see ViewingAreaEvents
+ * The MusicAreaController implements callbacks that handle events from the spotify player in this browser window, and
+ * emits updates when the state is updated, @see MusicAreaEvents
  */
 export default class MusicAreaController extends InteractableAreaController<
   MusicAreaEvents,
@@ -118,15 +113,21 @@ export default class MusicAreaController extends InteractableAreaController<
 
   /**
    * Applies updates to this music area controller's model, setting the fields
-   * isPlaying, elapsedTimeSec and video from the updatedModel
+   * 
    *
    * @param updatedModel
    */
   protected _updateFrom(updatedModel: MusicAreaModel): void {
     console.log('inside _updateFrom');
     // Invokes setters, which have emit()
+    if(updatedModel.topic)
     this.topic = updatedModel.topic;
+    if(updatedModel.sessionInProgress)
     this.sessionInProgress = updatedModel.sessionInProgress;
+    if(updatedModel.currentSong)
+    this.currentSong = updatedModel.currentSong;
+    if(updatedModel.songQueue)
+    this.currentQueue = updatedModel.songQueue;
   }
 
   /**

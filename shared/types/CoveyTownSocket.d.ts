@@ -205,9 +205,9 @@ export interface MusicArea extends Interactable {
   topic?: string;
   sessionInProgress?: boolean;
   accessToken?: AccessToken;
-  currentSong?: Track;
+  currentSong?: Track | null;
   songQueue?: QueuedTrack[];
-  searchResults?: Required<Pick<PartialSearchResult, 'tracks'>>;
+  searchResults?: Track[];
   searchQuery?: string;
   trackId?: string;
   queueId?: string;

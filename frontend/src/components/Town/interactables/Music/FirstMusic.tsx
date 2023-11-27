@@ -164,7 +164,7 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
                 <SpotifyPlayback musicController={musicAreaController} />
               </div>
               <div>
-                <SpotifySdk userAccessToken={accessToken} />
+                <SpotifySdk musicController={musicAreaController} userAccessToken={accessToken} />
               </div>
             </>
           )}

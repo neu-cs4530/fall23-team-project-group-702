@@ -105,6 +105,7 @@ export default class SpotifyArea extends InteractableArea {
       topic: this._topic,
       sessionInProgress: this._sessionInProgress,
       songQueue: this._musicSessionController.queue,
+      currentSong: this._musicSessionController.songNowPlaying,
     };
   }
 
@@ -124,14 +125,20 @@ export default class SpotifyArea extends InteractableArea {
     }
     const rect: BoundingBox = { x: mapObject.x, y: mapObject.y, width, height };
     return new SpotifyArea(
-      { id: name, occupants: [], topic: 'JASON IS THE BEST', sessionInProgress: false },
+      {
+        id: name,
+        occupants: [],
+        topic: 'JASON IS THE BEST',
+        sessionInProgress: false,
+        currentSong: null,
+      },
       rect,
       broadcastEmitter,
     );
   }
 
   /**
-   * Updates the state of this ViewingArea, setting the video, isPlaying and progress properties
+   * Updates the state of this MusicArea, setting properties
    *
    * @param musicArea updated model
    */
@@ -166,6 +173,7 @@ export default class SpotifyArea extends InteractableArea {
         case 'skip': {
           const results = await this._musicSessionController.skip();
           console.log(' post spotify controller skip confirmation ');
+          this._emitAreaChanged();
           return {
             payload: { currentSong: results[0], songQueue: results[1] } as MusicArea,
           } as InteractableCommandReturnType<CommandType>;
@@ -184,7 +192,7 @@ export default class SpotifyArea extends InteractableArea {
           const results = await this._musicSessionController.search(searchQuery as string);
           console.log('Search successful');
           return {
-            payload: { searchResults: results },
+            payload: { searchResults: results.tracks.items },
           } as InteractableCommandReturnType<CommandType>;
         }
         case 'playSong': {
@@ -237,6 +245,7 @@ export default class SpotifyArea extends InteractableArea {
               deviceId,
               userAccessToken,
             );
+            this._emitAreaChanged();
             return {
               payload: { accessToken: confirmedAccessToken },
             } as InteractableCommandReturnType<CommandType>;

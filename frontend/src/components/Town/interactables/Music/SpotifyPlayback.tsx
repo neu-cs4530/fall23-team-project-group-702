@@ -18,46 +18,34 @@ export default function SpotifyPlayback({
 
   const handleSearch = async () => {
     if (searchQuery === '') return;
-    const response = await fetch(
+    const response = await musicController.sendSpotifyCommand({
+      commandType: 'search',
+      searchQuery,
+    } as MusicArea);
+    /*
+    const response2 = await fetch(
       `http://localhost:3000/api/spotifyplayback?temp=search&searchQuery=${searchQuery}`,
     );
-    const results = await response.json();
-    setSearchResults(results.tracks.items);
+    const results = await response2.json();
+    */
+    if(response.searchResults)
+    setSearchResults(response.searchResults);
   };
 
   const handleSkip = async () => {
-    /*
-    const response = await fetch(`http://localhost:3000/api/spotifyplayback?temp=skip`);
-    if (response.status === 204) {
-      return;
-    }
-    const result = await response.json();
-    setCurrentTrack(result.currentSong);
-    setQueue(result.updatedQueue);
-    */
-
     // Song Skip
-    const musicAreaState = await musicController.sendSpotifyCommand({
+    // We expect the properties 'currentSong' and 'songQueue' to change
+    await musicController.sendSpotifyCommand({
       commandType: 'skip',
+      songQueue: musicController.currentQueue
     } as MusicArea);
-
-    console.log(musicAreaState.currentSong);
-    console.log(musicAreaState.songQueue);
-
-    setCurrentTrack(musicAreaState.currentSong);
-    if (musicAreaState.songQueue) {
-      setQueue(musicAreaState.songQueue);
-    } else {
-      setQueue([]);
-    }
   };
 
   const handleAddToQueue = async (trackId: string) => {
-    const response = await fetch(
-      `http://localhost:3000/api/spotifyplayback?temp=addQueue&trackId=${trackId}`,
-    );
-    const updatedQueue = await response.json();
-    setQueue(updatedQueue);
+    await musicController.sendSpotifyCommand({
+      commandType: 'addQueue',
+      trackId,
+    } as MusicArea);
   };
 
   const handleRemoveFromQueue = async (queueId: string) => {
@@ -78,8 +66,29 @@ export default function SpotifyPlayback({
     console.log(JSON.stringify(currentTrack));
   }, [currentTrack]);
 
+  // Listener effects
+  /**
+   *   currentSongChange: (song: Track | undefined) => void;
+       currentQueueChange: (queue: QueuedTrack[] | undefined) => void;
+   */
+  useEffect(() => {
+
+    const trackSetter = (song : Track | null) => {
+        if(song !== null) {
+          setCurrentTrack(song);
+        }
+    }
+      musicController.addListener('currentQueueChange', setQueue);
+      musicController.addListener('currentSongChange', trackSetter);
+      return () => {
+        musicController.removeListener('currentQueueChange', setQueue);
+        musicController.removeListener('currentSongChange', trackSetter);
+      };
+  }, [musicController])
+
   return (
     <Box p={4} bg='white' boxShadow='md' borderRadius='md' my={4}>
+    { currentTrack &&
       <iframe
         src={`https://open.spotify.com/embed/track/${currentTrack.id}?utm_source=generator&theme=0`}
         width='100%'
@@ -88,6 +97,7 @@ export default function SpotifyPlayback({
         loading='lazy'
         style={{ borderRadius: '8px' }}
       />
+    }
 
       <Box my={4}>
         <Box display='flex' alignItems='center' justifyContent='center' gridGap={2}>
