@@ -17,11 +17,37 @@ import SpotifyController from './SpotifyController';
 
 export default class SpotifyArea extends InteractableArea {
   /* The topic of the conversation area, or undefined if it is not set */
-  public topic?: string;
+  private _topic?: string;
 
-  public sessionInProgress?: boolean;
+  private _sessionInProgress?: boolean; // NEED GETTERS AND SETTERS
+
+  private _accessToken?: AccessToken;
 
   private _musicSessionController: SpotifyController;
+
+  public get topic(): string | undefined {
+    return this._topic;
+  }
+
+  public set topic(value: string | undefined) {
+    this._topic = value;
+  }
+
+  public get sessionInProgress(): boolean | undefined {
+    return this._sessionInProgress;
+  }
+
+  public set sessionInProgress(value: boolean | undefined) {
+    this._sessionInProgress = value;
+  }
+
+  public get accessToken(): AccessToken | undefined {
+    return this._accessToken;
+  }
+
+  public set accessToken(value: AccessToken | undefined) {
+    this._accessToken = value;
+  }
 
   /** The conversation area is "active" when there are players inside of it  */
   public get isActive(): boolean {
@@ -41,10 +67,10 @@ export default class SpotifyArea extends InteractableArea {
     townEmitter: TownEmitter,
   ) {
     super(id, coordinates, townEmitter);
-    this.topic = topic;
-    this.sessionInProgress = false;
+    this._topic = topic;
+    this._sessionInProgress = false;
     console.log(
-      `created music area topic: ${this.topic} | sessionInProgress: ${this.sessionInProgress}`,
+      `created music area topic: ${this._topic} | sessionInProgress: ${this._sessionInProgress}`,
     );
     this._musicSessionController = new SpotifyController();
   }
@@ -62,7 +88,7 @@ export default class SpotifyArea extends InteractableArea {
     super.remove(player);
     console.log('removed');
     if (this._occupants.length === 0) {
-      this.topic = undefined;
+      this._topic = undefined;
       this._emitAreaChanged();
     }
   }
@@ -73,13 +99,13 @@ export default class SpotifyArea extends InteractableArea {
    */
   public toModel(): MusicAreaModel {
     console.log('sending sessionInPorrgreis:');
-    console.log(this.sessionInProgress);
+    console.log(this._sessionInProgress);
     return {
       id: this.id,
       occupants: this.occupantsByID,
       type: 'MusicArea',
-      topic: this.topic,
-      sessionInProgress: this.sessionInProgress,
+      topic: this._topic,
+      sessionInProgress: this._sessionInProgress,
       songQueue: this._musicSessionController.queue,
     };
   }
@@ -112,8 +138,8 @@ export default class SpotifyArea extends InteractableArea {
    * @param musicArea updated model
    */
   public updateModel({ topic, sessionInProgress }: MusicAreaModel) {
-    this.topic = topic;
-    this.sessionInProgress = sessionInProgress;
+    this._topic = topic;
+    this._sessionInProgress = sessionInProgress;
   }
 
   public async handleSpotifyCommand<CommandType extends InteractableCommand>(
@@ -128,15 +154,12 @@ export default class SpotifyArea extends InteractableArea {
             console.log('topic was undefined');
             return {} as InteractableCommandReturnType<CommandType>;
           }
-          // Update with new topic
-          this.topic = topic as string;
 
-          console.log(`topic updated: ${this.topic}`);
+          // Update with new topic
+          this._topic = topic as string;
 
           // Update session in progress
-          this.sessionInProgress = true;
-          console.log('sessionInProgress was set to: ');
-          console.log(this.sessionInProgress);
+          this._sessionInProgress = true;
 
           // Emit to other frontend MusicAreaControllers to update their state
           this._emitAreaChanged();

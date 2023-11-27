@@ -19,6 +19,7 @@ export const SpotifyDetails: React.VFC<{ userAccessToken: AccessToken }> = (prop
         'Activating with device_id (part 2) with accessToken: ' +
           props.userAccessToken.access_token,
       );
+      // add user to sessio
       // set sdk in rest api
       const response = await fetch('http://localhost:3000/api/spotifyplayback', {
         method: 'POST',
@@ -31,7 +32,8 @@ export const SpotifyDetails: React.VFC<{ userAccessToken: AccessToken }> = (prop
         }),
       });
       if (!response.ok) {
-        throw new Error('Unable to set Spotify access token');
+        const body = await response.json();
+        throw new Error(`Unable to set Spotify access token. Error message: ${JSON.stringify(body)}. error message ${response.statusText}`);
       }
     }
     activate();

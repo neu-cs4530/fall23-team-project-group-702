@@ -1,10 +1,11 @@
+import { AccessToken } from '@spotify/web-api-ts-sdk';
 import { MusicArea, MusicArea as MusicAreaModel, Song } from '../../types/CoveyTownSocket';
 import TownController from '../TownController';
 // import { SongQueue } from '../../types/CoveyTownSocket';
 import InteractableAreaController, { BaseInteractableEventMap } from './InteractableAreaController';
 
 /**
- * The events that a ViewingAreaController can emit
+ * The events that a MusicAreaController can emit
  */
 export type MusicAreaEvents = BaseInteractableEventMap & {
   /**
@@ -19,6 +20,7 @@ export type MusicAreaEvents = BaseInteractableEventMap & {
    */
   // songChange: (song: Song | undefined) => void;
   sessionInProgressChange: (sessionInProgress: boolean | undefined) => void;
+  accessTokenChange: (accessToken: AccessToken | undefined) => void;
 };
 
 /**

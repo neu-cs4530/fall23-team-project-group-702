@@ -15,12 +15,13 @@ import { useInteractable, useInteractableAreaController } from '../../../../clas
 import useTownController from '../../../../hooks/useTownController';
 import MusicAreaInteractable from '../MusicArea';
 import { useCallback, useEffect, useState } from 'react';
-import SpotifyMain from './SpotifyMain';
 import { InteractableID, MusicArea } from '../../../../types/CoveyTownSocket';
 import MusicAreaController from '../../../../classes/interactable/MusicAreaController';
 import { useRouter } from 'next/router';
 import { AccessToken } from '@spotify/web-api-ts-sdk';
 import { CLIENT_ID, CLIENT_SECRET, REDIRECT_URI, TOKEN_URL } from '../../../../utilities/constants';
+import SpotifyPlayback from './SpotifyPlayback';
+import SpotifySdk from './SpotifySdk';
 
 /**
  * Jukebox Interface Component that handles rendering the join/create music session modal and the music playback interface modal.
@@ -30,7 +31,9 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
   const townController = useTownController();
   const router = useRouter();
 
-  const [accessToken, setAccessToken] = useState(null as unknown as AccessToken);
+  const [accessToken, setAccessToken] = useState<AccessToken | undefined>(
+    townController.spotifyAccessToken,
+  );
   const [sessionName, setSessionName] = useState<string | undefined>(musicAreaController.topic);
   const [sessionActive, setSessionActive] = useState<boolean | undefined>(
     musicAreaController.sessionInProgress,
@@ -44,12 +47,13 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
         const loginResponse = await fetch('http://localhost:3000/api/login', {
           method: 'GET',
         });
-        const loginData = await loginResponse.json();
-        if (!loginData) {
+        const spotifyLoginPageURL = await loginResponse.json();
+        if (!spotifyLoginPageURL) {
           throw new Error('Unable to get Spotify login URL');
         }
-        window.location.href = loginData;
-      } else if (!accessToken) {
+        // Redirects user's page to Spotify login page
+        window.location.href = spotifyLoginPageURL;
+      } else if (accessToken === undefined) {
         /* get user access token using login info */
         const spotifyAccessTokenParams = new URLSearchParams({
           grant_type: 'authorization_code',
@@ -63,10 +67,22 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
           body: spotifyAccessTokenParams,
         });
         if (!authResponse.ok) {
-          throw new Error('Unable to get Spotify access token using code');
+          const body = await authResponse.json();
+          throw new Error(
+            `Unable to set Spotify access token. Error message: ${JSON.stringify(
+              body,
+            )}. error message ${authResponse.statusText}`,
+          );
         }
         /* the access token for the current user */
-        const authorizationData = await authResponse.json();
+        const authorizationData: AccessToken = await authResponse.json();
+
+        townController.spotifyAccessToken = authorizationData;
+        // // Post new access token to backend
+        // await musicAreaController.sendSpotifyCommand({
+        //   commandType: 'updateAccessToken',
+        //   accessToken: authorizationData,
+        // } as MusicArea);
 
         /* set access token if a valid access token object */
         if (authorizationData && authorizationData.access_token) {
@@ -82,9 +98,11 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
   useEffect(() => {
     musicAreaController.addListener('topicChange', setSessionName);
     musicAreaController.addListener('sessionInProgressChange', setSessionActive);
+    musicAreaController.addListener('accessTokenChange', setAccessToken);
     return () => {
       musicAreaController.removeListener('topicChange', setSessionName);
       musicAreaController.removeListener('sessionInProgressChange', setSessionActive);
+      musicAreaController.removeListener('accessTokenChange', setAccessToken);
     };
   }, [musicAreaController]);
 
@@ -133,9 +151,21 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
   } else {
     return (
       <div>
-        {sessionName} <br />
-        {JSON.stringify(sessionActive)}
-        <SpotifyMain accessToken={accessToken} />
+        <div>{sessionName}</div>
+        <>
+          {!accessToken ? (
+            <>User Access Tokens Not Loaded</>
+          ) : (
+            <>
+              <div>
+                <SpotifyPlayback />
+              </div>
+              <div>
+                <SpotifySdk userAccessToken={accessToken} />
+              </div>
+            </>
+          )}
+        </>
       </div>
     );
   }

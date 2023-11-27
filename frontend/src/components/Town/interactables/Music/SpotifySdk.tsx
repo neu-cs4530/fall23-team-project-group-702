@@ -14,6 +14,7 @@ const SpotifySdk: React.VFC<{
     return <div>Not logged in || Host web sdk object not created</div>;
   } else {
     return (
+      // DEVICE IS CREATED HERE
       <WebPlaybackSDK
         initialDeviceName='Covey Player'
         getOAuthToken={getOAuthToken}

@@ -21,7 +21,7 @@ export class UserMusicPlayer {
 
   private _allDevices: Devices;
 
-  public _sdk: SpotifyApi;
+  private _sdk: SpotifyApi;
 
   private _accessToken: AccessToken;
 
@@ -41,17 +41,6 @@ export class UserMusicPlayer {
   }
 
   /**
-   * Call Spotifies Authentication method
-   * Confirms the user gave a vaid access token and sets the access token for the SpotifyPlayback object
-   */
-  public async authenticate(): Promise<AccessToken> {
-    // await this._sdk.authentication.refreshAccessToken();
-    const response = await this._sdk.authenticate();
-    this._accessToken = response.accessToken;
-    return this._accessToken;
-  }
-
-  /**
    * Gets the access token of the user hosting the music sesson
    * @returns - the access token
    */
@@ -60,6 +49,17 @@ export class UserMusicPlayer {
       // eslint-disable-next-line prettier/prettier
       return (null as unknown) as AccessToken;
     }
+    return this._accessToken;
+  }
+
+  /**
+   * Call Spotifies Authentication method
+   * Confirms the user gave a vaid access token and sets the access token for the SpotifyPlayback object
+   */
+  public async authenticate(): Promise<AccessToken> {
+    // await this._sdk.authentication.refreshAccessToken();
+    const response = await this._sdk.authenticate();
+    this._accessToken = response.accessToken;
     return this._accessToken;
   }
 

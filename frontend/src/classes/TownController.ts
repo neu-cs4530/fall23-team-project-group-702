@@ -42,6 +42,7 @@ import TicTacToeAreaController from './interactable/TicTacToeAreaController';
 import ViewingAreaController from './interactable/ViewingAreaController';
 import PlayerController from './PlayerController';
 import MusicAreaController from './interactable/MusicAreaController';
+import { AccessToken } from '@spotify/web-api-ts-sdk';
 
 const CALCULATE_NEARBY_PLAYERS_DELAY_MS = 300;
 const SOCKET_COMMAND_TIMEOUT_MS = 5000;
@@ -209,6 +210,11 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
    */
   private _interactableEmitter = new EventEmitter();
 
+  /**
+   * Spotify access token for this player
+   */
+  private _spotifyAccessToken?: AccessToken;
+
   public constructor({ userName, townID, loginController }: ConnectionProperties) {
     super();
     this._townID = townID;
@@ -246,6 +252,14 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
   private set _townIsPubliclyListed(newSetting: boolean) {
     this._townIsPubliclyListedInternal = newSetting;
     this.emit('townSettingsUpdated', { isPubliclyListed: newSetting });
+  }
+
+  public get spotifyAccessToken() {
+    return this._spotifyAccessToken;
+  }
+
+  public set spotifyAccessToken(accessToken: AccessToken | undefined) {
+    this._spotifyAccessToken = accessToken;
   }
 
   public get providerVideoToken() {
