@@ -69,8 +69,8 @@ export default function SpotifyPlayback() {
 
       <Box my={4}>
         <Box display='flex' alignItems='center' gridGap={2}>
-          <Button onClick={handleTogglePlay}>{isPlaying ? 'Toggle Pause' : 'Toggle Play'}</Button>
-          <Button onClick={handleSkip}>Skip</Button>
+          <Button onClick={handleTogglePlay}>{isPlaying ? 'Toggle Pause' : '▶'}</Button>
+          <Button onClick={handleSkip}> ⏭ </Button>
         </Box>
       </Box>
 
@@ -123,7 +123,7 @@ export default function SpotifyPlayback() {
               <Tr>
                 <Th>Artists</Th>
                 <Th>Track Name</Th>
-                <Th>Track ID</Th>
+                <Th></Th>
               </Tr>
             </Thead>
             <Tbody>
