@@ -133,7 +133,7 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
   } else {
     return (
       <div>
-        {sessionName} <br/>
+        {sessionName} <br />
         {JSON.stringify(sessionActive)}
         <SpotifyMain accessToken={accessToken} />
       </div>

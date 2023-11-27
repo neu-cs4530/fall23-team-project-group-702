@@ -57,7 +57,7 @@ export default function SpotifyPlayback() {
   }, [currentTrack]);
 
   return (
-    <Box p={4} bg='white' boxShadow='md' borderRadius='md' my={4}>
+    <Box p={4} bg='white' boxShadow='md' borderRadius='md' my={2}>
       <iframe
         src={`https://open.spotify.com/embed/track/${currentTrack.id}?utm_source=generator&theme=0`}
         width='100%'
