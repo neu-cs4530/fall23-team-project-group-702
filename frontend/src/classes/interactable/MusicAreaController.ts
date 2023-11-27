@@ -71,13 +71,15 @@ export default class MusicAreaController extends InteractableAreaController<
     if (this._model.sessionInProgress === undefined) {
       throw new Error('sessionInProgress is undefined');
     }
-    return false;
+    return this._model.sessionInProgress;
   }
 
   public set sessionInProgress(sessionInProgress: boolean | undefined) {
-    if (this._model.sessionInProgress !== sessionInProgress) {
+    if (this._model.sessionInProgress !== undefined) {
       this._model.sessionInProgress = sessionInProgress;
       this.emit('sessionInProgressChange', sessionInProgress);
+    } else {
+      throw new Error('session in progress is undefined');
     }
   }
 

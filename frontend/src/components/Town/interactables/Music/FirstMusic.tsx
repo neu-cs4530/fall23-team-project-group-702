@@ -105,10 +105,6 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
   if (!sessionActive) {
     return (
       <div>
-        <div>
-          {JSON.stringify(sessionActive)}
-        </div>
-
         <b>Start a Music Session</b>
         <VStack spacing={3} align='stretch' p={3}>
           <Box textAlign='center'>Open Lounge Jukebox 1</Box>
@@ -135,15 +131,10 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
       </div>
     );
   } else {
-    if (sessionActive == undefined) {
-      console.log('session active is undefined');
-      console.log(sessionActive);
-    }
     return (
       <div>
         {sessionName} <br/>
-        {typeof sessionActive}<br/>
-        {typeof undefined}<br/>
+        {JSON.stringify(sessionActive)}
         <SpotifyMain accessToken={accessToken} />
       </div>
     );

@@ -72,6 +72,8 @@ export default class SpotifyArea extends InteractableArea {
    * transporting over a socket to a client.
    */
   public toModel(): MusicAreaModel {
+    console.log('sending sessionInPorrgreis:');
+    console.log(this.sessionInProgress);
     return {
       id: this.id,
       occupants: this.occupantsByID,
@@ -133,6 +135,8 @@ export default class SpotifyArea extends InteractableArea {
 
           // Update session in progress
           this.sessionInProgress = true;
+          console.log('sessionInProgress was set to: ');
+          console.log(this.sessionInProgress);
 
           // Emit to other frontend MusicAreaControllers to update their state
           this._emitAreaChanged();
