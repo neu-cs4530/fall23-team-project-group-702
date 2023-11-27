@@ -40,7 +40,7 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
   if (!sessionActive) {
     return (
       <div>
-        Start a Music Session
+        <b>Start a Music Session</b>
         <VStack spacing={3} align='stretch' p={3}>
           <Box textAlign='center'>Open Lounge Jukebox 1</Box>
           <form>

@@ -68,7 +68,7 @@ export default function SpotifyPlayback() {
       />
 
       <Box my={4}>
-        <Box display='flex' alignItems='center' gridGap={2}>
+        <Box display='flex' alignItems='center' justifyContent='center' gridGap={2}>
           <Button onClick={handleTogglePlay}>{isPlaying ? 'Toggle Pause' : '▶'}</Button>
           <Button onClick={handleSkip}> ⏭ </Button>
         </Box>
