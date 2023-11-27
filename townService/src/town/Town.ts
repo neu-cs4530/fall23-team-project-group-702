@@ -172,6 +172,7 @@ export default class Town {
         const interactable = this._interactables.find(
           eachInteractable => eachInteractable.id === command.interactableID,
         );
+        // !!!!!!!!!!!!!!!!!!!!! ADDED EXTRA CHECK FOR MUSIC AREA
         if (interactable && interactable.toModel().type === 'MusicArea') {
           try {
             const musicInteractable = interactable as SpotifyArea;

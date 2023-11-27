@@ -1,4 +1,4 @@
-import { MusicArea as MusicAreaModel, Song } from '../../types/CoveyTownSocket';
+import { MusicArea, MusicArea as MusicAreaModel, Song } from '../../types/CoveyTownSocket';
 import TownController from '../TownController';
 // import { SongQueue } from '../../types/CoveyTownSocket';
 import InteractableAreaController, { BaseInteractableEventMap } from './InteractableAreaController';
@@ -103,5 +103,21 @@ export default class MusicAreaController extends InteractableAreaController<
     console.log('inside _updateFrom');
     this.topic = updatedModel.topic;
     this.sessionInProgress = updatedModel.sessionInProgress;
+  }
+
+  /**
+   * Sends a command to the backend to update the state of the music area
+   * @param payload information to send
+   */
+  public async sendSpotifyCommand(payload: MusicArea) {
+    const instanceID = this.id;
+    if (!instanceID) {
+      throw new Error("instanceID doesn't exist");
+    }
+    const response = await this._townController.sendInteractableCommand(this.id, {
+      type: 'MusicAreaCommand',
+      payload: payload,
+    });
+    console.log('response from sendSpotifyCommand ', response);
   }
 }

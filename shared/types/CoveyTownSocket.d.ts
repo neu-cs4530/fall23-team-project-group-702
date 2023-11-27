@@ -77,26 +77,6 @@ export interface BoundingBox {
   height: number;
 }
 
-// Uniquely-identifiable Track added to a Spotify Playback Queue
-export interface QueuedTrack {
-  queueId: string;
-  track: Track;
-}
-
-export interface MusicArea extends Interactable {
-  commandType?: string;
-  topic?: string;
-  sessionInProgress?: boolean;
-  accessToken?: AccessToken;
-  currentSong?: Track;
-  songQueue?: QueuedTrack[];
-  searchResults?: Required<Pick<PartialSearchResult, 'tracks'>>;
-  searchQuery?: string;
-  trackId?: string;
-  queueId?: string;
-  deviceId?: string;
-}
-
 export type SongQueue = {
   qID: int;
   songs: Song[];
@@ -214,12 +194,36 @@ interface InteractableCommandBase {
   type: string;
 }
 
+// Uniquely-identifiable Track added to a Spotify Playback Queue
+export interface QueuedTrack {
+  queueId: string;
+  track: Track;
+}
+
+export interface MusicArea extends Interactable {
+  commandType?: string;
+  topic?: string;
+  sessionInProgress?: boolean;
+  accessToken?: AccessToken;
+  currentSong?: Track;
+  songQueue?: QueuedTrack[];
+  searchResults?: Required<Pick<PartialSearchResult, 'tracks'>>;
+  searchQuery?: string;
+  trackId?: string;
+  queueId?: string;
+  deviceId?: string;
+}
+
 export type InteractableCommand =
   | ViewingAreaUpdateCommand
   | JoinGameCommand
   | GameMoveCommand<TicTacToeMove>
   | LeaveGameCommand
   | MusicAreaCommand;
+export interface MusicAreaCommand {
+  type: 'MusicAreaCommand';
+  payload: MusicArea;
+}
 export interface ViewingAreaUpdateCommand {
   type: 'ViewingAreaUpdate';
   update: ViewingArea;
@@ -236,10 +240,6 @@ export interface GameMoveCommand<MoveType> {
   gameID: GameInstanceID;
   move: MoveType;
 }
-export interface MusicAreaCommand {
-  type: 'MusicAreaCommand';
-  payload: MusicArea;
-}
 export type InteractableCommandReturnType<CommandType extends InteractableCommand> =
   CommandType extends JoinGameCommand
     ? { gameID: string }
@@ -250,7 +250,7 @@ export type InteractableCommandReturnType<CommandType extends InteractableComman
     : CommandType extends LeaveGameCommand
     ? undefined
     : CommandType extends MusicAreaCommand
-    ? { payload: MusicArea}
+    ? { payload: MusicArea }
     : never;
 
 export type InteractableCommandResponse<MessageType> = {

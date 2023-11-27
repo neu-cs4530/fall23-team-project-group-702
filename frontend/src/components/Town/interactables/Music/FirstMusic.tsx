@@ -16,7 +16,7 @@ import useTownController from '../../../../hooks/useTownController';
 import MusicAreaInteractable from '../MusicArea';
 import { useCallback, useEffect, useState } from 'react';
 import SpotifyMain from './SpotifyMain';
-import { InteractableID } from '../../../../types/CoveyTownSocket';
+import { InteractableID, MusicArea } from '../../../../types/CoveyTownSocket';
 import MusicAreaController from '../../../../classes/interactable/MusicAreaController';
 import { useRouter } from 'next/router';
 import { AccessToken } from '@spotify/web-api-ts-sdk';
@@ -80,8 +80,9 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
   }, [accessToken, router.query]);
 
   // mocking what start music session, should acc use gameAreaController to send interactableCommand to backend
-  const handleStartMusicSession = () => {
+  const handleStartMusicSession = async () => {
     // townController.sendInteractableCommand;
+    await musicAreaController.sendSpotifyCommand({} as MusicArea);
     setSessionActive(true); // backend call townController.sendInteract
   };
 
