@@ -18,6 +18,9 @@ import { useCallback, useEffect, useState } from 'react';
 import SpotifyMain from './SpotifyMain';
 import { InteractableID } from '../../../../types/CoveyTownSocket';
 import MusicAreaController from '../../../../classes/interactable/MusicAreaController';
+import { useRouter } from 'next/router';
+import { AccessToken } from '@spotify/web-api-ts-sdk';
+import { CLIENT_ID, CLIENT_SECRET, REDIRECT_URI, TOKEN_URL } from '../../../../utilities/constants';
 
 /**
  * Jukebox Interface Component that handles rendering the join/create music session modal and the music playback interface modal.
@@ -25,17 +28,66 @@ import MusicAreaController from '../../../../classes/interactable/MusicAreaContr
 function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX.Element {
   const musicAreaController = useInteractableAreaController<MusicAreaController>(interactableID);
   const townController = useTownController();
+  const router = useRouter();
 
+  const [accessToken, setAccessToken] = useState(null as unknown as AccessToken);
   const [sessionName, setSessionName] = useState<string>(musicAreaController.topic);
   const [sessionActive, setSessionActive] = useState<boolean>(
     musicAreaController.sessionInProgress,
   );
+
+  useEffect(() => {
+    const params = router.query;
+    async function login() {
+      if (!params.code) {
+        /* redirect user to spotify login */
+        const loginResponse = await fetch('http://localhost:3000/api/login', {
+          method: 'GET',
+        });
+        const loginData = await loginResponse.json();
+        if (!loginData) {
+          throw new Error('Unable to get Spotify login URL');
+        }
+        window.location.href = loginData;
+      } else if (!accessToken) {
+        /* get user access token using login info */
+        const spotifyAccessTokenParams = new URLSearchParams({
+          grant_type: 'authorization_code',
+          code: params.code as string,
+          redirect_uri: REDIRECT_URI,
+          client_id: CLIENT_ID,
+          client_secret: CLIENT_SECRET,
+        });
+        const authResponse = await fetch(TOKEN_URL, {
+          method: 'POST',
+          body: spotifyAccessTokenParams,
+        });
+        if (!authResponse.ok) {
+          throw new Error('Unable to get Spotify access token using code');
+        }
+        /* the access token for the current user */
+        const authorizationData = await authResponse.json();
+
+        /* set access token if a valid access token object */
+        if (authorizationData && authorizationData.access_token) {
+          setAccessToken(authorizationData);
+        } else {
+          throw new Error('Unable to get Spotify access token');
+        }
+      }
+    }
+    login();
+  }, [accessToken, router.query]);
 
   // mocking what start music session, should acc use gameAreaController to send interactableCommand to backend
   const handleStartMusicSession = () => {
     // townController.sendInteractableCommand;
     setSessionActive(true); // backend call townController.sendInteract
   };
+
+  if (!accessToken) {
+    return <div>Not logged in</div>;
+  }
 
   if (!sessionActive) {
     return (
@@ -69,7 +121,7 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
     return (
       <div>
         {sessionName}
-        <SpotifyMain />
+        <SpotifyMain accessToken={accessToken} />
       </div>
     );
   }
