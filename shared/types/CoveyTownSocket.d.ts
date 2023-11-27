@@ -2,7 +2,7 @@ import {
   // SpotifyApi,
   // Devices,
   Track,
-  // AccessToken,
+  AccessToken,
   PartialSearchResult,
   // PlaybackState,
 } from '@spotify/web-api-ts-sdk';
@@ -84,13 +84,17 @@ export interface QueuedTrack {
 }
 
 export interface MusicArea extends Interactable {
+  commandType?: string;
   topic?: string;
   sessionInProgress?: boolean;
-  accessToken?: string;
+  accessToken?: AccessToken;
   currentSong?: Track;
   songQueue?: QueuedTrack[];
   searchResults?: Required<Pick<PartialSearchResult, 'tracks'>>;
-  commandType?: string;
+  searchQuery?: string;
+  trackId?: string;
+  queueId?: string;
+  deviceId?: string;
 }
 
 export type SongQueue = {

@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 import { ITiledMapObject } from '@jonbell/tiled-map-type-guard';
-import { Track } from '@spotify/web-api-ts-sdk';
+import { AccessToken, Track } from '@spotify/web-api-ts-sdk';
 import InvalidParametersError from '../../lib/InvalidParametersError';
 import Player from '../../lib/Player';
 import {
@@ -121,76 +121,102 @@ export default class SpotifyArea extends InteractableArea {
       const musicArea = command as MusicAreaCommand;
       this.updateModel(musicArea.payload);
       switch (musicArea.payload.commandType) {
+        case 'topic': {
+          const { topic } = musicArea.payload;
+          const { sessionInProgress } = musicArea.payload;
+          if (!topic || !sessionInProgress) {
+            console.log('no topic provided');
+            return {} as InteractableCommandReturnType<CommandType>;
+          }
+          this.topic = topic as string;
+          console.log('topic updated');
+          return {
+            payload: { topic, sessionInProgress },
+          } as InteractableCommandReturnType<CommandType>;
+        }
         case 'skip': {
           const results = await this._musicSessionController.skip();
           console.log('skipped');
-          res.status(200).json({ currentSong: results[0], updatedQueue: results[1] });
-          break;
+          return {
+            payload: { currentSong: results[0], songQueue: results[1] } as MusicArea,
+          } as InteractableCommandReturnType<CommandType>;
         }
         case 'togglePlay': {
           await this._musicSessionController.togglePlay();
-          res.status(200).send('Altered playback state');
-          break;
+          console.log('toggled play');
+          return {} as InteractableCommandReturnType<CommandType>;
         }
         case 'search': {
-          const { searchQuery } = req.query;
+          const { searchQuery } = musicArea.payload;
           if (!searchQuery) {
             console.log('no search query provided');
-            res.status(400).send('no search query provided');
-            return;
+            return {} as InteractableCommandReturnType<CommandType>;
           }
-          const searchResults = await this._musicSessionController.search(searchQuery as string);
+          const results = await this._musicSessionController.search(searchQuery as string);
           console.log('Search successful');
-          res.status(200).json(searchResults);
-          break;
+          return {
+            payload: { searchResults: results },
+          } as InteractableCommandReturnType<CommandType>;
         }
         case 'playSong': {
-          const { trackId } = req.query;
+          const { trackId } = musicArea.payload;
           if (!trackId) {
             console.log('no track ID provided');
-            res.status(400).send('no track ID provided');
-            return;
+            return {} as InteractableCommandReturnType<CommandType>;
           }
           await this._musicSessionController.playSongNow(trackId as string);
-          res.status(200).send('playing song');
-          break;
+          return {} as InteractableCommandReturnType<CommandType>;
         }
         case 'addQueue': {
-          const { trackId } = req.query;
+          const { trackId } = musicArea.payload;
           if (!trackId) {
             console.log('no track ID provided');
-            res.status(400).send('no track ID provided');
-            return;
+            return {} as InteractableCommandReturnType<CommandType>;
           }
           const updatedQueue = await this._musicSessionController.addSongToQueue(trackId as string);
           console.log('added to queue');
-          res.status(200).json(updatedQueue);
-          break;
+          return {
+            payload: { songQueue: updatedQueue },
+          } as InteractableCommandReturnType<CommandType>;
         }
         case 'removeFromQueue': {
-          const { queueId } = req.query;
+          const { queueId } = musicArea.payload;
           if (!queueId) {
             console.log('no track ID provided');
-            res.status(400).send('no track ID provided');
-            return;
+            return {} as InteractableCommandReturnType<CommandType>;
           }
           const updatedQueue = await this._musicSessionController.removeFromQueue(
             queueId as string,
           );
           console.log('removed from queue');
-          res.status(200).json(updatedQueue);
-          break;
+          return {
+            payload: { songQueue: updatedQueue },
+          } as InteractableCommandReturnType<CommandType>;
         }
         case 'getCurrentPlayback': {
           const { queue } = this._musicSessionController;
-
           console.log('got queue');
-          res.status(200).json(queue);
-          break;
+          return { payload: { songQueue: queue } } as InteractableCommandReturnType<CommandType>;
+        }
+        case 'addUserToSession': {
+          const userAccessToken: AccessToken = musicArea.payload.accessToken;
+          const { deviceId } = musicArea.payload;
+
+          if (userAccessToken && deviceId) {
+            console.log('received access token. creating spotify playback object');
+            const confirmedAccessToken = await this._musicSessionController.addUserMusicPlayer(
+              deviceId,
+              userAccessToken,
+            );
+            return {
+              payload: { accessToken: confirmedAccessToken },
+            } as InteractableCommandReturnType<CommandType>;
+          }
+          console.log('400, should not reach');
+          return {} as InteractableCommandReturnType<CommandType>;
         }
         default:
           console.log('invalid query');
-          res.status(400).send('invalid query');
           break;
       }
     }

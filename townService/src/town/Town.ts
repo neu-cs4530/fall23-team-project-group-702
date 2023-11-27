@@ -175,7 +175,7 @@ export default class Town {
         if (interactable && interactable.toModel().type === 'MusicArea') {
           try {
             const musicInteractable = interactable as SpotifyArea;
-            const payload = musicInteractable.handleSpotifyCommand(command);
+            const payload = await musicInteractable.handleSpotifyCommand(command);
             socket.emit('commandResponse', {
               commandID: command.commandID,
               interactableID: command.interactableID,

@@ -97,7 +97,7 @@ export default function SpotifyPlayback() {
                 </Tr>
               ))
             ) : (
-              <p>Blah</p>
+              <></>
             )}
           </Tbody>
         </Table>
