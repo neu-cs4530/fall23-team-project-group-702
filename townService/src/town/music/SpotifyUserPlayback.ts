@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import {
   SpotifyApi,
   Devices,
@@ -6,6 +5,7 @@ import {
   AccessToken,
   PartialSearchResult,
   PlaybackState,
+  Device,
   // Device,
 } from '@spotify/web-api-ts-sdk';
 
@@ -146,9 +146,7 @@ export class SpotifyUserPlayback {
         Authorization: `Bearer ${this._accessToken.access_token}`,
       },
     });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const results: any = await response.json();
-
+    const results = (await response.json()) as Required<Pick<PartialSearchResult, 'tracks'>>;
     return results;
   }
 
@@ -176,44 +174,25 @@ export class SpotifyUserPlayback {
        spotify will return status code 202 to indicate the command was a success but the transfer is pending
        this also applies to when using the playNow method (when using play song web api route)
      */
-    let deviceTransferComplete = false;
-    while (!deviceTransferComplete) {
-      // eslint-disable-next-line no-await-in-loop
-      await this.getDevices();
-      for (const device of this._activeDevices.devices) {
-        if (device.id === deviceId) {
-          deviceTransferComplete = true;
+    await this.getDevices();
+    async function checkDeviceTransfer(
+      id: string,
+      devices: Device[],
+      playback: SpotifyUserPlayback,
+    ) {
+      const updatedDevices = await playback.getDevices();
+      for (const device of devices) {
+        if (device.id === id) {
+          return;
         }
       }
-      if (!deviceTransferComplete) {
-        console.log('LOOPING FROM SPOTIFYUSERPLAYBACK.TS');
-        console.log(new Date());
-        // eslint-disable-next-line no-await-in-loop, no-promise-executor-return
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        console.log(new Date());
-      }
+      console.log('LOOPING');
+      // console.log(new Date());
+      // await new Promise(resolve => setTimeout(resolve, 1000));
+      // console.log(new Date());
+      await checkDeviceTransfer(id, updatedDevices.devices, playback);
     }
-    // await this.getDevices();
-    // async function checkDeviceTransfer(
-    //   id: string,
-    //   devices: Device[],
-    //   playback: SpotifyUserPlayback,
-    // ) {
-    //   const updatedDevices = await playback.getDevices();
-    //   for (const device of devices) {
-    //     if (device.id === id) {
-    //       return;
-    //     }
-    //   }
-    //   console.log('LOOPING');
-    //   console.log(new Date());
-    //   // eslint-disable-next-line no-promise-executor-return
-    //   await new Promise(resolve => setTimeout(resolve, 1000));
-    //   console.log(new Date());
-    //   await checkDeviceTransfer(id, updatedDevices.devices, playback);
-    // }
-
-    // checkDeviceTransfer(deviceId, this._activeDevices.devices, this);
+    checkDeviceTransfer(deviceId, this._activeDevices.devices, this);
 
     console.log(
       `transfer complete. active devices length: ${JSON.stringify(
@@ -228,18 +207,22 @@ export class SpotifyUserPlayback {
    * @throws - if the device has not been transferred to the web sdk yet
    * @throws - if unable to play song on the device
    */
-  public async playSongNow(trackId: string): Promise<void> {
+  public async playSongNow(trackId: string, seek?: number): Promise<void> {
     if (!this._deviceId || this._deviceId === '') {
       throw new Error('Device has not been transferred to the web sdk yet.');
     }
     const playerDevice = await this.getDevices();
+    let requestBody = JSON.stringify({ uris: [`spotify:track:${trackId}`] });
+    if (seek) {
+      requestBody = JSON.stringify({ uris: [`spotify:track:${trackId}`], position_ms: seek });
+    }
     playerDevice.devices.forEach(async device => {
       if (device.id === this._deviceId) {
         const playSongResponse = await fetch(
           `https://api.spotify.com/v1/me/player/play?device_id=${device.id}`,
           {
             method: 'PUT',
-            body: JSON.stringify({ uris: [`spotify:track:${trackId}`] }),
+            body: requestBody,
             headers: {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${this._accessToken.access_token}`,

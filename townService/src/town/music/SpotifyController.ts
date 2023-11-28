@@ -92,7 +92,7 @@ export default class SpotifyController {
           hostUserState.progress_ms,
         )} || track name = ${JSON.stringify(hostUserState.item.name)}`,
       );
-      await userMusicPlayer.nextSong(hostUserState.item.id);
+      await userMusicPlayer.playSongNow(hostUserState.item.id, hostUserState.progress_ms);
       await this.synchronize();
     }
     console.log('Current users in music session: ');
@@ -107,18 +107,23 @@ export default class SpotifyController {
    * @throws - if there are no users in the music session
    */
   public async synchronize(): Promise<void> {
-    const hostUserState = await this.getCurrentHostPlaybackState();
-    /* hostUserState is null if no song is currently playing */
-    if (!hostUserState) {
-      return;
-    }
-    /* Song is currnetly playing, perform synchronization */
-    const hostUserPosition = hostUserState.progress_ms;
+    /* Song is currently playing, perform synchronization */
     for (const userMusicPlayer of this._userMusicPlayers) {
-      const track = await userMusicPlayer.getCurrentlyPlayingTrack();
+      const hostUserState = await this.getCurrentHostPlaybackState();
+      /* hostUserState is null if no song is currently playing */
+      if (!hostUserState) {
+        return;
+      }
+      const hostUserPosition = hostUserState.progress_ms;
+      const hostIsPlaying = hostUserState.is_playing;
+      const userState = await userMusicPlayer.getCurrentlyPlayingTrack();
       /* Checks that the user is playing the same song as the host */
-      if (track?.item.id !== hostUserState.item.id) {
-        await userMusicPlayer.nextSong(hostUserState.item.id);
+      if (userState?.item.id !== hostUserState.item.id) {
+        await userMusicPlayer.playSongNow(hostUserState.item.id);
+      }
+      /* If song isPlaying was desynced, resyncrhonize */
+      if (userState?.is_playing !== hostIsPlaying) {
+        await userMusicPlayer.togglePlay();
       }
       await userMusicPlayer.seekToPosition(hostUserPosition);
     }
@@ -191,7 +196,7 @@ export default class SpotifyController {
     this._songNowPlaying = nextQueuedTrack.track;
     this._queue = this._queue.slice(1);
     for (const userMusicPlayer of this._userMusicPlayers) {
-      await userMusicPlayer.nextSong(nextQueuedTrack.track.id);
+      await userMusicPlayer.playSongNow(nextQueuedTrack.track.id);
     }
     this._isASongPlaying = true;
 
