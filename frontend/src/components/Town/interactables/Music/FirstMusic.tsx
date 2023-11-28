@@ -15,7 +15,7 @@ import { useInteractable, useInteractableAreaController } from '../../../../clas
 import useTownController from '../../../../hooks/useTownController';
 import MusicAreaInteractable from '../MusicArea';
 import { useCallback, useEffect, useState } from 'react';
-import { InteractableID, MusicArea } from '../../../../types/CoveyTownSocket';
+import { InteractableID } from '../../../../types/CoveyTownSocket';
 import MusicAreaController from '../../../../classes/interactable/MusicAreaController';
 import { AccessToken } from '@spotify/web-api-ts-sdk';
 import SpotifyPlayback from './SpotifyPlayback';
@@ -116,35 +116,77 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
  *
  */
 export default function FirstMusicWrapper(): JSX.Element {
+  console.log('Rendering FirstMusicWrapper');
   const musicArea = useInteractable<MusicAreaInteractable>('musicArea');
   const townController = useTownController();
 
+  const [isOpen, setIsOpen] = useState<boolean>(true);
+
+  // // Whenever player wants to reopen interface
+  // useEffect(() => {
+  //   const handleInteract = () => {
+  //     setIsOpen(true);
+  //   };
+  //   if (musicArea) {
+  //     console.log('attempting to interact');
+  //     musicArea.addListener('interact', handleInteract);
+  //     return () => {
+  //       musicArea.removeListener('interact', handleInteract);
+  //     };
+  //   }
+  // }, [musicArea]);
+
+  // Pause controller if interacting and modal is open
   useEffect(() => {
-    if (musicArea) {
+    if (isOpen && musicArea) {
       townController.pause();
     } else {
       townController.unPause();
     }
-  }, [townController, musicArea]);
+  }, [isOpen, musicArea, townController]);
 
+  // Should set isOpen to false
   const closeModal = useCallback(() => {
+    setIsOpen(false);
+  }, [setIsOpen]);
+
+  const handleReopen = useCallback(() => {
+    setIsOpen(true);
+  }, [setIsOpen]);
+
+  const handleLeaveSession = useCallback(() => {
     if (musicArea) {
+      console.log('handling leave session');
       townController.interactEnd(musicArea);
-      // setIsVisible(false);
+      const controller = townController.getMusicAreaController(musicArea);
+      controller.removeUserFromSession();
     }
-  }, [townController, musicArea]);
+  }, [musicArea, townController]);
+
+  useEffect(() => {
+    if (musicArea) {
+      musicArea.addListener('leaveSession', handleLeaveSession);
+      return () => {
+        musicArea.removeListener('leaveSession', handleLeaveSession);
+      };
+    }
+  });
 
   if (musicArea && musicArea.getType() === 'musicArea') {
-    console.log('Rendering first music');
-    return (
-      <Modal isOpen={true} onClose={closeModal} closeOnOverlayClick={false}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalCloseButton />
-          <FirstMusic interactableID={musicArea.id} />;
-        </ModalContent>
-      </Modal>
-    );
+    console.log('Rendering first music. isOpen: ' + isOpen);
+    if (isOpen) {
+      return (
+        <Modal isOpen={true} onClose={closeModal} closeOnOverlayClick={false}>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalCloseButton />
+            <FirstMusic interactableID={musicArea.id} />;
+          </ModalContent>
+        </Modal>
+      );
+    } else {
+      return <Button onClick={handleReopen}>Open Music Player</Button>;
+    }
   }
   return <></>;
 }

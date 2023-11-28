@@ -136,7 +136,8 @@ export default class MusicAreaController extends InteractableAreaController<
     // Invokes setters, which have emit()
     console.log('frontend says that isplayingstate is now: ' + updatedModel.isPlaying);
     if (updatedModel.topic !== undefined) this.topic = updatedModel.topic;
-    if (updatedModel.sessionInProgress != undefined) this.sessionInProgress = updatedModel.sessionInProgress;
+    if (updatedModel.sessionInProgress != undefined)
+      this.sessionInProgress = updatedModel.sessionInProgress;
     if (updatedModel.currentSong !== undefined) this.currentSong = updatedModel.currentSong;
     if (updatedModel.songQueue !== undefined) this.currentQueue = updatedModel.songQueue;
     if (updatedModel.isPlaying !== undefined) this.isPlaying = updatedModel.isPlaying;
@@ -154,6 +155,17 @@ export default class MusicAreaController extends InteractableAreaController<
     await this._townController.sendInteractableCommand(this.id, {
       type: 'CreateMusicSession',
       topic: sessionName,
+    });
+  }
+
+  public async leaveSession(accessToken: AccessToken) {
+    const instanceID = this.id;
+    if (!instanceID) {
+      throw new Error('instanceID undefined');
+    }
+    await this._townController.sendInteractableCommand(this.id, {
+      type: 'RemoveUserFromMusicSession',
+      accessToken: accessToken,
     });
   }
 
@@ -175,84 +187,95 @@ export default class MusicAreaController extends InteractableAreaController<
     });
   }
 
-    /**
+  public async removeUserFromSession() {
+    const instanceID = this.id;
+    if (!instanceID) {
+      throw new Error('instanceID undefined');
+    }
+    console.log('send RemoveUserFromMusicSession');
+    await this._townController.sendInteractableCommand(this.id, {
+      type: 'RemoveUserFromMusicSession',
+      accessToken: this._townController.spotifyAccessToken,
+    });
+  }
+
+  /**
    * Tells backend to search songs for this user.
    * @param sessionName name
    */
-     public async searchSongs(searchQuery: string): Promise<Track[]> {
-      const instanceID = this.id;
-      if (!instanceID) {
-        throw new Error('instanceID undefined');
-      }
-      const results = await this._townController.sendInteractableCommand(this.id, {
-        type: 'SearchSongsMusicSession',
-        searchQuery,
-      });
-      return results.searchResults
+  public async searchSongs(searchQuery: string): Promise<Track[]> {
+    const instanceID = this.id;
+    if (!instanceID) {
+      throw new Error('instanceID undefined');
     }
+    const results = await this._townController.sendInteractableCommand(this.id, {
+      type: 'SearchSongsMusicSession',
+      searchQuery,
+    });
+    return results.searchResults;
+  }
 
-        /**
-         * Tells backend to add to queue.
-         * @param trackId spotify ID for track
-         */
-         public async addToQueue(trackId: string) {
-          const instanceID = this.id;
-          if (!instanceID) {
-            throw new Error('instanceID undefined');
-          }
-          const response = await this._townController.sendInteractableCommand(this.id, {
-            type: 'AddMusicToSessionQueue',
-            trackId,
-          });
-          // this.currentQueue = response.updatedQueue;
-        }
+  /**
+   * Tells backend to add to queue.
+   * @param trackId spotify ID for track
+   */
+  public async addToQueue(trackId: string) {
+    const instanceID = this.id;
+    if (!instanceID) {
+      throw new Error('instanceID undefined');
+    }
+    const response = await this._townController.sendInteractableCommand(this.id, {
+      type: 'AddMusicToSessionQueue',
+      trackId,
+    });
+    // this.currentQueue = response.updatedQueue;
+  }
 
-          /**
-         * Tells backend to remove a track using its generated queueID.
-         * @param queueId spotify queueId for track
-         */
-                 public async removeFromQueue(queueId: string) {
-                  const instanceID = this.id;
-                  if (!instanceID) {
-                    throw new Error('instanceID undefined');
-                  }
-                  const response = await this._townController.sendInteractableCommand(this.id, {
-                    type: 'RemoveMusicFromSessionQueue',
-                    queueId,
-                  });
-                  // this.currentQueue = response.updatedQueue;
-                }
+  /**
+   * Tells backend to remove a track using its generated queueID.
+   * @param queueId spotify queueId for track
+   */
+  public async removeFromQueue(queueId: string) {
+    const instanceID = this.id;
+    if (!instanceID) {
+      throw new Error('instanceID undefined');
+    }
+    const response = await this._townController.sendInteractableCommand(this.id, {
+      type: 'RemoveMusicFromSessionQueue',
+      queueId,
+    });
+    // this.currentQueue = response.updatedQueue;
+  }
 
-        /**
-         * Tells backend to skip the head of the queue if nonempty
-         */
-                public async skip() {
-                  const instanceID = this.id;
-                  if (!instanceID) {
-                    throw new Error('instanceID undefined');
-                  }
-                  const response = await this._townController.sendInteractableCommand(this.id, {
-                    type: 'SkipSongMusicSession',
-                  });
-                  // this.currentSong = response.currentSong;
-                  // this.currentQueue = response.updatedQueue;
-              }
+  /**
+   * Tells backend to skip the head of the queue if nonempty
+   */
+  public async skip() {
+    const instanceID = this.id;
+    if (!instanceID) {
+      throw new Error('instanceID undefined');
+    }
+    const response = await this._townController.sendInteractableCommand(this.id, {
+      type: 'SkipSongMusicSession',
+    });
+    // this.currentSong = response.currentSong;
+    // this.currentQueue = response.updatedQueue;
+  }
 
-              /**
-               * Pauses or Plays the current song based on its current playback state
-               * Payload: boolean representing the new playback state
-               */
-              public async togglePlay() {
-                const instanceID = this.id;
-                if (!instanceID) {
-                  throw new Error('instanceID undefined');
-                }
-                const { isPlaying } = await this._townController.sendInteractableCommand(this.id, {
-                  type: 'TogglePlayMusicSession',
-                });
-                // this.isPlaying = isPlaying;
-            }
-              
+  /**
+   * Pauses or Plays the current song based on its current playback state
+   * Payload: boolean representing the new playback state
+   */
+  public async togglePlay() {
+    const instanceID = this.id;
+    if (!instanceID) {
+      throw new Error('instanceID undefined');
+    }
+    const { isPlaying } = await this._townController.sendInteractableCommand(this.id, {
+      type: 'TogglePlayMusicSession',
+    });
+    // this.isPlaying = isPlaying;
+  }
 
   // /**
   //  * Sends a command to the backend to update the state of the music area

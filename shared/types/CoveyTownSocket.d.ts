@@ -222,7 +222,8 @@ export type InteractableCommand =
   | AddMusicToSessionQueue
   | SkipSongMusicSession
   | TogglePlayMusicSession
-  | RemoveMusicFromSessionQueue;
+  | RemoveMusicFromSessionQueue
+  | RemoveUserFromMusicSessionCommand;
 
 export interface CreateMusicSessionCommand {
   type: 'CreateMusicSession';
@@ -255,6 +256,11 @@ export interface SkipSongMusicSession {
 
 export interface TogglePlayMusicSession {
   type: 'TogglePlayMusicSession'
+}
+
+export interface RemoveUserFromMusicSessionCommand {
+  type: 'RemoveUserFromMusicSession';
+  accessToken: AccessToken;
 }
 
 export interface ViewingAreaUpdateCommand {

@@ -62,6 +62,7 @@ export default class MusicArea extends Interactable {
     if (this._isInteracting) {
       console.log('interaction ended');
       this.townController.interactableEmitter.emit('endInteraction', this);
+      this.emit('leaveSession');
       this._isInteracting = false;
     }
   }

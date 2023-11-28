@@ -89,6 +89,7 @@ export class SpotifyUserPlayback {
    * @returns - after the toggle, true if the song is playing, false if the song is paused
    */
   public async togglePlay(): Promise<boolean> {
+    console.log('togglePlay() invoked');
     await this.getDevices();
     const state = await this._sdk.player.getCurrentlyPlayingTrack();
     if (this._activeDevices.devices.length < 1) {
@@ -101,10 +102,12 @@ export class SpotifyUserPlayback {
       if (!device.is_active) {
         return;
       }
+      console.log(`active length: ${this._activeDevices.devices.length}`);
 
       if (state && state.is_playing) {
         console.log('pausing playback');
         await this._sdk.player.pausePlayback(device.id as string);
+        isPlaying = false;
       } else {
         console.log('starting playback');
         await this._sdk.player.startResumePlayback(device.id as string);

@@ -321,6 +321,13 @@ export default class SpotifyArea extends InteractableArea {
         this._emitAreaChanged();
         return { updatedQueue } as InteractableCommandReturnType<CommandType>;
       }
+      case 'RemoveUserFromMusicSession': {
+        const { accessToken } = command;
+        console.log(`removing from session with access token: ${accessToken.access_token}`);
+        this._musicSessionController.removeUser(accessToken.access_token);
+        this._emitAreaChanged();
+        return {} as InteractableCommandReturnType<CommandType>;
+      }
       default:
         throw new InvalidParametersError('Unknown command type');
     }

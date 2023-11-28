@@ -80,26 +80,26 @@ export default class SpotifyController {
     if (!userExists) {
       this._userMusicPlayers.push(userMusicPlayer);
       console.log(`pushed new music player. now length: ${this.userMusicPlayers.length}`);
+      await this.transferPlayback(deviceId, confirmedAccessToken.access_token);
+      const hostUserState = await this.getCurrentHostPlaybackState();
+      /* If song is currently playing, added check for players > 1 because we don't need to auto-play if only host */
+      if (hostUserState && this._userMusicPlayers.length > 1) {
+        console.log(
+          `in add music player - host user state: currently playing item = ${JSON.stringify(
+            hostUserState.item.id,
+          )} || progress_ms = ${JSON.stringify(
+            hostUserState.progress_ms,
+          )} || track name = ${JSON.stringify(hostUserState.item.name)}`,
+        );
+        await userMusicPlayer.playSongNow(hostUserState.item.id, hostUserState.progress_ms);
+        await this.synchronize();
+      }
+      console.log('Current users in music session: ');
+      for (const player of this._userMusicPlayers) {
+        console.log(`user: ${player.accessToken.access_token}`);
+      }
+      console.log('~~REGISTERED USER IN THE BACKEND~~');
     }
-    await this.transferPlayback(deviceId, confirmedAccessToken.access_token);
-    const hostUserState = await this.getCurrentHostPlaybackState();
-    /* If song is currently playing, added check for players > 1 because we don't need to auto-play if only host */
-    if (hostUserState && this._userMusicPlayers.length > 1) {
-      console.log(
-        `in add music player - host user state: currently playing item = ${JSON.stringify(
-          hostUserState.item.id,
-        )} || progress_ms = ${JSON.stringify(
-          hostUserState.progress_ms,
-        )} || track name = ${JSON.stringify(hostUserState.item.name)}`,
-      );
-      await userMusicPlayer.playSongNow(hostUserState.item.id, hostUserState.progress_ms);
-      await this.synchronize();
-    }
-    console.log('Current users in music session: ');
-    for (const player of this._userMusicPlayers) {
-      console.log(`user: ${player.accessToken.access_token}`);
-    }
-    console.log('~~REGISTERED USER IN THE BACKEND~~');
   }
 
   /**
@@ -274,6 +274,10 @@ export default class SpotifyController {
     if (!accessToken || accessToken === '') {
       throw new Error('No accessToken provided');
     }
+    const playerToRemove = this._userMusicPlayers.find(
+      userMusicPlayer => userMusicPlayer.accessToken.access_token === accessToken,
+    );
+    playerToRemove?.togglePlay();
     this._userMusicPlayers = this._userMusicPlayers.filter(
       userMusicPlayer => userMusicPlayer.accessToken.access_token !== accessToken,
     );

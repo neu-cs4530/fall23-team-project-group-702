@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Track } from '@spotify/web-api-ts-sdk';
 import { useState } from 'react';
 import { Box, Button, Heading, Input, Table, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/react';
-import { MusicArea, QueuedTrack } from '../../../../types/CoveyTownSocket';
+import { QueuedTrack } from '../../../../types/CoveyTownSocket';
 import MusicAreaController from '../../../../classes/interactable/MusicAreaController';
 
 export default function SpotifyPlayback({
@@ -23,9 +23,8 @@ export default function SpotifyPlayback({
    */
   const handleSearch = async () => {
     if (searchQuery === '') return;
-    const searchResults = await musicController.searchSongs(searchQuery);
-
-    if (searchResults) setSearchResults(searchResults);
+    const results = await musicController.searchSongs(searchQuery);
+    if (results) setSearchResults(results);
   };
 
   /**
@@ -58,6 +57,7 @@ export default function SpotifyPlayback({
    * Finally alter isPlaying state
    */
   const handleTogglePlay = async () => {
+    setIsPlaying(!isPlaying);
     await musicController.togglePlay();
   };
 
@@ -79,16 +79,16 @@ export default function SpotifyPlayback({
 
   return (
     <Box p={4} bg='white' boxShadow='md' borderRadius='md' my={9}>
-      {currentTrack !== null && (
-        <iframe
-          src={`https://open.spotify.com/embed/track/${currentTrack.id}?utm_source=generator&theme=0`}
-          width='100%'
-          height='300'
-          allow='autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture'
-          loading='lazy'
-          style={{ borderRadius: '8px' }}
-        />
-      )}
+      <iframe
+        src={`https://open.spotify.com/embed/track/${
+          currentTrack?.id ?? undefined
+        }?utm_source=generator&theme=0`}
+        width='100%'
+        height='300'
+        allow='autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture'
+        loading='lazy'
+        style={{ borderRadius: '8px' }}
+      />
 
       <Box my={0.5}>
         <Box display='flex' alignItems='center' justifyContent='center' gridGap={2}>
