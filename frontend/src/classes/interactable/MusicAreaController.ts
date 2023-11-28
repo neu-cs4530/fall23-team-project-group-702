@@ -102,8 +102,8 @@ export default class MusicAreaController extends InteractableAreaController<
   }
 
   public set isPlaying(playbackState: boolean) {
-    this._model.isPlaying = playbackState;
     this.emit('playbackStateChange', playbackState);
+    this._model.isPlaying = playbackState;
   }
 
   get currentQueue(): QueuedTrack[] {
@@ -123,7 +123,6 @@ export default class MusicAreaController extends InteractableAreaController<
    * @returns MusicAreaModel that represents the current state of this ViewingAreaController
    */
   public toInteractableAreaModel(): MusicAreaModel {
-    console.log('inside toInteractableAreaModel');
     return this._model;
   }
 
@@ -134,12 +133,13 @@ export default class MusicAreaController extends InteractableAreaController<
    * @param updatedModel
    */
   protected _updateFrom(updatedModel: MusicAreaModel): void {
-    console.log('inside _updateFrom');
     // Invokes setters, which have emit()
-    if (updatedModel.topic) this.topic = updatedModel.topic;
-    if (updatedModel.sessionInProgress) this.sessionInProgress = updatedModel.sessionInProgress;
-    if (updatedModel.currentSong) this.currentSong = updatedModel.currentSong;
-    if (updatedModel.songQueue) this.currentQueue = updatedModel.songQueue;
+    console.log('frontend says that isplayingstate is now: ' + updatedModel.isPlaying);
+    if (updatedModel.topic !== undefined) this.topic = updatedModel.topic;
+    if (updatedModel.sessionInProgress != undefined) this.sessionInProgress = updatedModel.sessionInProgress;
+    if (updatedModel.currentSong !== undefined) this.currentSong = updatedModel.currentSong;
+    if (updatedModel.songQueue !== undefined) this.currentQueue = updatedModel.songQueue;
+    if (updatedModel.isPlaying !== undefined) this.isPlaying = updatedModel.isPlaying;
   }
 
   /**
@@ -204,7 +204,7 @@ export default class MusicAreaController extends InteractableAreaController<
             type: 'AddMusicToSessionQueue',
             trackId,
           });
-          this.currentQueue = response.updatedQueue;
+          // this.currentQueue = response.updatedQueue;
         }
 
           /**
@@ -220,7 +220,7 @@ export default class MusicAreaController extends InteractableAreaController<
                     type: 'RemoveMusicFromSessionQueue',
                     queueId,
                   });
-                  this.currentQueue = response.updatedQueue;
+                  // this.currentQueue = response.updatedQueue;
                 }
 
         /**
@@ -234,8 +234,8 @@ export default class MusicAreaController extends InteractableAreaController<
                   const response = await this._townController.sendInteractableCommand(this.id, {
                     type: 'SkipSongMusicSession',
                   });
-                  this.currentSong = response.currentSong;
-                  this.currentQueue = response.updatedQueue;
+                  // this.currentSong = response.currentSong;
+                  // this.currentQueue = response.updatedQueue;
               }
 
               /**
@@ -250,7 +250,7 @@ export default class MusicAreaController extends InteractableAreaController<
                 const { isPlaying } = await this._townController.sendInteractableCommand(this.id, {
                   type: 'TogglePlayMusicSession',
                 });
-                this.isPlaying = isPlaying;
+                // this.isPlaying = isPlaying;
             }
               
 

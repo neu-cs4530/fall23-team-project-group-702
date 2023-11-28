@@ -9,7 +9,6 @@ import {
   InteractableCommand,
   InteractableCommandReturnType,
   TownEmitter,
-  SearchSongsMusicSessionCommand,
 } from '../../types/CoveyTownSocket';
 import InteractableArea from '../InteractableArea';
 import SpotifyController from './SpotifyController';
@@ -288,7 +287,6 @@ export default class SpotifyArea extends InteractableArea {
             accessToken: confirmedAccessToken,
           } as InteractableCommandReturnType<CommandType>;
         }
-        console.log('400, should not reach');
         return {} as InteractableCommandReturnType<CommandType>;
       }
       case 'SearchSongsMusicSession': {
@@ -305,6 +303,9 @@ export default class SpotifyArea extends InteractableArea {
       }
       case 'SkipSongMusicSession': {
         const updatedState = await this._musicSessionController.skip();
+        console.log('~SKIP STATS~');
+        console.log(updatedState[0]?.name);
+        console.log(updatedState[1]?.length);
         this._emitAreaChanged();
         return {
           currentSong: updatedState[0],
@@ -314,11 +315,13 @@ export default class SpotifyArea extends InteractableArea {
       case 'TogglePlayMusicSession': {
         // Boolean representing the new playback state
         const isPlaying = await this._musicSessionController.togglePlay();
+        this._emitAreaChanged();
         return { isPlaying } as InteractableCommandReturnType<CommandType>;
       }
       case 'RemoveMusicFromSessionQueue': {
         const { queueId } = command;
         const updatedQueue = await this._musicSessionController.removeFromQueue(queueId);
+        this._emitAreaChanged();
         return { updatedQueue } as InteractableCommandReturnType<CommandType>;
       }
       default:
