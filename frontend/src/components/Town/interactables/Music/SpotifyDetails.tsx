@@ -24,11 +24,7 @@ export const SpotifyDetails: React.VFC<{
       );
       // add user to sessio
       // set sdk in rest api
-      const response = await props.musicController.sendSpotifyCommand({
-        commandType: 'addUserToSession',
-        accessToken: props.userAccessToken,
-        deviceId: playerDevice.device_id,
-      } as MusicArea);
+      await props.musicController.addUserToSession(props.userAccessToken, playerDevice.device_id);
 
       /*
       const response2 = await fetch('http://localhost:3000/api/spotifyplayback', {
@@ -44,6 +40,6 @@ export const SpotifyDetails: React.VFC<{
       */
     }
     activate();
-  }, [playerDevice?.device_id, props.userAccessToken]);
+  }, [playerDevice?.device_id, props.musicController, props.userAccessToken]);
   return null;
 };

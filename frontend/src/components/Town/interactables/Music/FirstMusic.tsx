@@ -31,8 +31,8 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
   const [accessToken, setAccessToken] = useState<AccessToken | undefined>(
     townController.spotifyAccessToken,
   );
-  const [sessionName, setSessionName] = useState<string | undefined>(musicAreaController.topic);
-  const [sessionActive, setSessionActive] = useState<boolean | undefined>(
+  const [sessionName, setSessionName] = useState<string>(musicAreaController.topic);
+  const [sessionActive, setSessionActive] = useState<boolean>(
     musicAreaController.sessionInProgress,
   );
 
@@ -47,14 +47,13 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
     };
   }, [musicAreaController]);
 
-  // mocking what start music session, should acc use gameAreaController to send interactableCommand to backend
+  /**
+   * Handles starting a music session with the session name.
+   */
   const handleStartMusicSession = async () => {
-    // townController.sendInteractableCommand;
-    await musicAreaController.sendSpotifyCommand({
-      commandType: 'createSession',
-      topic: sessionName,
-    } as MusicArea);
-    setSessionActive(true); // backend call townController.sendInteract
+    console.log('Starting music session');
+    await musicAreaController.createSession(sessionName);
+    setSessionActive(true);
   };
 
   if (!accessToken) {

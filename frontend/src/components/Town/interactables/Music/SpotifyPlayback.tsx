@@ -68,10 +68,6 @@ export default function SpotifyPlayback({
     setIsPlaying(currentlyPlaying);
   };
 
-  useEffect(() => {
-    console.log(JSON.stringify(currentTrack));
-  }, [currentTrack]);
-
   // Listener effects
   /**
    *   currentSongChange: (song: Track | undefined) => void;

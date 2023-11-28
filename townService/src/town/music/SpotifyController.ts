@@ -55,6 +55,7 @@ export default class SpotifyController {
    * @returns - the access token of the user
    */
   public async addUserMusicPlayer(deviceId: string, userAccessToken: AccessToken): Promise<void> {
+    console.log('in addUserMusicPlayer');
     /* Create music player and transfer playback to websdk */
     const userMusicPlayer = new SpotifyUserPlayback(userAccessToken);
     const confirmedAccessToken = await userMusicPlayer.authenticate();
@@ -64,7 +65,15 @@ export default class SpotifyController {
     ) {
       throw new Error('Unable to authenticate user');
     }
-    this._userMusicPlayers.push(userMusicPlayer);
+
+    // Shouldn't create a new player if this user already has a player
+    const userExists = this._userMusicPlayers.some(
+      player => player.accessToken.access_token === userAccessToken.access_token,
+    );
+    if (!userExists) {
+      this._userMusicPlayers.push(userMusicPlayer);
+      console.log(`pushed new music player. now length: ${this.userMusicPlayers.length}`);
+    }
     await this.transferPlayback(deviceId, confirmedAccessToken.access_token);
     const hostUserState = await this.getCurrentHostPlaybackState();
     /* If song is currently playing, added check for players > 1 because we don't need to auto-play if only host */

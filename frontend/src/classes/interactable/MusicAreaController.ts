@@ -1,5 +1,11 @@
+import { AccordionDescendantsProvider } from '@chakra-ui/react';
 import { AccessToken, Track } from '@spotify/web-api-ts-sdk';
-import { MusicArea, MusicArea as MusicAreaModel, QueuedTrack, Song } from '../../types/CoveyTownSocket';
+import {
+  MusicArea,
+  MusicArea as MusicAreaModel,
+  QueuedTrack,
+  Song,
+} from '../../types/CoveyTownSocket';
 import TownController from '../TownController';
 // import { SongQueue } from '../../types/CoveyTownSocket';
 import InteractableAreaController, { BaseInteractableEventMap } from './InteractableAreaController';
@@ -12,11 +18,11 @@ export type MusicAreaEvents = BaseInteractableEventMap & {
    * A playbackChange event indicates that the playing/paused state has changed.
    * Listeners are passed the new state in the parameter `isPlaying`
    */
-  topicChange: (topic: string | undefined) => void;
+  topicChange: (topic: string) => void;
   currentSongChange: (song: Track | null) => void;
   currentQueueChange: (queue: QueuedTrack[]) => void;
-  sessionInProgressChange: (sessionInProgress: boolean | undefined) => void;
-  accessTokenChange: (accessToken: AccessToken | undefined) => void;
+  sessionInProgressChange: (sessionInProgress: boolean) => void;
+  accessTokenChange: (accessToken: AccessToken) => void;
 };
 
 /**
@@ -58,7 +64,7 @@ export default class MusicAreaController extends InteractableAreaController<
   /**
    * the topic of the session
    */
-  public set topic(topic: string | undefined) {
+  public set topic(topic: string) {
     if (this._model.topic !== topic) {
       this._model.topic = topic;
       this.emit('topicChange', topic);
@@ -72,7 +78,7 @@ export default class MusicAreaController extends InteractableAreaController<
     return this._model.sessionInProgress;
   }
 
-  public set sessionInProgress(sessionInProgress: boolean | undefined) {
+  public set sessionInProgress(sessionInProgress: boolean) {
     if (this._model.sessionInProgress !== undefined) {
       this._model.sessionInProgress = sessionInProgress;
       this.emit('sessionInProgressChange', sessionInProgress);
@@ -81,20 +87,20 @@ export default class MusicAreaController extends InteractableAreaController<
     }
   }
 
-  get currentSong(): any {
+  get currentSong(): Track {
     return this._model.currentSong;
   }
 
-  public set currentSong(currentSong: any) {
+  public set currentSong(currentSong: Track) {
     this._model.currentSong = currentSong;
     this.emit('currentSongChange', currentSong);
   }
 
-  get currentQueue(): any {
+  get currentQueue(): QueuedTrack[] {
     return this._model.songQueue;
   }
 
-  public set currentQueue(currentQueue: any) {
+  public set currentQueue(currentQueue: QueuedTrack[]) {
     this._model.songQueue = currentQueue;
     this.emit('currentQueueChange', currentQueue);
   }
@@ -113,38 +119,66 @@ export default class MusicAreaController extends InteractableAreaController<
 
   /**
    * Applies updates to this music area controller's model, setting the fields
-   * 
+   *
    *
    * @param updatedModel
    */
   protected _updateFrom(updatedModel: MusicAreaModel): void {
     console.log('inside _updateFrom');
     // Invokes setters, which have emit()
-    if(updatedModel.topic)
-    this.topic = updatedModel.topic;
-    if(updatedModel.sessionInProgress)
-    this.sessionInProgress = updatedModel.sessionInProgress;
-    if(updatedModel.currentSong)
-    this.currentSong = updatedModel.currentSong;
-    if(updatedModel.songQueue)
-    this.currentQueue = updatedModel.songQueue;
+    if (updatedModel.topic) this.topic = updatedModel.topic;
+    if (updatedModel.sessionInProgress) this.sessionInProgress = updatedModel.sessionInProgress;
+    if (updatedModel.currentSong) this.currentSong = updatedModel.currentSong;
+    if (updatedModel.songQueue) this.currentQueue = updatedModel.songQueue;
   }
 
   /**
-   * Sends a command to the backend to update the state of the music area
-   * @param payload information to send
+   * Tells backend to create a musicSession.
+   * @param sessionName name
    */
-  public async sendSpotifyCommand(payload: MusicArea): Promise<MusicArea> {
+  public async createSession(sessionName: string) {
     const instanceID = this.id;
     if (!instanceID) {
       throw new Error('instanceID undefined');
     }
-    const response = await this._townController.sendInteractableCommand(this.id, {
-      type: 'MusicAreaCommand',
-      payload: payload,
+    await this._townController.sendInteractableCommand(this.id, {
+      type: 'CreateMusicSession',
+      topic: sessionName,
     });
-    console.log('response from sendSpotifyCommand ', response);
-    const musicAreaState = response.payload as MusicArea;
-    return musicAreaState;
   }
+
+  /**
+   * Creates the SpotifyPlayer for this user's access token and device id.
+   * @param accessToken a Spotify access token
+   * @param deviceId a Spotify device id
+   */
+  public async addUserToSession(accessToken: AccessToken, deviceId: string) {
+    console.log('attempting to send interactableCommand(AddUsertoMusicSession)');
+    const instanceID = this.id;
+    if (!instanceID) {
+      throw new Error('instanceID undefined');
+    }
+    await this._townController.sendInteractableCommand(this.id, {
+      type: 'AddUserToMusicSession',
+      accessToken: accessToken,
+      deviceId: deviceId,
+    });
+  }
+
+  // /**
+  //  * Sends a command to the backend to update the state of the music area
+  //  * @param payload information to send
+  //  */
+  // public async sendSpotifyCommand(payload: MusicArea): Promise<MusicArea> {
+  //   const instanceID = this.id;
+  //   if (!instanceID) {
+  //     throw new Error('instanceID undefined');
+  //   }
+  //   const response = await this._townController.sendInteractableCommand(this.id, {
+  //     type: 'MusicAreaCommand',
+  //     payload: payload,
+  //   });
+  //   const musicAreaState = response.payload as MusicArea;
+  //   return musicAreaState;
+  // }
 }

@@ -1,6 +1,5 @@
 /* eslint-disable no-console */
 import { ITiledMapObject } from '@jonbell/tiled-map-type-guard';
-import { AccessToken, Track } from '@spotify/web-api-ts-sdk';
 import InvalidParametersError from '../../lib/InvalidParametersError';
 import Player from '../../lib/Player';
 import {
@@ -9,44 +8,33 @@ import {
   InteractableCommand,
   InteractableCommandReturnType,
   TownEmitter,
-  MusicAreaCommand,
-  MusicArea,
 } from '../../types/CoveyTownSocket';
 import InteractableArea from '../InteractableArea';
 import SpotifyController from './SpotifyController';
 
 export default class SpotifyArea extends InteractableArea {
   /* The topic of the conversation area, or undefined if it is not set */
-  private _topic?: string;
+  private _topic: string;
 
-  private _sessionInProgress?: boolean; // NEED GETTERS AND SETTERS
+  private _sessionInProgress: boolean; // NEED GETTERS AND SETTERS
 
-  private _accessToken?: AccessToken;
 
   private _musicSessionController: SpotifyController;
 
-  public get topic(): string | undefined {
+  public get topic(): string {
     return this._topic;
   }
 
-  public set topic(value: string | undefined) {
+  public set topic(value: string) {
     this._topic = value;
   }
 
-  public get sessionInProgress(): boolean | undefined {
+  public get sessionInProgress(): boolean {
     return this._sessionInProgress;
   }
 
-  public set sessionInProgress(value: boolean | undefined) {
+  public set sessionInProgress(value: boolean) {
     this._sessionInProgress = value;
-  }
-
-  public get accessToken(): AccessToken | undefined {
-    return this._accessToken;
-  }
-
-  public set accessToken(value: AccessToken | undefined) {
-    this._accessToken = value;
   }
 
   /** The conversation area is "active" when there are players inside of it  */
@@ -88,7 +76,7 @@ export default class SpotifyArea extends InteractableArea {
     super.remove(player);
     console.log('removed');
     if (this._occupants.length === 0) {
-      this._topic = undefined;
+      this._topic = '';
       this._emitAreaChanged();
     }
   }
@@ -128,9 +116,10 @@ export default class SpotifyArea extends InteractableArea {
       {
         id: name,
         occupants: [],
-        topic: 'JASON IS THE BEST',
+        topic: '',
         sessionInProgress: false,
         currentSong: null,
+        songQueue: [],
       },
       rect,
       broadcastEmitter,
@@ -147,118 +136,161 @@ export default class SpotifyArea extends InteractableArea {
     this._sessionInProgress = sessionInProgress;
   }
 
+  /**
+   * Handles a sendInteractableCommand() from MusicAreaController. Represents a player
+   * interacting with the backend. Will update this state and emit area changed to other
+   * MusicAreaControllers (if applicable).
+   *
+   * @param command a MusicAreaController action
+   * @returns a payload, if applicable
+   */
+  // public async handleSpotifyCommand<CommandType extends InteractableCommand>(
+  //   command: CommandType,
+  // ): Promise<InteractableCommandReturnType<CommandType>> {
+  //   if (command.type === 'CreateMusicSession') {
+  //     const newMusicArea = command as MusicAreaCommand;
+
+  //     // Execute the specific action on this command
+  //     switch (newMusicArea.payload.commandType) {
+  //       case 'createSession': {
+  //         const { topic } = newMusicArea.payload;
+
+  //         // Update with new topic
+  //         this._topic = topic as string;
+
+  //         // Update session in progress
+  //         this._sessionInProgress = true;
+
+  //         // Emit to other frontend MusicAreaControllers to update their state
+  //         this._emitAreaChanged();
+  //         return {} as InteractableCommandReturnType<CommandType>;
+  //       }
+  //       case 'skip': {
+  //         const results = await this._musicSessionController.skip();
+  //         console.log(' post spotify controller skip confirmation ');
+  //         this._emitAreaChanged();
+  //         return {
+  //           payload: { currentSong: results[0], songQueue: results[1] } as MusicArea,
+  //         } as InteractableCommandReturnType<CommandType>;
+  //       }
+  //       case 'togglePlay': {
+  //         await this._musicSessionController.togglePlay();
+  //         console.log('toggled play');
+  //         return {} as InteractableCommandReturnType<CommandType>;
+  //       }
+  //       case 'search': {
+  //         const { searchQuery } = newMusicArea.payload;
+  //         if (!searchQuery) {
+  //           console.log('no search query provided');
+  //           return {} as InteractableCommandReturnType<CommandType>;
+  //         }
+  //         const results = await this._musicSessionController.search(searchQuery as string);
+  //         console.log('Search successful');
+  //         return {
+  //           payload: { searchResults: results.tracks.items },
+  //         } as InteractableCommandReturnType<CommandType>;
+  //       }
+  //       case 'playSong': {
+  //         const { trackId } = newMusicArea.payload;
+  //         if (!trackId) {
+  //           console.log('no track ID provided');
+  //           return {} as InteractableCommandReturnType<CommandType>;
+  //         }
+  //         await this._musicSessionController.playSongNow(trackId as string);
+  //         return {} as InteractableCommandReturnType<CommandType>;
+  //       }
+  //       case 'addQueue': {
+  //         const { trackId } = newMusicArea.payload;
+  //         if (!trackId) {
+  //           console.log('no track ID provided');
+  //           return {} as InteractableCommandReturnType<CommandType>;
+  //         }
+  //         const updatedQueue = await this._musicSessionController.addSongToQueue(trackId as string);
+  //         console.log('added to queue');
+  //         return {
+  //           payload: { songQueue: updatedQueue },
+  //         } as InteractableCommandReturnType<CommandType>;
+  //       }
+  //       case 'removeFromQueue': {
+  //         const { queueId } = newMusicArea.payload;
+  //         if (!queueId) {
+  //           console.log('no track ID provided');
+  //           return {} as InteractableCommandReturnType<CommandType>;
+  //         }
+  //         const updatedQueue = await this._musicSessionController.removeFromQueue(
+  //           queueId as string,
+  //         );
+  //         console.log('removed from queue');
+  //         return {
+  //           payload: { songQueue: updatedQueue },
+  //         } as InteractableCommandReturnType<CommandType>;
+  //       }
+  //       case 'getCurrentPlayback': {
+  //         const { queue } = this._musicSessionController;
+  //         console.log('got queue');
+  //         return { payload: { songQueue: queue } } as InteractableCommandReturnType<CommandType>;
+  //       }
+  //       case 'addUserToSession': {
+  //         const userAccessToken: AccessToken = newMusicArea.payload.accessToken;
+  //         const { deviceId } = newMusicArea.payload;
+
+  //         if (userAccessToken && deviceId) {
+  //           console.log('received access token. creating spotify playback object');
+  //           const confirmedAccessToken = await this._musicSessionController.addUserMusicPlayer(
+  //             deviceId,
+  //             userAccessToken,
+  //           );
+  //           this._emitAreaChanged();
+  //           return {
+  //             payload: { accessToken: confirmedAccessToken },
+  //           } as InteractableCommandReturnType<CommandType>;
+  //         }
+  //         console.log('400, should not reach');
+  //         return {} as InteractableCommandReturnType<CommandType>;
+  //       }
+  //       default:
+  //         console.log('invalid query');
+  //         break;
+  //     }
+  //   }
+  //   throw new InvalidParametersError('Unknown command type');
+  // }
   public async handleSpotifyCommand<CommandType extends InteractableCommand>(
     command: CommandType,
   ): Promise<InteractableCommandReturnType<CommandType>> {
-    if (command.type === 'MusicAreaCommand') {
-      const newMusicArea = command as MusicAreaCommand;
-      switch (newMusicArea.payload.commandType) {
-        case 'createSession': {
-          const { topic } = newMusicArea.payload;
-          if (!topic) {
-            console.log('topic was undefined');
-            return {} as InteractableCommandReturnType<CommandType>;
-          }
+    switch (command.type) {
+      case 'CreateMusicSession': {
+        this._topic = command.topic;
+        this._sessionInProgress = true;
 
-          // Update with new topic
-          this._topic = topic as string;
+        this._emitAreaChanged();
 
-          // Update session in progress
-          this._sessionInProgress = true;
-
-          // Emit to other frontend MusicAreaControllers to update their state
-          this._emitAreaChanged();
-          return {} as InteractableCommandReturnType<CommandType>;
-        }
-        case 'skip': {
-          const results = await this._musicSessionController.skip();
-          console.log(' post spotify controller skip confirmation ');
-          this._emitAreaChanged();
-          return {
-            payload: { currentSong: results[0], songQueue: results[1] } as MusicArea,
-          } as InteractableCommandReturnType<CommandType>;
-        }
-        case 'togglePlay': {
-          await this._musicSessionController.togglePlay();
-          console.log('toggled play');
-          return {} as InteractableCommandReturnType<CommandType>;
-        }
-        case 'search': {
-          const { searchQuery } = newMusicArea.payload;
-          if (!searchQuery) {
-            console.log('no search query provided');
-            return {} as InteractableCommandReturnType<CommandType>;
-          }
-          const results = await this._musicSessionController.search(searchQuery as string);
-          console.log('Search successful');
-          return {
-            payload: { searchResults: results.tracks.items },
-          } as InteractableCommandReturnType<CommandType>;
-        }
-        case 'playSong': {
-          const { trackId } = newMusicArea.payload;
-          if (!trackId) {
-            console.log('no track ID provided');
-            return {} as InteractableCommandReturnType<CommandType>;
-          }
-          await this._musicSessionController.playSongNow(trackId as string);
-          return {} as InteractableCommandReturnType<CommandType>;
-        }
-        case 'addQueue': {
-          const { trackId } = newMusicArea.payload;
-          if (!trackId) {
-            console.log('no track ID provided');
-            return {} as InteractableCommandReturnType<CommandType>;
-          }
-          const updatedQueue = await this._musicSessionController.addSongToQueue(trackId as string);
-          console.log('added to queue');
-          return {
-            payload: { songQueue: updatedQueue },
-          } as InteractableCommandReturnType<CommandType>;
-        }
-        case 'removeFromQueue': {
-          const { queueId } = newMusicArea.payload;
-          if (!queueId) {
-            console.log('no track ID provided');
-            return {} as InteractableCommandReturnType<CommandType>;
-          }
-          const updatedQueue = await this._musicSessionController.removeFromQueue(
-            queueId as string,
-          );
-          console.log('removed from queue');
-          return {
-            payload: { songQueue: updatedQueue },
-          } as InteractableCommandReturnType<CommandType>;
-        }
-        case 'getCurrentPlayback': {
-          const { queue } = this._musicSessionController;
-          console.log('got queue');
-          return { payload: { songQueue: queue } } as InteractableCommandReturnType<CommandType>;
-        }
-        case 'addUserToSession': {
-          const userAccessToken: AccessToken = newMusicArea.payload.accessToken;
-          const { deviceId } = newMusicArea.payload;
-
-          if (userAccessToken && deviceId) {
-            console.log('received access token. creating spotify playback object');
-            const confirmedAccessToken = await this._musicSessionController.addUserMusicPlayer(
-              deviceId,
-              userAccessToken,
-            );
-            this._emitAreaChanged();
-            return {
-              payload: { accessToken: confirmedAccessToken },
-            } as InteractableCommandReturnType<CommandType>;
-          }
-          console.log('400, should not reach');
-          return {} as InteractableCommandReturnType<CommandType>;
-        }
-        default:
-          console.log('invalid query');
-          break;
+        return {} as InteractableCommandReturnType<CommandType>;
       }
+      case 'AddUserToMusicSession': {
+        const { accessToken } = command;
+        const { deviceId } = command;
+        const userExists = this._musicSessionController.userMusicPlayers.some(
+          player => player.accessToken === accessToken,
+        );
+
+        if (accessToken && deviceId && !userExists) {
+          console.log('received access token. creating spotify playback object');
+          const confirmedAccessToken = await this._musicSessionController.addUserMusicPlayer(
+            deviceId,
+            accessToken,
+          );
+          this._emitAreaChanged();
+          return {
+            accessToken: confirmedAccessToken,
+          } as InteractableCommandReturnType<CommandType>;
+        }
+        console.log('400, should not reach');
+        return {} as InteractableCommandReturnType<CommandType>;
+      }
+      default:
+        throw new InvalidParametersError('Unknown command type');
     }
-    throw new InvalidParametersError('Unknown command type');
   }
 
   public handleCommand<CommandType extends InteractableCommand>(

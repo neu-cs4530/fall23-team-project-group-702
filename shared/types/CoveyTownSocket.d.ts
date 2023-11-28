@@ -200,18 +200,14 @@ export interface QueuedTrack {
   track: Track;
 }
 
+/**
+ * Represents the state that a MusicArea  has.
+ */
 export interface MusicArea extends Interactable {
-  commandType?: string;
-  topic?: string;
-  sessionInProgress?: boolean;
-  accessToken?: AccessToken;
-  currentSong?: Track | null;
-  songQueue?: QueuedTrack[];
-  searchResults?: Track[];
-  searchQuery?: string;
-  trackId?: string;
-  queueId?: string;
-  deviceId?: string;
+  topic: string;
+  sessionInProgress: boolean;
+  currentSong: Track | null;
+  songQueue: QueuedTrack[];
 }
 
 export type InteractableCommand =
@@ -219,10 +215,18 @@ export type InteractableCommand =
   | JoinGameCommand
   | GameMoveCommand<TicTacToeMove>
   | LeaveGameCommand
-  | MusicAreaCommand;
-export interface MusicAreaCommand {
-  type: 'MusicAreaCommand';
-  payload: MusicArea;
+  | CreateMusicSessionCommand
+  | AddUserToMusicSessionCommand;
+
+export interface CreateMusicSessionCommand {
+  type: 'CreateMusicSession';
+  topic: string;
+}
+
+export interface AddUserToMusicSessionCommand {
+  type: 'AddUserToMusicSession';
+  accessToken: AccessToken;
+  deviceId: string;
 }
 export interface ViewingAreaUpdateCommand {
   type: 'ViewingAreaUpdate';
@@ -249,8 +253,8 @@ export type InteractableCommandReturnType<CommandType extends InteractableComman
     ? undefined
     : CommandType extends LeaveGameCommand
     ? undefined
-    : CommandType extends MusicAreaCommand
-    ? { payload: MusicArea }
+    : CommandType extends AddUserToMusicSessionCommand
+    ? { accessToken: AccessToken }
     : never;
 
 export type InteractableCommandResponse<MessageType> = {

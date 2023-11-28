@@ -529,6 +529,7 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
     interactableID: InteractableID,
     command: CommandType,
   ): Promise<InteractableCommandResponse<CommandType>['payload']> {
+    console.log('inside sendInteractableCommand with type' + command.type);
     const commandMessage: InteractableCommand & InteractableCommandBase = {
       ...command,
       commandID: nanoid(),
