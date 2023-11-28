@@ -13,45 +13,24 @@ export default function SpotifyPlayback({
   const [isPlaying, setIsPlaying] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Track[]>([]);
-  const [currentTrack, setCurrentTrack] = useState<Track>({} as Track); // pull from backend instead of {}
+  const [currentTrack, setCurrentTrack] = useState<Track | null>({} as Track); // pull from backend instead of {}
   const [queue, setQueue] = useState<QueuedTrack[]>([]); // pull from backend instead of []
 
   const handleSearch = async () => {
     if (searchQuery === '') return;
-    const response = await musicController.sendSpotifyCommand({
-      commandType: 'search',
-      searchQuery,
-    } as MusicArea);
-    /*
-    const response2 = await fetch(
-      `http://localhost:3000/api/spotifyplayback?temp=search&searchQuery=${searchQuery}`,
-    );
-    const results = await response2.json();
-    */
-    if (response.searchResults) setSearchResults(response.searchResults);
+    const searchResults = await musicController.searchSongs(searchQuery);
+    
+    if (searchResults) setSearchResults(searchResults);
   };
 
   const handleSkip = async () => {
     // Song Skip
     // We expect the properties 'currentSong' and 'songQueue' to change
-    const response = await musicController.sendSpotifyCommand({
-      commandType: 'skip',
-    } as MusicArea);
-
-    if (response.currentSong) {
-      setCurrentTrack(response.currentSong);
-    }
-    if (response.songQueue) {
-      setQueue(response.songQueue);
-    }
+    await musicController.skip();
   };
 
   const handleAddToQueue = async (trackId: string) => {
-    const response = await musicController.sendSpotifyCommand({
-      commandType: 'addQueue',
-      trackId,
-    } as MusicArea);
-    if (response.songQueue) setQueue(response.songQueue);
+    await musicController.addToQueue(trackId);
   };
 
   const handleRemoveFromQueue = async (queueId: string) => {
@@ -74,22 +53,17 @@ export default function SpotifyPlayback({
        currentQueueChange: (queue: QueuedTrack[] | undefined) => void;
    */
   useEffect(() => {
-    const trackSetter = (song: Track | null) => {
-      if (song !== null) {
-        setCurrentTrack(song);
-      }
-    };
     musicController.addListener('currentQueueChange', setQueue);
-    musicController.addListener('currentSongChange', trackSetter);
+    musicController.addListener('currentSongChange', setCurrentTrack);
     return () => {
       musicController.removeListener('currentQueueChange', setQueue);
-      musicController.removeListener('currentSongChange', trackSetter);
+      musicController.removeListener('currentSongChange', setCurrentTrack);
     };
   }, [musicController]);
 
   return (
     <Box p={4} bg='white' boxShadow='md' borderRadius='md' my={4}>
-      {currentTrack && (
+      {currentTrack !== null && (
         <iframe
           src={`https://open.spotify.com/embed/track/${currentTrack.id}?utm_source=generator&theme=0`}
           width='100%'

@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 import { ITiledMapObject } from '@jonbell/tiled-map-type-guard';
+import { Track } from '@spotify/web-api-ts-sdk';
 import InvalidParametersError from '../../lib/InvalidParametersError';
 import Player from '../../lib/Player';
 import {
@@ -8,6 +9,7 @@ import {
   InteractableCommand,
   InteractableCommandReturnType,
   TownEmitter,
+  SearchSongsMusicSessionCommand,
 } from '../../types/CoveyTownSocket';
 import InteractableArea from '../InteractableArea';
 import SpotifyController from './SpotifyController';
@@ -17,7 +19,6 @@ export default class SpotifyArea extends InteractableArea {
   private _topic: string;
 
   private _sessionInProgress: boolean; // NEED GETTERS AND SETTERS
-
 
   private _musicSessionController: SpotifyController;
 
@@ -287,6 +288,26 @@ export default class SpotifyArea extends InteractableArea {
         }
         console.log('400, should not reach');
         return {} as InteractableCommandReturnType<CommandType>;
+      }
+      case 'SearchSongsMusicSession': {
+        const { searchQuery } = command;
+        const spotifySearchResults = await this._musicSessionController.search(searchQuery);
+        const searchResults: Track[] = spotifySearchResults.tracks.items;
+        return { searchResults } as InteractableCommandReturnType<CommandType>;
+      }
+      case 'AddMusicToSessionQueue': {
+        const { trackId } = command;
+        const updatedQueue = await this._musicSessionController.addSongToQueue(trackId);
+        this._emitAreaChanged();
+        return { updatedQueue } as InteractableCommandReturnType<CommandType>;
+      }
+      case 'SkipSongMusicSession': {
+        const updatedState = await this._musicSessionController.skip();
+        this._emitAreaChanged();
+        return {
+          currentSong: updatedState[0],
+          updatedQueue: updatedState[1],
+        } as InteractableCommandReturnType<CommandType>;
       }
       default:
         throw new InvalidParametersError('Unknown command type');

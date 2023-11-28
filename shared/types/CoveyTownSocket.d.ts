@@ -216,11 +216,19 @@ export type InteractableCommand =
   | GameMoveCommand<TicTacToeMove>
   | LeaveGameCommand
   | CreateMusicSessionCommand
-  | AddUserToMusicSessionCommand;
+  | AddUserToMusicSessionCommand
+  | SearchSongsMusicSessionCommand
+  | AddMusicToSessionQueue
+  | SkipSongMusicSession;
 
 export interface CreateMusicSessionCommand {
   type: 'CreateMusicSession';
   topic: string;
+}
+
+export interface SearchSongsMusicSessionCommand {
+  type: 'SearchSongsMusicSession'
+  searchQuery: string;
 }
 
 export interface AddUserToMusicSessionCommand {
@@ -228,6 +236,15 @@ export interface AddUserToMusicSessionCommand {
   accessToken: AccessToken;
   deviceId: string;
 }
+
+export interface AddMusicToSessionQueue {
+  type: 'AddMusicToSessionQueue'
+  trackId: string;
+}
+export interface SkipSongMusicSession {
+  type: 'SkipSongMusicSession'
+}
+
 export interface ViewingAreaUpdateCommand {
   type: 'ViewingAreaUpdate';
   update: ViewingArea;
@@ -255,6 +272,12 @@ export type InteractableCommandReturnType<CommandType extends InteractableComman
     ? undefined
     : CommandType extends AddUserToMusicSessionCommand
     ? { accessToken: AccessToken }
+    : CommandType extends SearchSongsMusicSessionCommand
+    ? { searchResults: Track[] }
+    : CommandType extends AddMusicToSessionQueue
+    ? { updatedQueue: QueuedTrack[] }
+    : CommandType extends SkipSongMusicSession
+    ? { currentSong: Track, updatedQueue: QueuedTrack[] }
     : never;
 
 export type InteractableCommandResponse<MessageType> = {

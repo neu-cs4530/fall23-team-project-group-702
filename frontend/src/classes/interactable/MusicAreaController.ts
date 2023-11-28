@@ -165,6 +165,54 @@ export default class MusicAreaController extends InteractableAreaController<
     });
   }
 
+    /**
+   * Tells backend to search songs for this user.
+   * @param sessionName name
+   */
+     public async searchSongs(searchQuery: string): Promise<Track[]> {
+      const instanceID = this.id;
+      if (!instanceID) {
+        throw new Error('instanceID undefined');
+      }
+      const results = await this._townController.sendInteractableCommand(this.id, {
+        type: 'SearchSongsMusicSession',
+        searchQuery,
+      });
+      return results.searchResults
+    }
+
+        /**
+         * Tells backend to add to queue.
+         * @param trackId spotify ID for track
+         */
+         public async addToQueue(trackId: string) {
+          const instanceID = this.id;
+          if (!instanceID) {
+            throw new Error('instanceID undefined');
+          }
+          const response = await this._townController.sendInteractableCommand(this.id, {
+            type: 'AddMusicToSessionQueue',
+            trackId,
+          });
+          this.currentQueue = response.updatedQueue;
+        }
+
+        /**
+         * Tells backend to skip the head of the queue if nonempty
+         */
+                 public async skip() {
+                  const instanceID = this.id;
+                  if (!instanceID) {
+                    throw new Error('instanceID undefined');
+                  }
+                  const response = await this._townController.sendInteractableCommand(this.id, {
+                    type: 'SkipSongMusicSession',
+                  });
+                  this.currentSong = response.currentSong;
+                  this.currentQueue = response.updatedQueue;
+              }
+              
+
   // /**
   //  * Sends a command to the backend to update the state of the music area
   //  * @param payload information to send
