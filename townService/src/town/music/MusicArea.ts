@@ -325,6 +325,12 @@ export default class SpotifyArea extends InteractableArea {
         const { accessToken } = command;
         console.log(`removing from session with access token: ${accessToken.access_token}`);
         this._musicSessionController.removeUser(accessToken.access_token);
+        if (this._musicSessionController.userMusicPlayers.length === 0) {
+          // Reset state
+          this._topic = '';
+          this._musicSessionController.clearState();
+          this.sessionInProgress = false;
+        }
         this._emitAreaChanged();
         return {} as InteractableCommandReturnType<CommandType>;
       }

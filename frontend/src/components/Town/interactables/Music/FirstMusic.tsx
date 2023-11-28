@@ -2,6 +2,7 @@ import React from 'react';
 import {
   Box,
   Button,
+  Container,
   FormControl,
   FormLabel,
   Input,
@@ -120,7 +121,7 @@ export default function FirstMusicWrapper(): JSX.Element {
   const musicArea = useInteractable<MusicAreaInteractable>('musicArea');
   const townController = useTownController();
 
-  const [isOpen, setIsOpen] = useState<boolean>(true);
+  const [isOpen, setIsOpen] = useState<boolean>(true); // not being properly cleaned up
 
   // // Whenever player wants to reopen interface
   // useEffect(() => {
@@ -145,7 +146,6 @@ export default function FirstMusicWrapper(): JSX.Element {
     }
   }, [isOpen, musicArea, townController]);
 
-  // Should set isOpen to false
   const closeModal = useCallback(() => {
     setIsOpen(false);
   }, [setIsOpen]);
@@ -154,12 +154,16 @@ export default function FirstMusicWrapper(): JSX.Element {
     setIsOpen(true);
   }, [setIsOpen]);
 
-  const handleLeaveSession = useCallback(() => {
+  const handleLeaveSession = useCallback(async () => {
     if (musicArea) {
       console.log('handling leave session');
       townController.interactEnd(musicArea);
       const controller = townController.getMusicAreaController(musicArea);
-      controller.removeUserFromSession();
+      await controller.removeUserFromSession();
+      if (!controller.sessionInProgress) {
+        // Reset state if session ended
+        setIsOpen(true);
+      }
     }
   }, [musicArea, townController]);
 

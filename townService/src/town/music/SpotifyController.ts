@@ -286,4 +286,14 @@ export default class SpotifyController {
       console.log(`user: ${userMusicPlayer.accessToken.access_token}`);
     }
   }
+
+  /**
+   * Clears the state of this spotify controller (used on music session end).
+   */
+  public async clearState(): Promise<void> {
+    this._isASongPlaying = false;
+    this._queue = [];
+    this._songNowPlaying = null;
+    this._userMusicPlayers = [];
+  }
 }
