@@ -18,13 +18,13 @@ export default function SpotifyPlayback({
 
   /**
    * handleSearch: Searches based on the current search query
-   *  we setState directly because this is a local action that does not need to alert everyone else in the 
+   *  we setState directly because this is a local action that does not need to alert everyone else in the
    * interactable area.
    */
   const handleSearch = async () => {
     if (searchQuery === '') return;
     const searchResults = await musicController.searchSongs(searchQuery);
-    
+
     if (searchResults) setSearchResults(searchResults);
   };
 
@@ -78,21 +78,21 @@ export default function SpotifyPlayback({
   }, [musicController]);
 
   return (
-    <Box p={4} bg='white' boxShadow='md' borderRadius='md' my={4}>
+    <Box p={4} bg='white' boxShadow='md' borderRadius='md' my={9}>
       {currentTrack !== null && (
         <iframe
           src={`https://open.spotify.com/embed/track/${currentTrack.id}?utm_source=generator&theme=0`}
           width='100%'
-          height='200'
+          height='300'
           allow='autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture'
           loading='lazy'
           style={{ borderRadius: '8px' }}
         />
       )}
 
-      <Box my={4}>
+      <Box my={0.5}>
         <Box display='flex' alignItems='center' justifyContent='center' gridGap={2}>
-          <Button onClick={handleTogglePlay}>{isPlaying ? 'Toggle Pause' : '▶'}</Button>
+          <Button onClick={handleTogglePlay}>{isPlaying ? '⏸' : '▶'}</Button>
           <Button onClick={handleSkip}> ⏭ </Button>
         </Box>
       </Box>
