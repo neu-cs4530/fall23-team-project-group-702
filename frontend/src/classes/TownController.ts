@@ -693,17 +693,6 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
     }
   }
 
-  /**
-   * Create a new music area, sending the request to the townService. Throws an error if the request
-   * is not successful. Does not immediately update local state about the new music area - it will be
-   * updated once the townService creates the area and emits an interactableUpdate
-   *
-   * @param newArea
-   */
-  async createMusicArea(newArea: { id: InteractableID; occupants: Array<string> }) {
-    await this._townsService.createMusicArea(this.townID, this.sessionToken, newArea);
-  }
-
   public getMusicAreaController(musicArea: MusicArea): MusicAreaController {
     const existingController = this._interactableControllers.find(
       eachExistingArea => eachExistingArea.id === musicArea.id,

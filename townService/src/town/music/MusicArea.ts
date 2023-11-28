@@ -272,11 +272,8 @@ export default class SpotifyArea extends InteractableArea {
       case 'AddUserToMusicSession': {
         const { accessToken } = command;
         const { deviceId } = command;
-        const userExists = this._musicSessionController.userMusicPlayers.some(
-          player => player.accessToken === accessToken,
-        );
 
-        if (accessToken && deviceId && !userExists) {
+        if (accessToken && deviceId) {
           console.log('received access token. creating spotify playback object');
           const confirmedAccessToken = await this._musicSessionController.addUserMusicPlayer(
             deviceId,
