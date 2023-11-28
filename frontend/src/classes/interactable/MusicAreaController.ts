@@ -216,7 +216,7 @@ export default class MusicAreaController extends InteractableAreaController<
         /**
          * Tells backend to skip the head of the queue if nonempty
          */
-                 public async skip() {
+                public async skip() {
                   const instanceID = this.id;
                   if (!instanceID) {
                     throw new Error('instanceID undefined');

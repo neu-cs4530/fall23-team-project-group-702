@@ -16,6 +16,11 @@ export default function SpotifyPlayback({
   const [currentTrack, setCurrentTrack] = useState<Track | null>({} as Track); // pull from backend instead of {}
   const [queue, setQueue] = useState<QueuedTrack[]>([]); // pull from backend instead of []
 
+  /**
+   * handleSearch: Searches based on the current search query
+   *  we setState directly because this is a local action that does not need to alert everyone else in the 
+   * interactable area.
+   */
   const handleSearch = async () => {
     if (searchQuery === '') return;
     const searchResults = await musicController.searchSongs(searchQuery);
@@ -23,20 +28,35 @@ export default function SpotifyPlayback({
     if (searchResults) setSearchResults(searchResults);
   };
 
+  /**
+   *  handleSkip: Skips the song that is currently playing for this player
+   */
   const handleSkip = async () => {
     // Song Skip
     // We expect the properties 'currentSong' and 'songQueue' to change
     await musicController.skip();
   };
 
+  /**
+   *  handleSkip: Adds the current track to the queue in the backend (MusicArea.ts)
+   */
   const handleAddToQueue = async (trackId: string) => {
     await musicController.addToQueue(trackId);
   };
-
+  /**
+   * Removes the selected song from the queue
+   * @param queueId : Generated queueId for the song, is unique across tracks
+   */
   const handleRemoveFromQueue = async (queueId: string) => {
     await musicController.removeFromQueue(queueId);
   };
 
+  /**
+   * Alters the playback state to pause or play
+   * If the current state is paused, play.
+   * If the current state is playing, pause.
+   * Finally alter isPlaying state
+   */
   const handleTogglePlay = async () => {
     await musicController.togglePlay();
     setIsPlaying(!isPlaying);
