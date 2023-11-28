@@ -197,6 +197,22 @@ export default class MusicAreaController extends InteractableAreaController<
           this.currentQueue = response.updatedQueue;
         }
 
+          /**
+         * Tells backend to remove a track using its generated queueID.
+         * @param queueId spotify queueId for track
+         */
+                 public async removeFromQueue(queueId: string) {
+                  const instanceID = this.id;
+                  if (!instanceID) {
+                    throw new Error('instanceID undefined');
+                  }
+                  const response = await this._townController.sendInteractableCommand(this.id, {
+                    type: 'RemoveMusicFromSessionQueue',
+                    queueId,
+                  });
+                  this.currentQueue = response.updatedQueue;
+                }
+
         /**
          * Tells backend to skip the head of the queue if nonempty
          */
@@ -211,6 +227,19 @@ export default class MusicAreaController extends InteractableAreaController<
                   this.currentSong = response.currentSong;
                   this.currentQueue = response.updatedQueue;
               }
+
+              /**
+               * Pauses or Plays the current song based on its current playback state
+               */
+              public async togglePlay() {
+                const instanceID = this.id;
+                if (!instanceID) {
+                  throw new Error('instanceID undefined');
+                }
+                await this._townController.sendInteractableCommand(this.id, {
+                  type: 'TogglePlayMusicSession',
+                });
+            }
               
 
   // /**

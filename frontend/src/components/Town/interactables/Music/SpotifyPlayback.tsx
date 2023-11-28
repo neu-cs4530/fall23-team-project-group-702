@@ -34,17 +34,11 @@ export default function SpotifyPlayback({
   };
 
   const handleRemoveFromQueue = async (queueId: string) => {
-    const response = await fetch(
-      `http://localhost:3000/api/spotifyplayback?temp=removeFromQueue&queueId=${queueId}`,
-    );
-    const updatedQueue = await response.json();
-    setQueue(updatedQueue);
+    await musicController.removeFromQueue(queueId);
   };
 
   const handleTogglePlay = async () => {
-    const response = await fetch(`http://localhost:3000/api/spotifyplayback?temp=togglePlay`);
-    const currentlyPlaying = await response.json();
-    setIsPlaying(currentlyPlaying);
+    await musicController.togglePlay();
   };
 
   // Listener effects

@@ -309,6 +309,15 @@ export default class SpotifyArea extends InteractableArea {
           updatedQueue: updatedState[1],
         } as InteractableCommandReturnType<CommandType>;
       }
+      case 'TogglePlayMusicSession': {
+        await this._musicSessionController.togglePlay();
+        return {} as InteractableCommandReturnType<CommandType>;
+      }
+      case 'RemoveMusicFromSessionQueue': {
+        const { queueId } = command;
+        const updatedQueue = await this._musicSessionController.removeFromQueue(queueId);
+        return { updatedQueue } as InteractableCommandReturnType<CommandType>;
+      }
       default:
         throw new InvalidParametersError('Unknown command type');
     }

@@ -219,7 +219,9 @@ export type InteractableCommand =
   | AddUserToMusicSessionCommand
   | SearchSongsMusicSessionCommand
   | AddMusicToSessionQueue
-  | SkipSongMusicSession;
+  | SkipSongMusicSession
+  | TogglePlayMusicSession
+  | RemoveMusicFromSessionQueue;
 
 export interface CreateMusicSessionCommand {
   type: 'CreateMusicSession';
@@ -241,8 +243,17 @@ export interface AddMusicToSessionQueue {
   type: 'AddMusicToSessionQueue'
   trackId: string;
 }
+
+export interface RemoveMusicFromSessionQueue {
+  type: 'RemoveMusicFromSessionQueue'
+  queueId: string;
+}
 export interface SkipSongMusicSession {
   type: 'SkipSongMusicSession'
+}
+
+export interface TogglePlayMusicSession {
+  type: 'TogglePlayMusicSession'
 }
 
 export interface ViewingAreaUpdateCommand {
@@ -278,6 +289,10 @@ export type InteractableCommandReturnType<CommandType extends InteractableComman
     ? { updatedQueue: QueuedTrack[] }
     : CommandType extends SkipSongMusicSession
     ? { currentSong: Track, updatedQueue: QueuedTrack[] }
+    : CommandType extends TogglePlayMusicSession
+    ? undefined
+    : CommandType extends RemoveMusicFromSessionQueue
+    ? { updatedQueue: QueuedTrack[] }
     : never;
 
 export type InteractableCommandResponse<MessageType> = {
