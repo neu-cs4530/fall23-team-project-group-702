@@ -39,6 +39,7 @@ export default function SpotifyPlayback({
 
   const handleTogglePlay = async () => {
     await musicController.togglePlay();
+    setIsPlaying(!isPlaying);
   };
 
   // Listener effects
