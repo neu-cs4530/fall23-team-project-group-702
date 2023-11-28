@@ -208,6 +208,7 @@ export interface MusicArea extends Interactable {
   sessionInProgress: boolean;
   currentSong: Track | null;
   songQueue: QueuedTrack[];
+  isPlaying: boolean;
 }
 
 export type InteractableCommand =
@@ -290,7 +291,7 @@ export type InteractableCommandReturnType<CommandType extends InteractableComman
     : CommandType extends SkipSongMusicSession
     ? { currentSong: Track, updatedQueue: QueuedTrack[] }
     : CommandType extends TogglePlayMusicSession
-    ? undefined
+    ? { isPlaying: boolean }
     : CommandType extends RemoveMusicFromSessionQueue
     ? { updatedQueue: QueuedTrack[] }
     : never;

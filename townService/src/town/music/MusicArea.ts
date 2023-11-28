@@ -95,6 +95,7 @@ export default class SpotifyArea extends InteractableArea {
       sessionInProgress: this._sessionInProgress,
       songQueue: this._musicSessionController.queue,
       currentSong: this._musicSessionController.songNowPlaying,
+      isPlaying: this._musicSessionController.isASongPlaying,
     };
   }
 
@@ -121,6 +122,7 @@ export default class SpotifyArea extends InteractableArea {
         sessionInProgress: false,
         currentSong: null,
         songQueue: [],
+        isPlaying: false,
       },
       rect,
       broadcastEmitter,
@@ -310,8 +312,9 @@ export default class SpotifyArea extends InteractableArea {
         } as InteractableCommandReturnType<CommandType>;
       }
       case 'TogglePlayMusicSession': {
-        await this._musicSessionController.togglePlay();
-        return {} as InteractableCommandReturnType<CommandType>;
+        // Boolean representing the new playback state
+        const isPlaying = await this._musicSessionController.togglePlay();
+        return { isPlaying } as InteractableCommandReturnType<CommandType>;
       }
       case 'RemoveMusicFromSessionQueue': {
         const { queueId } = command;

@@ -23,6 +23,7 @@ export type MusicAreaEvents = BaseInteractableEventMap & {
   currentQueueChange: (queue: QueuedTrack[]) => void;
   sessionInProgressChange: (sessionInProgress: boolean) => void;
   accessTokenChange: (accessToken: AccessToken) => void;
+  playbackStateChange: (playbackState: boolean) => void;
 };
 
 /**
@@ -94,6 +95,15 @@ export default class MusicAreaController extends InteractableAreaController<
   public set currentSong(currentSong: Track) {
     this._model.currentSong = currentSong;
     this.emit('currentSongChange', currentSong);
+  }
+
+  get isPlaying(): boolean {
+    return this._model.isPlaying;
+  }
+
+  public set isPlaying(playbackState: boolean) {
+    this._model.isPlaying = playbackState;
+    this.emit('playbackStateChange', playbackState);
   }
 
   get currentQueue(): QueuedTrack[] {
@@ -230,15 +240,17 @@ export default class MusicAreaController extends InteractableAreaController<
 
               /**
                * Pauses or Plays the current song based on its current playback state
+               * Payload: boolean representing the new playback state
                */
               public async togglePlay() {
                 const instanceID = this.id;
                 if (!instanceID) {
                   throw new Error('instanceID undefined');
                 }
-                await this._townController.sendInteractableCommand(this.id, {
+                const { isPlaying } = await this._townController.sendInteractableCommand(this.id, {
                   type: 'TogglePlayMusicSession',
                 });
+                this.isPlaying = isPlaying;
             }
               
 

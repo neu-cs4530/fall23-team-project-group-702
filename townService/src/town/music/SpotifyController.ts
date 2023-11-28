@@ -28,10 +28,13 @@ export default class SpotifyController {
 
   private _songNowPlaying: Track | null;
 
+  private _isASongPlaying: boolean;
+
   constructor() {
     this._userMusicPlayers = [];
     this._queue = [];
     this._songNowPlaying = null;
+    this._isASongPlaying = false;
   }
 
   public get queue(): Array<QueuedTrack> {
@@ -40,6 +43,10 @@ export default class SpotifyController {
 
   public get songNowPlaying(): Track | null {
     return this._songNowPlaying;
+  }
+
+  public get isASongPlaying(): boolean {
+    return this._isASongPlaying;
   }
 
   public get userMusicPlayers(): SpotifyUserPlayback[] {
@@ -186,6 +193,7 @@ export default class SpotifyController {
     for (const userMusicPlayer of this._userMusicPlayers) {
       await userMusicPlayer.nextSong(nextQueuedTrack.track.id);
     }
+    this._isASongPlaying = true;
 
     /* Debugging */
     console.log(`New queue after skip length: ${this._queue.length}`);
@@ -199,11 +207,15 @@ export default class SpotifyController {
    * Toggles the playback state for all users
    * Synchronizes the music session after toggling the playback state
    */
-  public async togglePlay(): Promise<void> {
+  public async togglePlay(): Promise<boolean> {
     for (const userMusicPlayer of this._userMusicPlayers) {
       await userMusicPlayer.togglePlay();
     }
     await this.synchronize();
+    this._isASongPlaying = !this._isASongPlaying;
+    console.log('toggle play trigged, new playing state:');
+    console.log(this._isASongPlaying);
+    return this._isASongPlaying;
   }
 
   /**

@@ -59,7 +59,6 @@ export default function SpotifyPlayback({
    */
   const handleTogglePlay = async () => {
     await musicController.togglePlay();
-    setIsPlaying(!isPlaying);
   };
 
   // Listener effects
@@ -70,9 +69,11 @@ export default function SpotifyPlayback({
   useEffect(() => {
     musicController.addListener('currentQueueChange', setQueue);
     musicController.addListener('currentSongChange', setCurrentTrack);
+    musicController.addListener('playbackStateChange', setIsPlaying);
     return () => {
       musicController.removeListener('currentQueueChange', setQueue);
       musicController.removeListener('currentSongChange', setCurrentTrack);
+      musicController.removeListener('playbackStateChange', setIsPlaying);
     };
   }, [musicController]);
 
