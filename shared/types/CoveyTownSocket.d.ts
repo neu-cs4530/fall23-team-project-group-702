@@ -3,7 +3,7 @@ import {
   // Devices,
   Track,
   AccessToken,
-  PartialSearchResult,
+  // PartialSearchResult,
   // PlaybackState,
 } from '@spotify/web-api-ts-sdk';
 
