@@ -107,11 +107,11 @@ export default class SpotifyController {
    * @throws - if there are no users in the music session
    */
   public async synchronize(): Promise<void> {
-    /* Song is currently playing, perform synchronization */
     for (const userMusicPlayer of this._userMusicPlayers) {
       const hostUserState = await this.getCurrentHostPlaybackState();
-      /* hostUserState is null if no song is currently playing */
+      /* hostUserState is null if no song is currently playing/paused */
       if (!hostUserState) {
+        await userMusicPlayer.pausePlayback();
         return;
       }
       const hostUserPosition = hostUserState.progress_ms;
@@ -119,11 +119,15 @@ export default class SpotifyController {
       const userState = await userMusicPlayer.getCurrentlyPlayingTrack();
       /* Checks that the user is playing the same song as the host */
       if (userState?.item.id !== hostUserState.item.id) {
-        await userMusicPlayer.playSongNow(hostUserState.item.id);
+        await userMusicPlayer.playSongNow(hostUserState.item.id, hostUserPosition);
       }
+      /* Set is playing to the host's playing state */
+      this._isASongPlaying = hostIsPlaying;
       /* If song isPlaying was desynced, resyncrhonize */
-      if (userState?.is_playing !== hostIsPlaying) {
-        await userMusicPlayer.togglePlay();
+      if (hostIsPlaying) {
+        await userMusicPlayer.resumePlayback();
+      } else {
+        await userMusicPlayer.pausePlayback();
       }
       await userMusicPlayer.seekToPosition(hostUserPosition);
     }
@@ -214,12 +218,15 @@ export default class SpotifyController {
    */
   public async togglePlay(): Promise<boolean> {
     for (const userMusicPlayer of this._userMusicPlayers) {
-      await userMusicPlayer.togglePlay();
+      if (this._isASongPlaying) {
+        await userMusicPlayer.pausePlayback();
+      } else {
+        await userMusicPlayer.resumePlayback();
+      }
     }
     await this.synchronize();
-    this._isASongPlaying = !this._isASongPlaying;
-    console.log('toggle play trigged, new playing state:');
-    console.log(this._isASongPlaying);
+    // console.log('toggle play trigged, new playing state:');
+    // console.log(this._isASongPlaying);
     return this._isASongPlaying;
   }
 
@@ -277,13 +284,18 @@ export default class SpotifyController {
     const playerToRemove = this._userMusicPlayers.find(
       userMusicPlayer => userMusicPlayer.accessToken.access_token === accessToken,
     );
-    playerToRemove?.togglePlay();
+    const userState = await playerToRemove?.getCurrentlyPlayingTrack();
+    /* When the user leaves the session, if they have a song playing, pause the song */
+    if (userState?.is_playing) {
+      await playerToRemove?.pausePlayback();
+    }
     this._userMusicPlayers = this._userMusicPlayers.filter(
       userMusicPlayer => userMusicPlayer.accessToken.access_token !== accessToken,
     );
-    console.log('Current users in music session: ');
+
+    console.log('Removed user: Current users in music session: ');
     for (const userMusicPlayer of this._userMusicPlayers) {
-      console.log(`user: ${userMusicPlayer.accessToken.access_token}`);
+      console.log(`In Removed user, user: ${userMusicPlayer.accessToken.access_token}`);
     }
   }
 

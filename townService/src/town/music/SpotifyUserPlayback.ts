@@ -85,36 +85,66 @@ export class SpotifyUserPlayback {
   }
 
   /**
-   * Plays/Pauses the current song.
-   * @returns - after the toggle, true if the song is playing, false if the song is paused
+   * Plays the song, resumes the playbackon the device
    */
-  public async togglePlay(): Promise<boolean> {
-    console.log('togglePlay() invoked');
+  public async resumePlayback(): Promise<void> {
+    /* fetches devices from spotify */
     await this.getDevices();
-    const state = await this._sdk.player.getCurrentlyPlayingTrack();
     if (this._activeDevices.devices.length < 1) {
       /* return false if there are no active devices */
-      console.log('no active devices');
-      return false;
+      console.log('resumePlayback() not executed, no active devices');
+      return;
     }
-    let isPlaying = false;
+    /* get song state from sdk. if state doesn't exist, then no song is currently playing/paused */
+    const thisUserState = await this._sdk.player.getCurrentlyPlayingTrack();
     this._activeDevices.devices.forEach(async device => {
-      if (!device.is_active) {
-        return;
-      }
-      console.log(`active length: ${this._activeDevices.devices.length}`);
-
-      if (state && state.is_playing) {
-        console.log('pausing playback');
-        await this._sdk.player.pausePlayback(device.id as string);
-        isPlaying = false;
+      /* if device is not active, don't to anything. If device is not Covey Player, do not adjust playback */
+      if (!device.is_active || device.name !== 'Covey Player') {
+        console.log(`device ${device.name} is not active or has incorrect name: ${device.name}`);
       } else {
-        console.log('starting playback');
-        await this._sdk.player.startResumePlayback(device.id as string);
-        isPlaying = true;
+        console.log(`in resumePlayback(): # devices active: ${this._activeDevices.devices.length}`);
+        /* 
+          We know a song is currently.
+          If state doesn't exist, then no song is currently playing/paused so do nothing to avoid spotify error
+          If state exists, then only resume playback if the song is paused
+        */
+        if (thisUserState && !thisUserState.is_playing) {
+          await this._sdk.player.startResumePlayback(device.id as string);
+        }
       }
     });
-    return isPlaying;
+  }
+
+  /**
+   * Plays the song, resumes the playbackon the device
+   */
+  public async pausePlayback(): Promise<void> {
+    /* fetches devices from spotify */
+    await this.getDevices();
+    if (this._activeDevices.devices.length < 1) {
+      /* return false if there are no active devices */
+      console.log('resumePlayback() not executed, no active devices');
+      return;
+    }
+    /* get song state from sdk. if state doesn't exist, then no song is currently playing/paused */
+    const state = await this._sdk.player.getCurrentlyPlayingTrack();
+    this._activeDevices.devices.forEach(async device => {
+      /* if device is not active, don't to anything. If device is not Covey Player, do not adjust playback */
+      if (!device.is_active || device.name !== 'Covey Player') {
+        console.log(`device ${device.name} is not active or has incorrect name: ${device.name}`);
+      } else {
+        console.log(`in resumePlayback(): # devices active: ${this._activeDevices.devices.length}`);
+        /* 
+          We know a song is currently.
+          If state doesn't exist, then no song is currently playing/paused so do nothing to avoid spotify error
+          If state exists, then only resume playback if the song is paused
+        */
+        if (state && state.is_playing) {
+          /* if state doesn't exist, this throws an error */
+          await this._sdk.player.pausePlayback(device.id as string);
+        }
+      }
+    });
   }
 
   /*
