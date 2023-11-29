@@ -213,7 +213,13 @@ export default function FirstMusicWrapper(): JSX.Element {
       sessionInProgress = musicAreaController.sessionInProgress;
     }
     if (!isOpen && sessionInProgress) {
-      return <Button onClick={handleReopen}>Re-open Music Player</Button>;
+      return (
+        <Modal isOpen={true} onClose={closeModal} size='sm'>
+          <ModalContent maxW='200px'>
+            <Button onClick={handleReopen}>Re-open Music Player</Button>;
+          </ModalContent>
+        </Modal>
+      );
     } else {
       return (
         <Modal isOpen={isOpen} onClose={closeModal} closeOnOverlayClick={false} size='2xl'>
