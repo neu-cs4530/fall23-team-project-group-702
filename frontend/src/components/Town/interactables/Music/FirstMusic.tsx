@@ -31,6 +31,7 @@ import PrivateMusicAreaController from '../../../../classes/interactable/Private
  */
 function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX.Element {
   const musicAreaController = useInteractableAreaController<MusicAreaController>(interactableID);
+  const privateMusicAreaController = musicAreaController as PrivateMusicAreaController;
   const townController = useTownController();
 
   const [accessToken, setAccessToken] = useState<AccessToken | undefined>(
@@ -40,6 +41,7 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
   const [sessionActive, setSessionActive] = useState<boolean>(
     musicAreaController.sessionInProgress,
   );
+  const [isPrivate, setIsPrivate] = useState<boolean>(privateMusicAreaController.isPrivateSession);
 
   useEffect(() => {
     musicAreaController.addListener('topicChange', setSessionName);
@@ -52,6 +54,14 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
     };
   }, [musicAreaController]);
 
+  useEffect(() => {
+    const privateController = musicAreaController as PrivateMusicAreaController;
+    privateController.addListener('roomVisibilityChange', setIsPrivate);
+    return () => {
+      musicAreaController.removeListener('roomVisibilityChange', setIsPrivate);
+    };
+  }, [musicAreaController]);
+
   /**
    * Handles starting a music session with the session name.
    */
@@ -59,6 +69,15 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
     console.log('Starting music session');
     await musicAreaController.createSession(sessionName);
     setSessionActive(true);
+  };
+
+  const handleSetPrivacyState = async () => {
+    const privateController = musicAreaController as PrivateMusicAreaController;
+    // Emit to all controllers
+    privateController.setPrivacy(!privateController.isPrivateSession);
+
+    // Set for this controller
+    setIsPrivate(!privateController.isPrivateSession);
   };
 
   if (!accessToken) {
@@ -90,15 +109,6 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
             <Button colorScheme='pink' w='50%' alignSelf='center' onClick={handleStartMusicSession}>
               Create session
             </Button>
-            {
-              <Button
-                onClick={() => {
-                  const privateController = musicAreaController as PrivateMusicAreaController;
-                  privateController.setPrivacy(!privateController.isPrivateSession);
-                }}>
-                Make Private Session
-              </Button>
-            }
           </VStack>
         </Box>
       </div>
@@ -109,6 +119,13 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
         <Heading as='h2' size='lg' textAlign='center' my={4}>
           {sessionName}
         </Heading>
+        <Box textAlign='center'>
+          {
+            <Button onClick={handleSetPrivacyState}>
+              {isPrivate ? 'Unlock Area' : 'Lock Area'}
+            </Button>
+          }
+        </Box>
         <>
           {accessToken ? (
             <>
@@ -181,6 +198,8 @@ export default function FirstMusicWrapper(): JSX.Element {
       await musicAreaController.removeUserFromSession();
       if (!musicAreaController.sessionInProgress) {
         // Reset state if session ended
+        const privateMusicAreaController = musicAreaController as PrivateMusicAreaController;
+        await privateMusicAreaController.setPrivacy(false);
         setIsOpen(true);
       }
     }
@@ -195,17 +214,28 @@ export default function FirstMusicWrapper(): JSX.Element {
     }
   });
 
-  if (musicArea && musicArea.getType() === 'musicArea') {
-    console.log('Rendering first music');
-    return (
-      <Modal isOpen={true} onClose={closeModal} closeOnOverlayClick={false}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalCloseButton />
-          <FirstMusic interactableID={musicArea.id} />;
-        </ModalContent>
-      </Modal>
-    );
+  if (musicArea && isValidMusicAreaType(musicArea.getType())) {
+    console.log('Rendering first music. isOpen: ' + isOpen);
+    let sessionInProgress;
+    if (musicArea) {
+      const musicAreaController = townController.getMusicAreaController(musicArea);
+      sessionInProgress = musicAreaController.sessionInProgress;
+    }
+    console.log('session in progress: ' + sessionInProgress);
+    if (!isOpen && sessionInProgress) {
+      return <Button onClick={handleReopen}>Re-open Music Player</Button>;
+    } else {
+      return (
+        <Modal isOpen={isOpen} onClose={closeModal} closeOnOverlayClick={false} size='2xl'>
+          <ModalOverlay />
+          <ModalContent maxW='540px'>
+            {' '}
+            <ModalCloseButton />
+            <FirstMusic interactableID={musicArea.id} />
+          </ModalContent>
+        </Modal>
+      );
+    }
   }
   return <></>;
 }
