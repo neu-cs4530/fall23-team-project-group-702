@@ -3,6 +3,7 @@ node_modules/
 node_modules/*
 node_modules/@spotify/web-api-ts-sdk/
 node_modules/@spotify/web-api-ts-sdk/dist/mjs/endpoints/SearchEndpoints.d.ts
+**/node_modules/*
 src/components/VideoCall/VideoFrontend
 src/classes/DebugLogger.ts
 build
