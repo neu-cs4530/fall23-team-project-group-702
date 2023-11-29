@@ -1,15 +1,5 @@
 import { AccessToken, Track } from '@spotify/web-api-ts-sdk';
-<<<<<<< HEAD
 import { MusicArea as MusicAreaModel, QueuedTrack } from '../../types/CoveyTownSocket';
-=======
-import {
-  MusicArea,
-  MusicArea as MusicAreaModel,
-  QueuedTrack,
-  Song,
-} from '../../types/CoveyTownSocket';
-import PlayerController from '../PlayerController';
->>>>>>> c7c93de (backend informed private sessions, see button in firstmusic to see how to control, could be cleaner)
 import TownController from '../TownController';
 import InteractableAreaController, { BaseInteractableEventMap } from './InteractableAreaController';
 
