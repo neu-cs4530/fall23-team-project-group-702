@@ -2,6 +2,7 @@ import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 import clsx from 'clsx';
 import React from 'react';
 import { usePlayersInVideoCall } from '../../../../../classes/TownController';
+import FirstMusic from '../../../../Town/interactables/Music/FirstMusic';
 import TicTacToeAreaWrapper from '../../../../Town/interactables/TicTacToe/TicTacToeArea';
 import ViewingAreaVideo from '../../../../Town/interactables/ViewingAreaVideo';
 import useMainParticipant from '../../hooks/useMainParticipant/useMainParticipant';
@@ -126,6 +127,7 @@ export default function ParticipantList() {
         slot={0}
       />
       <ViewingAreaVideo />
+      <FirstMusic/>
 
       {participants
         .filter(p => nearbyPlayers.find(player => player.id == p.participant.identity))

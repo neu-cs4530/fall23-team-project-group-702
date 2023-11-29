@@ -83,7 +83,7 @@ export default function NewConversationModal(): JSX.Element {
       }}>
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Create a conversation in {newConversation?.name} </ModalHeader>
+        <ModalHeader>Create a conversation in {newConversation?.name} </ModalHeader>{' '}
         <ModalCloseButton />
         <form
           onSubmit={ev => {

@@ -7,6 +7,7 @@ import { io } from 'socket.io-client';
 import TypedEmitter from 'typed-emitter';
 import Interactable from '../components/Town/Interactable';
 import ConversationArea from '../components/Town/interactables/ConversationArea';
+import MusicArea from '../components/Town/interactables/MusicArea';
 import GameArea from '../components/Town/interactables/GameArea';
 import ViewingArea from '../components/Town/interactables/ViewingArea';
 import { LoginController } from '../contexts/LoginControllerContext';
@@ -26,7 +27,12 @@ import {
   TownSettingsUpdate,
   ViewingArea as ViewingAreaModel,
 } from '../types/CoveyTownSocket';
-import { isConversationArea, isTicTacToeArea, isViewingArea } from '../types/TypeUtils';
+import {
+  isConversationArea,
+  isMusicArea,
+  isTicTacToeArea,
+  isViewingArea,
+} from '../types/TypeUtils';
 import ConversationAreaController from './interactable/ConversationAreaController';
 import GameAreaController, { GameEventTypes } from './interactable/GameAreaController';
 import InteractableAreaController, {
@@ -35,6 +41,8 @@ import InteractableAreaController, {
 import TicTacToeAreaController from './interactable/TicTacToeAreaController';
 import ViewingAreaController from './interactable/ViewingAreaController';
 import PlayerController from './PlayerController';
+import MusicAreaController from './interactable/MusicAreaController';
+import { AccessToken } from '@spotify/web-api-ts-sdk';
 
 const CALCULATE_NEARBY_PLAYERS_DELAY_MS = 300;
 const SOCKET_COMMAND_TIMEOUT_MS = 5000;
@@ -202,6 +210,16 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
    */
   private _interactableEmitter = new EventEmitter();
 
+  /**
+   * Spotify access token for this player
+   */
+  private _spotifyAccessToken?: AccessToken;
+
+  /**
+   * Spotify playback device ID for this player
+   */
+  private _playbackDeviceId?: string;
+
   public constructor({ userName, townID, loginController }: ConnectionProperties) {
     super();
     this._townID = townID;
@@ -239,6 +257,22 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
   private set _townIsPubliclyListed(newSetting: boolean) {
     this._townIsPubliclyListedInternal = newSetting;
     this.emit('townSettingsUpdated', { isPubliclyListed: newSetting });
+  }
+
+  public get spotifyAccessToken() {
+    return this._spotifyAccessToken;
+  }
+
+  public set spotifyAccessToken(accessToken: AccessToken | undefined) {
+    this._spotifyAccessToken = accessToken;
+  }
+
+  public get playbackDeviceId() {
+    return this._playbackDeviceId;
+  }
+
+  public set playbackDeviceId(playbackDeviceId: string | undefined) {
+    this._playbackDeviceId = playbackDeviceId;
   }
 
   public get providerVideoToken() {
@@ -330,11 +364,19 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
     return ret as GameAreaController<GameState, GameEventTypes>[];
   }
 
+  public get musicAreas() {
+    const ret = this._interactableControllers.filter(
+      eachInteractable => eachInteractable instanceof MusicAreaController,
+    );
+    return ret as MusicAreaController[];
+  }
+
   /**
    * Begin interacting with an interactable object. Emits an event to all listeners.
    * @param interactedObj
    */
   public interact<T extends Interactable>(interactedObj: T) {
+    console.log(interactedObj.getType());
     this._interactableEmitter.emit(interactedObj.getType(), interactedObj);
   }
 
@@ -487,6 +529,7 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
     interactableID: InteractableID,
     command: CommandType,
   ): Promise<InteractableCommandResponse<CommandType>['payload']> {
+    console.log('inside sendInteractableCommand with type' + command.type);
     const commandMessage: InteractableCommand & InteractableCommandBase = {
       ...command,
       commandID: nanoid(),
@@ -504,7 +547,7 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
           if (response.error) {
             reject(response.error);
           } else {
-            resolve(response.payload);
+            resolve(response.payload); // cewbfj
           }
         }
       };
@@ -601,6 +644,8 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
             );
           } else if (isViewingArea(eachInteractable)) {
             this._interactableControllers.push(new ViewingAreaController(eachInteractable));
+          } else if (isMusicArea(eachInteractable)) {
+            this._interactableControllers.push(new MusicAreaController(eachInteractable, this));
           } else if (isTicTacToeArea(eachInteractable)) {
             this._interactableControllers.push(
               new TicTacToeAreaController(eachInteractable.id, eachInteractable, this),
@@ -645,6 +690,17 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
       return existingController;
     } else {
       throw new Error(`No such viewing area controller ${existingController}`);
+    }
+  }
+
+  public getMusicAreaController(musicArea: MusicArea): MusicAreaController {
+    const existingController = this._interactableControllers.find(
+      eachExistingArea => eachExistingArea.id === musicArea.id,
+    );
+    if (existingController instanceof MusicAreaController) {
+      return existingController;
+    } else {
+      throw new Error(`No such music area controller ${existingController}`);
     }
   }
 
@@ -747,8 +803,17 @@ export function useTownSettings() {
  */
 export function useInteractableAreaController<T>(interactableAreaID: string): T {
   const townController = useTownController();
-  const interactableAreaController = townController.gameAreas.find(
-    eachArea => eachArea.id == interactableAreaID,
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const temp: any = townController.gameAreas;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const temp2: any = townController.musicAreas;
+  const joined = temp.concat(temp2);
+
+  const interactableAreaController = joined.find(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (eachArea: any) => eachArea.id == interactableAreaID,
   );
   if (!interactableAreaController) {
     throw new Error(`Requested interactable area ${interactableAreaID} does not exist`);
@@ -826,10 +891,12 @@ function samePlayers(a1: PlayerController[], a2: PlayerController[]) {
 export function useInteractable<T extends Interactable>(
   interactableType: T['name'],
 ): T | undefined {
+  console.log('interactable name ' + interactableType);
   const townController = useTownController();
   const [interactable, setInteractable] = useState<T | undefined>(undefined);
   useEffect(() => {
     const onInteract = (interactWith: T) => {
+      console.log('interacting');
       setInteractable(interactWith);
     };
     const offInteract = () => {

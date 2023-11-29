@@ -1,3 +1,12 @@
+import {
+  // SpotifyApi,
+  // Devices,
+  Track,
+  AccessToken,
+  PartialSearchResult,
+  // PlaybackState,
+} from '@spotify/web-api-ts-sdk';
+
 export type TownJoinResponse = {
   /** Unique ID that represents this player * */
   userID: string;
@@ -15,9 +24,9 @@ export type TownJoinResponse = {
   isPubliclyListed: boolean;
   /** Current state of interactables in this town */
   interactables: TypedInteractable[];
-}
+};
 
-export type InteractableType = 'ConversationArea' | 'ViewingArea' | 'TicTacToeArea';
+export type InteractableType = 'ConversationArea' | 'ViewingArea' | 'TicTacToeArea' | 'MusicArea';
 export interface Interactable {
   type: InteractableType;
   id: InteractableID;
@@ -27,7 +36,7 @@ export interface Interactable {
 export type TownSettingsUpdate = {
   friendlyName?: string;
   isPubliclyListed?: boolean;
-}
+};
 
 export type Direction = 'front' | 'back' | 'left' | 'right';
 
@@ -36,9 +45,9 @@ export interface Player {
   id: PlayerID;
   userName: string;
   location: PlayerLocation;
-};
+}
 
-export type XY = { x: number, y: number };
+export type XY = { x: number; y: number };
 
 export interface PlayerLocation {
   /* The CENTER x coordinate of this player's location */
@@ -49,7 +58,7 @@ export interface PlayerLocation {
   rotation: Direction;
   moving: boolean;
   interactableID?: string;
-};
+}
 export type ChatMessage = {
   author: string;
   sid: string;
@@ -59,12 +68,23 @@ export type ChatMessage = {
 
 export interface ConversationArea extends Interactable {
   topic?: string;
-};
+}
+
 export interface BoundingBox {
   x: number;
   y: number;
   width: number;
   height: number;
+}
+
+export type SongQueue = {
+  qID: int;
+  songs: Song[];
+};
+
+export type Song = {
+  name: string;
+  trackURI: string;
 };
 
 export interface ViewingArea extends Interactable {
@@ -79,7 +99,7 @@ export type GameStatus = 'IN_PROGRESS' | 'WAITING_TO_START' | 'OVER';
  */
 export interface GameState {
   status: GameStatus;
-} 
+}
 
 /**
  * Type for the state of a game that can be won
@@ -174,8 +194,76 @@ interface InteractableCommandBase {
   type: string;
 }
 
-export type InteractableCommand =  ViewingAreaUpdateCommand | JoinGameCommand | GameMoveCommand<TicTacToeMove> | LeaveGameCommand;
-export interface ViewingAreaUpdateCommand  {
+// Uniquely-identifiable Track added to a Spotify Playback Queue
+export interface QueuedTrack {
+  queueId: string;
+  track: Track;
+}
+
+/**
+ * Represents the state that a MusicArea  has.
+ */
+export interface MusicArea extends Interactable {
+  topic: string;
+  sessionInProgress: boolean;
+  currentSong: Track | null;
+  songQueue: QueuedTrack[];
+  isPlaying: boolean;
+}
+
+export type InteractableCommand =
+  | ViewingAreaUpdateCommand
+  | JoinGameCommand
+  | GameMoveCommand<TicTacToeMove>
+  | LeaveGameCommand
+  | CreateMusicSessionCommand
+  | AddUserToMusicSessionCommand
+  | SearchSongsMusicSessionCommand
+  | AddMusicToSessionQueue
+  | SkipSongMusicSession
+  | TogglePlayMusicSession
+  | RemoveMusicFromSessionQueue
+  | RemoveUserFromMusicSessionCommand;
+
+export interface CreateMusicSessionCommand {
+  type: 'CreateMusicSession';
+  topic: string;
+}
+
+export interface SearchSongsMusicSessionCommand {
+  type: 'SearchSongsMusicSession'
+  searchQuery: string;
+}
+
+export interface AddUserToMusicSessionCommand {
+  type: 'AddUserToMusicSession';
+  accessToken: AccessToken;
+  deviceId: string;
+}
+
+export interface AddMusicToSessionQueue {
+  type: 'AddMusicToSessionQueue'
+  trackId: string;
+}
+
+export interface RemoveMusicFromSessionQueue {
+  type: 'RemoveMusicFromSessionQueue'
+  queueId: string;
+}
+export interface SkipSongMusicSession {
+  type: 'SkipSongMusicSession'
+}
+
+export interface TogglePlayMusicSession {
+  type: 'TogglePlayMusicSession'
+}
+
+export interface RemoveUserFromMusicSessionCommand {
+  type: 'RemoveUserFromMusicSession';
+  accessToken: AccessToken;
+}
+
+export interface ViewingAreaUpdateCommand {
   type: 'ViewingAreaUpdate';
   update: ViewingArea;
 }
@@ -191,19 +279,35 @@ export interface GameMoveCommand<MoveType> {
   gameID: GameInstanceID;
   move: MoveType;
 }
-export type InteractableCommandReturnType<CommandType extends InteractableCommand> = 
-  CommandType extends JoinGameCommand ? { gameID: string}:
-  CommandType extends ViewingAreaUpdateCommand ? undefined :
-  CommandType extends GameMoveCommand<TicTacToeMove> ? undefined :
-  CommandType extends LeaveGameCommand ? undefined :
-  never;
+export type InteractableCommandReturnType<CommandType extends InteractableCommand> =
+  CommandType extends JoinGameCommand
+    ? { gameID: string }
+    : CommandType extends ViewingAreaUpdateCommand
+    ? undefined
+    : CommandType extends GameMoveCommand<TicTacToeMove>
+    ? undefined
+    : CommandType extends LeaveGameCommand
+    ? undefined
+    : CommandType extends AddUserToMusicSessionCommand
+    ? { accessToken: AccessToken }
+    : CommandType extends SearchSongsMusicSessionCommand
+    ? { searchResults: Track[] }
+    : CommandType extends AddMusicToSessionQueue
+    ? { updatedQueue: QueuedTrack[] }
+    : CommandType extends SkipSongMusicSession
+    ? { currentSong: Track, updatedQueue: QueuedTrack[] }
+    : CommandType extends TogglePlayMusicSession
+    ? { isPlaying: boolean }
+    : CommandType extends RemoveMusicFromSessionQueue
+    ? { updatedQueue: QueuedTrack[] }
+    : never;
 
 export type InteractableCommandResponse<MessageType> = {
   commandID: CommandID;
   interactableID: InteractableID;
   error?: string;
   payload?: InteractableCommandResponseMap[MessageType];
-}
+};
 
 export interface ServerToClientEvents {
   playerMoved: (movedPlayer: Player) => void;

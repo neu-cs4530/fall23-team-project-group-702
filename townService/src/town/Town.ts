@@ -9,6 +9,7 @@ import { isViewingArea } from '../TestUtils';
 import {
   ChatMessage,
   ConversationArea as ConversationAreaModel,
+  MusicArea as MusicAreaModel,
   CoveyTownSocket,
   Interactable,
   InteractableCommand,
@@ -22,6 +23,7 @@ import { logError } from '../Utils';
 import ConversationArea from './ConversationArea';
 import GameAreaFactory from './games/GameAreaFactory';
 import InteractableArea from './InteractableArea';
+import SpotifyArea from './music/MusicArea';
 import ViewingArea from './ViewingArea';
 
 /**
@@ -164,46 +166,80 @@ export default class Town {
 
     // Set up a listener to process commands to interactables.
     // Dispatches commands to the appropriate interactable and sends the response back to the client
-    socket.on('interactableCommand', (command: InteractableCommand & InteractableCommandBase) => {
-      const interactable = this._interactables.find(
-        eachInteractable => eachInteractable.id === command.interactableID,
-      );
-      if (interactable) {
-        try {
-          const payload = interactable.handleCommand(command, newPlayer);
+    socket.on(
+      'interactableCommand',
+      async (command: InteractableCommand & InteractableCommandBase) => {
+        const interactable = this._interactables.find(
+          eachInteractable => eachInteractable.id === command.interactableID,
+        );
+        // !!!!!!!!!!!!!!!!!!!!! ADDED EXTRA CHECK FOR MUSIC AREA
+        console.log('inside socket.on(interactableCOmmand)');
+        if (interactable && interactable.toModel().type === 'MusicArea') {
+          console.log('attempting to call handleSpotifyCommmand');
+          try {
+            const musicInteractable = interactable as SpotifyArea;
+            const payload = await musicInteractable.handleSpotifyCommand(command);
+            socket.emit('commandResponse', {
+              commandID: command.commandID,
+              interactableID: command.interactableID,
+              isOK: true,
+              payload,
+            });
+          } catch (err) {
+            if (err instanceof InvalidParametersError) {
+              socket.emit('commandResponse', {
+                commandID: command.commandID,
+                interactableID: command.interactableID,
+                isOK: false,
+                error: err.message,
+              });
+            } else {
+              logError(err);
+              socket.emit('commandResponse', {
+                commandID: command.commandID,
+                interactableID: command.interactableID,
+                isOK: false,
+                error: 'Unknown error',
+              });
+            }
+          }
+        } else if (interactable) {
+          try {
+            const payload = interactable.handleCommand(command, newPlayer);
+            socket.emit('commandResponse', {
+              commandID: command.commandID,
+              interactableID: command.interactableID,
+              isOK: true,
+              payload,
+            });
+          } catch (err) {
+            if (err instanceof InvalidParametersError) {
+              socket.emit('commandResponse', {
+                commandID: command.commandID,
+                interactableID: command.interactableID,
+                isOK: false,
+                error: err.message,
+              });
+            } else {
+              logError(err);
+              socket.emit('commandResponse', {
+                commandID: command.commandID,
+                interactableID: command.interactableID,
+                isOK: false,
+                error: 'Unknown error',
+              });
+            }
+          }
+        } else {
           socket.emit('commandResponse', {
             commandID: command.commandID,
             interactableID: command.interactableID,
-            isOK: true,
-            payload,
+            isOK: false,
+            error: `No such interactable ${command.interactableID}`,
           });
-        } catch (err) {
-          if (err instanceof InvalidParametersError) {
-            socket.emit('commandResponse', {
-              commandID: command.commandID,
-              interactableID: command.interactableID,
-              isOK: false,
-              error: err.message,
-            });
-          } else {
-            logError(err);
-            socket.emit('commandResponse', {
-              commandID: command.commandID,
-              interactableID: command.interactableID,
-              isOK: false,
-              error: 'Unknown error',
-            });
-          }
         }
-      } else {
-        socket.emit('commandResponse', {
-          commandID: command.commandID,
-          interactableID: command.interactableID,
-          isOK: false,
-          error: `No such interactable ${command.interactableID}`,
-        });
-      }
-    });
+      },
+    );
     return newPlayer;
   }
 
@@ -296,6 +332,34 @@ export default class Town {
       return false;
     }
     area.topic = conversationArea.topic;
+    area.addPlayersWithinBounds(this._players);
+    this._broadcastEmitter.emit('interactableUpdate', area.toModel());
+    return true;
+  }
+
+  /**
+   * Creates a new music area in this town if there is not currently an active
+   * music session with the same ID. The music area ID must match the name of a
+   * music area that exists in this town's map, and the music area must not
+   * already have a song set.
+   *
+   * If successful creating the music area, this method:
+   *  Adds any players who are in the region defined by the music area to it.
+   *  Notifies all players in the town that the music area has been updated
+   *
+   * @param musicArea Information describing the music area to create. Ignores any
+   *  occupantsById that are set on the music area that is passed to this method.
+   *
+   * @returns true if the music session is successfully created, or false if there is no known
+   * music area with the specified ID or if there is already an active music area
+   * with the specified ID
+   */
+  public addMusicArea(musicArea: MusicAreaModel): boolean {
+    const area = this._interactables.find(eachArea => eachArea.id === musicArea.id) as SpotifyArea;
+    if (!area || !musicArea.topic || area.topic) {
+      return false;
+    }
+    area.topic = musicArea.topic;
     area.addPlayersWithinBounds(this._players);
     this._broadcastEmitter.emit('interactableUpdate', area.toModel());
     return true;
@@ -404,10 +468,15 @@ export default class Town {
       .filter(eachObject => eachObject.type === 'GameArea')
       .map(eachGameAreaObj => GameAreaFactory(eachGameAreaObj, this._broadcastEmitter));
 
+    const musicAreas = objectLayer.objects
+      .filter(eachObject => eachObject.type === 'MusicArea')
+      .map(eachGameAreaObj => SpotifyArea.fromMapObject(eachGameAreaObj, this._broadcastEmitter));
+
     this._interactables = this._interactables
       .concat(viewingAreas)
       .concat(conversationAreas)
-      .concat(gameAreas);
+      .concat(gameAreas)
+      .concat(musicAreas);
     this._validateInteractables();
   }
 
@@ -424,9 +493,17 @@ export default class Town {
       );
     }
     // Make sure that there are no overlapping objects
+
     for (const interactable of this._interactables) {
       for (const otherInteractable of this._interactables) {
-        if (interactable !== otherInteractable && interactable.overlaps(otherInteractable)) {
+        if (
+          interactable !== otherInteractable &&
+          interactable.overlaps(otherInteractable) &&
+          !(
+            interactable.toModel().type === 'MusicArea' ||
+            otherInteractable.toModel().type === 'MusicArea'
+          )
+        ) {
           throw new Error(
             `Expected interactables not to overlap, but found overlap between ${interactable.id} and ${otherInteractable.id}`,
           );
