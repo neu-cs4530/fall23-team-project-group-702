@@ -1,5 +1,10 @@
+node_modules/
+node_modules/*
 build
 node_modules/@spotify/web-api-ts-sdk/
 client/dist/
 dist/*
 node_modules/@spotify/web-api-ts-sdk/dist/mjs/endpoints/SearchEndpoints.d.ts
+dist/mjs/endpoints/SearchEndpoints.d.ts
+dist/
+**/dist/**
