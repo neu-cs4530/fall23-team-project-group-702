@@ -472,11 +472,16 @@ export default class Town {
       .filter(eachObject => eachObject.type === 'MusicArea')
       .map(eachGameAreaObj => SpotifyArea.fromMapObject(eachGameAreaObj, this._broadcastEmitter));
 
+    const privateMusicAreas = objectLayer.objects
+      .filter(eachObject => eachObject.type === 'PrivateMusicArea')
+      .map(eachGameAreaObj => SpotifyArea.fromMapObject(eachGameAreaObj, this._broadcastEmitter));
+
     this._interactables = this._interactables
       .concat(viewingAreas)
       .concat(conversationAreas)
       .concat(gameAreas)
-      .concat(musicAreas);
+      .concat(musicAreas)
+      .concat(privateMusicAreas);
     this._validateInteractables();
   }
 
@@ -500,8 +505,8 @@ export default class Town {
           interactable !== otherInteractable &&
           interactable.overlaps(otherInteractable) &&
           !(
-            interactable.toModel().type === 'MusicArea' ||
-            otherInteractable.toModel().type === 'MusicArea'
+            interactable.toModel().type === 'PrivateMusicArea' ||
+            otherInteractable.toModel().type === 'PrivateMusicArea'
           )
         ) {
           throw new Error(

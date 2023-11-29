@@ -134,7 +134,7 @@ export default function FirstMusicWrapper(): JSX.Element {
     }
   }, [townController, musicArea]);
 
-  if (musicArea && musicArea.getType() === 'musicArea') {
+  if (musicArea && (musicArea.getType() === 'musicArea')) {
     console.log('Rendering first music');
     return (
       <Modal isOpen={true} onClose={closeModal} closeOnOverlayClick={false}>

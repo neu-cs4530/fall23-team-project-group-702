@@ -24,6 +24,7 @@ export type MusicAreaEvents = BaseInteractableEventMap & {
   sessionInProgressChange: (sessionInProgress: boolean) => void;
   accessTokenChange: (accessToken: AccessToken) => void;
   playbackStateChange: (playbackState: boolean) => void;
+  roomVisibilityChange: (privateState: boolean) => void;
 };
 
 /**
@@ -120,7 +121,7 @@ export default class MusicAreaController extends InteractableAreaController<
   }
 
   /**
-   * @returns MusicAreaModel that represents the current state of this ViewingAreaController
+   * @returns MusicAreaModel that represents the current state of this MusicAreaController
    */
   public toInteractableAreaModel(): MusicAreaModel {
     return this._model;

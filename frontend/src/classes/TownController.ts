@@ -30,6 +30,7 @@ import {
 import {
   isConversationArea,
   isMusicArea,
+  isPrivateMusicArea,
   isTicTacToeArea,
   isViewingArea,
 } from '../types/TypeUtils';
@@ -43,6 +44,8 @@ import ViewingAreaController from './interactable/ViewingAreaController';
 import PlayerController from './PlayerController';
 import MusicAreaController from './interactable/MusicAreaController';
 import { AccessToken } from '@spotify/web-api-ts-sdk';
+import PrivateMusicAreaController from './interactable/PrivateMusicAreaController';
+import PrivateMusicArea from '../components/Town/interactables/PrivateMusicArea';
 
 const CALCULATE_NEARBY_PLAYERS_DELAY_MS = 300;
 const SOCKET_COMMAND_TIMEOUT_MS = 5000;
@@ -371,6 +374,13 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
     return ret as MusicAreaController[];
   }
 
+  public get privateMusicAreas() {
+    const ret = this._interactableControllers.filter(
+      eachInteractable => eachInteractable instanceof PrivateMusicAreaController,
+    );
+    return ret as PrivateMusicAreaController[];
+  }
+
   /**
    * Begin interacting with an interactable object. Emits an event to all listeners.
    * @param interactedObj
@@ -635,6 +645,7 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
 
         this._interactableControllers = [];
         initialData.interactables.forEach(eachInteractable => {
+          console.log('[DEBUG]' + eachInteractable.type);
           if (isConversationArea(eachInteractable)) {
             this._interactableControllers.push(
               ConversationAreaController.fromConversationAreaModel(
@@ -644,9 +655,12 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
             );
           } else if (isViewingArea(eachInteractable)) {
             this._interactableControllers.push(new ViewingAreaController(eachInteractable));
-          } else if (isMusicArea(eachInteractable)) {
+          } else if (isMusicArea(eachInteractable) && !(isPrivateMusicArea(eachInteractable))) {
             this._interactableControllers.push(new MusicAreaController(eachInteractable, this));
-          } else if (isTicTacToeArea(eachInteractable)) {
+          } else if (isPrivateMusicArea(eachInteractable)) {
+            this._interactableControllers.push(new PrivateMusicAreaController(eachInteractable, this));
+            console.log('found private room, pushing..?')
+          }else if (isTicTacToeArea(eachInteractable)) {
             this._interactableControllers.push(
               new TicTacToeAreaController(eachInteractable.id, eachInteractable, this),
             );
@@ -701,6 +715,17 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
       return existingController;
     } else {
       throw new Error(`No such music area controller ${existingController}`);
+    }
+  }
+
+  public getPrivateMusicAreaController(musicArea: PrivateMusicArea): PrivateMusicAreaController {
+    const existingController = this._interactableControllers.find(
+      eachExistingArea => eachExistingArea.id === musicArea.id,
+    );
+    if (existingController instanceof PrivateMusicAreaController) {
+      return existingController;
+    } else {
+      throw new Error(`No such private music area controller ${existingController}`);
     }
   }
 
@@ -809,7 +834,12 @@ export function useInteractableAreaController<T>(interactableAreaID: string): T 
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const temp2: any = townController.musicAreas;
-  const joined = temp.concat(temp2);
+
+  const temp3: any = townController.privateMusicAreas;
+
+  const halfJoined = temp.concat(temp2);
+  const joined = halfJoined.concat(temp3);
+  
 
   const interactableAreaController = joined.find(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

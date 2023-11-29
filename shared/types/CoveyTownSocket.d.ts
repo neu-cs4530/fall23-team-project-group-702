@@ -26,7 +26,8 @@ export type TownJoinResponse = {
   interactables: TypedInteractable[];
 };
 
-export type InteractableType = 'ConversationArea' | 'ViewingArea' | 'TicTacToeArea' | 'MusicArea';
+export type InteractableType = 'ConversationArea' | 'ViewingArea' 
+| 'TicTacToeArea' | 'MusicArea' | 'PrivateMusicArea';
 export interface Interactable {
   type: InteractableType;
   id: InteractableID;
@@ -209,6 +210,13 @@ export interface MusicArea extends Interactable {
   currentSong: Track | null;
   songQueue: QueuedTrack[];
   isPlaying: boolean;
+}
+
+/**
+ * A Private MusicArea to be closed and opened to other users
+ */
+export interface PrivateMusicArea extends MusicArea {
+  isPrivate: boolean;
 }
 
 export type InteractableCommand =

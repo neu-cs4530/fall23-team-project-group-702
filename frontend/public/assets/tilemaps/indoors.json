@@ -558,7 +558,7 @@
                  "id":54,
                  "name":"Private Music Room",
                  "rotation":0,
-                 "type":"MusicArea",
+                 "type":"PrivateMusicArea",
                  "visible":true,
                  "width":150,
                  "x":775.33316666666,
