@@ -24,6 +24,7 @@ import ConversationArea from './ConversationArea';
 import GameAreaFactory from './games/GameAreaFactory';
 import InteractableArea from './InteractableArea';
 import SpotifyArea from './music/MusicArea';
+import PrivateSpotifyArea from './music/PrivateMusicArea';
 import ViewingArea from './ViewingArea';
 
 /**
@@ -474,7 +475,9 @@ export default class Town {
 
     const privateMusicAreas = objectLayer.objects
       .filter(eachObject => eachObject.type === 'PrivateMusicArea')
-      .map(eachGameAreaObj => SpotifyArea.fromMapObject(eachGameAreaObj, this._broadcastEmitter));
+      .map(eachGameAreaObj =>
+        PrivateSpotifyArea.fromMapObject(eachGameAreaObj, this._broadcastEmitter),
+      );
 
     this._interactables = this._interactables
       .concat(viewingAreas)
