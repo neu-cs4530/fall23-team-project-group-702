@@ -1,7 +1,6 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-console */
 import { Track, AccessToken, PartialSearchResult, PlaybackState } from '@spotify/web-api-ts-sdk';
-import { is } from 'ramda';
 // import { uniqueId } from 'lodash';
 import { SpotifyUserPlayback, QueuedTrack } from './SpotifyUserPlayback';
 
