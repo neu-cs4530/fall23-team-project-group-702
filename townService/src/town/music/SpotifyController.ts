@@ -284,6 +284,10 @@ export default class SpotifyController {
     const playerToRemove = this._userMusicPlayers.find(
       userMusicPlayer => userMusicPlayer.accessToken.access_token === accessToken,
     );
+    if (!playerToRemove) {
+      console.log('No music player exists for this user');
+      return;
+    }
     const userState = await playerToRemove?.getCurrentlyPlayingTrack();
     /* When the user leaves the session, if they have a song playing, pause the song */
     if (userState?.is_playing) {
@@ -306,6 +310,8 @@ export default class SpotifyController {
     this._isASongPlaying = false;
     this._queue = [];
     this._songNowPlaying = null;
-    this._userMusicPlayers = [];
+    for (const user of this._userMusicPlayers) {
+      this.removeUser(user.accessToken.access_token);
+    }
   }
 }

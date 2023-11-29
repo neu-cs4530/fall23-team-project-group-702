@@ -896,7 +896,7 @@ export function useInteractable<T extends Interactable>(
   const [interactable, setInteractable] = useState<T | undefined>(undefined);
   useEffect(() => {
     const onInteract = (interactWith: T) => {
-      console.log('interacting');
+      console.log('interacting with ' + interactableType);
       setInteractable(interactWith);
     };
     const offInteract = () => {
@@ -906,6 +906,7 @@ export function useInteractable<T extends Interactable>(
     townController.interactableEmitter.on('endInteraction', offInteract);
 
     return () => {
+      console.log('ends interaction');
       townController.interactableEmitter.off(interactableType, onInteract);
       townController.interactableEmitter.off('endInteraction', offInteract);
     };

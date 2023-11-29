@@ -262,6 +262,7 @@ export default class SpotifyArea extends InteractableArea {
   ): Promise<InteractableCommandReturnType<CommandType>> {
     switch (command.type) {
       case 'CreateMusicSession': {
+        console.log('backend: created music session');
         this._topic = command.topic;
         this._sessionInProgress = true;
 
@@ -324,9 +325,26 @@ export default class SpotifyArea extends InteractableArea {
       case 'RemoveUserFromMusicSession': {
         const { accessToken } = command;
         console.log(`removing from session with access token: ${accessToken.access_token}`);
-        this._musicSessionController.removeUser(accessToken.access_token);
-        if (this._musicSessionController.userMusicPlayers.length === 0) {
+
+        // Check if the host (player who created this session) left
+        let hostUserWasRemoved: boolean;
+        if (this._musicSessionController.userMusicPlayers.length > 0) {
+          // if invariant, don't need to check
+          if (
+            this._musicSessionController.userMusicPlayers[0].accessToken.access_token ===
+            accessToken.access_token
+          ) {
+            hostUserWasRemoved = true;
+          } else {
+            hostUserWasRemoved = false;
+          }
+        } else {
+          hostUserWasRemoved = false;
+        }
+        this._musicSessionController.removeUser(accessToken.access_token); // if invariant don't need to check
+        if (this._musicSessionController.userMusicPlayers.length === 0 || hostUserWasRemoved) {
           // Reset state
+          console.log('clearing musicSession state');
           this._topic = '';
           this._musicSessionController.clearState();
           this.sessionInProgress = false;

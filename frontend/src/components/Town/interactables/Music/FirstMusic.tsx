@@ -117,28 +117,13 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
  * A wrapper component for the TicTacToeArea component.
  * Determines if the player is currently in a tic tac toe area on the map, and if so,
  * renders the TicTacToeArea component in a modal.
- *
  */
 export default function FirstMusicWrapper(): JSX.Element {
   console.log('Rendering FirstMusicWrapper');
   const musicArea = useInteractable<MusicAreaInteractable>('musicArea');
   const townController = useTownController();
 
-  const [isOpen, setIsOpen] = useState<boolean>(true); // not being properly cleaned up
-
-  // // Whenever player wants to reopen interface
-  // useEffect(() => {
-  //   const handleInteract = () => {
-  //     setIsOpen(true);
-  //   };
-  //   if (musicArea) {
-  //     console.log('attempting to interact');
-  //     musicArea.addListener('interact', handleInteract);
-  //     return () => {
-  //       musicArea.removeListener('interact', handleInteract);
-  //     };
-  //   }
-  // }, [musicArea]);
+  const [isOpen, setIsOpen] = useState<boolean>(true);
 
   // Pause controller if interacting and modal is open
   useEffect(() => {
@@ -151,7 +136,18 @@ export default function FirstMusicWrapper(): JSX.Element {
 
   const closeModal = useCallback(() => {
     setIsOpen(false);
-  }, [setIsOpen]);
+
+    console.log('closing modal');
+    if (musicArea) {
+      const musicAreaController = townController.getMusicAreaController(musicArea);
+      console.log(
+        'musicAreaController.sessionInProgress: ' + musicAreaController.sessionInProgress,
+      );
+      if (!musicAreaController.sessionInProgress) {
+        musicArea.overlapExit();
+      }
+    }
+  }, [musicArea, townController]);
 
   const handleReopen = useCallback(() => {
     setIsOpen(true);
@@ -161,9 +157,9 @@ export default function FirstMusicWrapper(): JSX.Element {
     if (musicArea) {
       console.log('handling leave session');
       townController.interactEnd(musicArea);
-      const controller = townController.getMusicAreaController(musicArea);
-      await controller.removeUserFromSession();
-      if (!controller.sessionInProgress) {
+      const musicAreaController = townController.getMusicAreaController(musicArea);
+      await musicAreaController.removeUserFromSession();
+      if (!musicAreaController.sessionInProgress) {
         // Reset state if session ended
         setIsOpen(true);
       }
@@ -181,9 +177,17 @@ export default function FirstMusicWrapper(): JSX.Element {
 
   if (musicArea && musicArea.getType() === 'musicArea') {
     console.log('Rendering first music. isOpen: ' + isOpen);
-    if (isOpen) {
+    let sessionInProgress;
+    if (musicArea) {
+      const musicAreaController = townController.getMusicAreaController(musicArea);
+      sessionInProgress = musicAreaController.sessionInProgress;
+    }
+    console.log('session in progress: ' + sessionInProgress);
+    if (!isOpen && sessionInProgress) {
+      return <Button onClick={handleReopen}>Re-open Music Player</Button>;
+    } else {
       return (
-        <Modal isOpen={true} onClose={closeModal} closeOnOverlayClick={false}>
+        <Modal isOpen={isOpen} onClose={closeModal} closeOnOverlayClick={false}>
           <ModalOverlay />
           <ModalContent>
             <ModalCloseButton />
@@ -191,8 +195,6 @@ export default function FirstMusicWrapper(): JSX.Element {
           </ModalContent>
         </Modal>
       );
-    } else {
-      return <Button onClick={handleReopen}>Open Music Player</Button>;
     }
   }
   return <></>;
