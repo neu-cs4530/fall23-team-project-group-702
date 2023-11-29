@@ -26,7 +26,8 @@ export type TownJoinResponse = {
   interactables: TypedInteractable[];
 };
 
-export type InteractableType = 'ConversationArea' | 'ViewingArea' | 'TicTacToeArea' | 'MusicArea';
+export type InteractableType = 'ConversationArea' | 'ViewingArea' 
+| 'TicTacToeArea' | 'MusicArea' | 'PrivateMusicArea';
 export interface Interactable {
   type: InteractableType;
   id: InteractableID;
@@ -211,6 +212,13 @@ export interface MusicArea extends Interactable {
   isPlaying: boolean;
 }
 
+/**
+ * A Private MusicArea to be closed and opened to other users
+ */
+export interface PrivateMusicArea extends MusicArea {
+  isPrivate: boolean;
+}
+
 export type InteractableCommand =
   | ViewingAreaUpdateCommand
   | JoinGameCommand
@@ -223,7 +231,8 @@ export type InteractableCommand =
   | SkipSongMusicSession
   | TogglePlayMusicSession
   | RemoveMusicFromSessionQueue
-  | RemoveUserFromMusicSessionCommand;
+  | RemoveUserFromMusicSessionCommand
+  | SetRoomPrivacy;
 
 export interface CreateMusicSessionCommand {
   type: 'CreateMusicSession';
@@ -263,6 +272,10 @@ export interface RemoveUserFromMusicSessionCommand {
   accessToken: AccessToken;
 }
 
+export interface SetRoomPrivacy {
+  type: 'SetRoomPrivacy'
+}
+
 export interface ViewingAreaUpdateCommand {
   type: 'ViewingAreaUpdate';
   update: ViewingArea;
@@ -300,6 +313,8 @@ export type InteractableCommandReturnType<CommandType extends InteractableComman
     ? { isPlaying: boolean }
     : CommandType extends RemoveMusicFromSessionQueue
     ? { updatedQueue: QueuedTrack[] }
+    : CommandType extends SetRoomPrivacy
+    ? undefined
     : never;
 
 export type InteractableCommandResponse<MessageType> = {

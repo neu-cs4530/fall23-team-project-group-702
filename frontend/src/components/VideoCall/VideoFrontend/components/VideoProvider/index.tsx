@@ -51,7 +51,6 @@ interface VideoProviderProps {
 export function VideoProvider({ options, children, onError = () => {}, onDisconnect=()=>{} }: VideoProviderProps) {
   const onErrorCallback: ErrorCallback = useCallback(
     error => {
-      console.log(`ERROR: ${error.message}`, error);
       onError(error);
     },
     [onError]

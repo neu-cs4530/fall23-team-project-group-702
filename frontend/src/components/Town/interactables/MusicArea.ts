@@ -1,4 +1,3 @@
-import MusicAreaController from '../../../classes/interactable/MusicAreaController';
 import { Song } from '../../../types/CoveyTownSocket';
 import Interactable, { KnownInteractableTypes } from '../Interactable';
 
@@ -9,7 +8,7 @@ export default class MusicArea extends Interactable {
 
   private _defaultSong?: Song;
 
-  private _musicArea?: MusicAreaController;
+  protected _musicArea?: any;
 
   private _isInteracting = false;
 
@@ -60,7 +59,6 @@ export default class MusicArea extends Interactable {
     this._labelText?.setVisible(false);
     this._infoTextBox?.setVisible(false);
     if (this._isInteracting) {
-      console.log('interaction ended');
       this.townController.interactableEmitter.emit('endInteraction', this);
       this.emit('leaveSession');
       this._isInteracting = false;
@@ -68,7 +66,6 @@ export default class MusicArea extends Interactable {
   }
 
   interact(): void {
-    console.log('inside interACT');
     this._labelText?.setVisible(false);
     this._infoTextBox?.setVisible(false);
     this._isInteracting = true;

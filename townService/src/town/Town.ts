@@ -24,6 +24,7 @@ import ConversationArea from './ConversationArea';
 import GameAreaFactory from './games/GameAreaFactory';
 import InteractableArea from './InteractableArea';
 import SpotifyArea from './music/MusicArea';
+import PrivateSpotifyArea from './music/PrivateMusicArea';
 import ViewingArea from './ViewingArea';
 
 /**
@@ -173,11 +174,18 @@ export default class Town {
           eachInteractable => eachInteractable.id === command.interactableID,
         );
         // !!!!!!!!!!!!!!!!!!!!! ADDED EXTRA CHECK FOR MUSIC AREA
-        // console.log('inside socket.on(interactableCOmmand)');
-        if (interactable && interactable.toModel().type === 'MusicArea') {
-          // console.log('attempting to call handleSpotifyCommmand');
+        if (
+          (interactable && interactable.toModel().type === 'MusicArea') ||
+          interactable?.toModel().type === 'PrivateMusicArea'
+        ) {
           try {
-            const musicInteractable = interactable as SpotifyArea;
+            let musicInteractable;
+            // Distinguish between private and public music rooms
+            if (interactable.toModel().type === 'MusicArea') {
+              musicInteractable = interactable as SpotifyArea;
+            } else {
+              musicInteractable = interactable as PrivateSpotifyArea;
+            }
             const payload = await musicInteractable.handleSpotifyCommand(command);
             socket.emit('commandResponse', {
               commandID: command.commandID,
@@ -472,11 +480,18 @@ export default class Town {
       .filter(eachObject => eachObject.type === 'MusicArea')
       .map(eachGameAreaObj => SpotifyArea.fromMapObject(eachGameAreaObj, this._broadcastEmitter));
 
+    const privateMusicAreas = objectLayer.objects
+      .filter(eachObject => eachObject.type === 'PrivateMusicArea')
+      .map(eachGameAreaObj =>
+        PrivateSpotifyArea.fromMapObject(eachGameAreaObj, this._broadcastEmitter),
+      );
+
     this._interactables = this._interactables
       .concat(viewingAreas)
       .concat(conversationAreas)
       .concat(gameAreas)
-      .concat(musicAreas);
+      .concat(musicAreas)
+      .concat(privateMusicAreas);
     this._validateInteractables();
   }
 
@@ -500,8 +515,8 @@ export default class Town {
           interactable !== otherInteractable &&
           interactable.overlaps(otherInteractable) &&
           !(
-            interactable.toModel().type === 'MusicArea' ||
-            otherInteractable.toModel().type === 'MusicArea'
+            interactable.toModel().type === 'PrivateMusicArea' ||
+            otherInteractable.toModel().type === 'PrivateMusicArea'
           )
         ) {
           throw new Error(

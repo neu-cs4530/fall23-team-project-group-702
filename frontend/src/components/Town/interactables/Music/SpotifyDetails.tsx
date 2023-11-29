@@ -16,11 +16,6 @@ export const SpotifyDetails: React.VFC<{
   useEffect(() => {
     async function activate() {
       if (playerDevice?.device_id === undefined || !props.userAccessToken) return;
-      console.log('Activating device in details... with device_id' + playerDevice.device_id);
-      console.log(
-        'Activating with device_id (part 2) with accessToken: ' +
-          props.userAccessToken.access_token,
-      );
       // add user to sessio
       // set sdk in rest api
       await props.musicController.addUserToSession(props.userAccessToken, playerDevice.device_id);

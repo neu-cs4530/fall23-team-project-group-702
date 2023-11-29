@@ -7,7 +7,8 @@ export type KnownInteractableTypes =
   | 'viewingArea'
   | 'transporter'
   | 'gameArea'
-  | 'musicArea';
+  | 'musicArea'
+  | 'privateMusicArea';
 
 /**
  * A base abstract class for representing an "interactable" in the Phaser game world.
@@ -82,7 +83,6 @@ export default abstract class Interactable extends Phaser.GameObjects.Sprite {
         this._scene.cursorKeys.space.isDown &&
         !this.townController.paused
       ) {
-        console.log('b4 interact');
         this.townController.interact(this);
         this.interact();
       }

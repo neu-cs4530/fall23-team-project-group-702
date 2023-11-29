@@ -15,18 +15,21 @@ import {
 import { useInteractable, useInteractableAreaController } from '../../../../classes/TownController';
 import useTownController from '../../../../hooks/useTownController';
 import MusicAreaInteractable from '../MusicArea';
+import PrivateMusicAreaInteractable from '../PrivateMusicArea';
 import { useCallback, useEffect, useState } from 'react';
 import { InteractableID } from '../../../../types/CoveyTownSocket';
 import MusicAreaController from '../../../../classes/interactable/MusicAreaController';
 import { AccessToken } from '@spotify/web-api-ts-sdk';
 import SpotifyPlayback from './SpotifyPlayback';
 import { SpotifyDetails } from './SpotifyDetails';
+import PrivateMusicAreaController from '../../../../classes/interactable/PrivateMusicAreaController';
 
 /**
  * Jukebox Interface Component that handles rendering the join/create music session modal and the music playback interface modal.
  */
 function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX.Element {
   const musicAreaController = useInteractableAreaController<MusicAreaController>(interactableID);
+  const privateMusicAreaController = musicAreaController as PrivateMusicAreaController;
   const townController = useTownController();
 
   const [accessToken, setAccessToken] = useState<AccessToken | undefined>(
@@ -36,6 +39,7 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
   const [sessionActive, setSessionActive] = useState<boolean>(
     musicAreaController.sessionInProgress,
   );
+  const [isPrivate, setIsPrivate] = useState<boolean>(privateMusicAreaController.isPrivateSession);
 
   useEffect(() => {
     musicAreaController.addListener('topicChange', setSessionName);
@@ -48,13 +52,29 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
     };
   }, [musicAreaController]);
 
+  useEffect(() => {
+    const privateController = musicAreaController as PrivateMusicAreaController;
+    privateController.addListener('roomVisibilityChange', setIsPrivate);
+    return () => {
+      musicAreaController.removeListener('roomVisibilityChange', setIsPrivate);
+    };
+  }, [musicAreaController]);
+
   /**
    * Handles starting a music session with the session name.
    */
   const handleStartMusicSession = async () => {
-    console.log('Starting music session');
     await musicAreaController.createSession(sessionName);
     setSessionActive(true);
+  };
+
+  const handleSetPrivacyState = async () => {
+    const privateController = musicAreaController as PrivateMusicAreaController;
+    // Emit to all controllers
+    privateController.setPrivacy(!privateController.isPrivateSession);
+
+    // Set for this controller
+    setIsPrivate(!privateController.isPrivateSession);
   };
 
   if (!accessToken) {
@@ -96,6 +116,13 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
         <Heading as='h2' size='lg' textAlign='center' my={4}>
           {sessionName}
         </Heading>
+        <Box textAlign='center'>
+          {
+            <Button onClick={handleSetPrivacyState}>
+              {isPrivate ? 'Unlock Area' : 'Lock Area'}
+            </Button>
+          }
+        </Box>
         <>
           {accessToken ? (
             <>
@@ -113,14 +140,21 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
   }
 }
 
+function isValidMusicAreaType(areaType: string): boolean {
+  return areaType === 'musicArea' || areaType === 'privateMusicArea';
+}
+
 /**
  * A wrapper component for the TicTacToeArea component.
  * Determines if the player is currently in a tic tac toe area on the map, and if so,
  * renders the TicTacToeArea component in a modal.
  */
 export default function FirstMusicWrapper(): JSX.Element {
-  console.log('Rendering FirstMusicWrapper');
-  const musicArea = useInteractable<MusicAreaInteractable>('musicArea');
+  let musicArea = useInteractable<MusicAreaInteractable>('musicArea');
+  // Check for different types of music rooms
+  if (!musicArea) {
+    musicArea = useInteractable<PrivateMusicAreaInteractable>('privateMusicArea');
+  }
   const townController = useTownController();
 
   const [isOpen, setIsOpen] = useState<boolean>(true);
@@ -137,12 +171,8 @@ export default function FirstMusicWrapper(): JSX.Element {
   const closeModal = useCallback(() => {
     setIsOpen(false);
 
-    console.log('closing modal');
     if (musicArea) {
       const musicAreaController = townController.getMusicAreaController(musicArea);
-      console.log(
-        'musicAreaController.sessionInProgress: ' + musicAreaController.sessionInProgress,
-      );
       if (!musicAreaController.sessionInProgress) {
         musicArea.overlapExit();
       }
@@ -155,12 +185,13 @@ export default function FirstMusicWrapper(): JSX.Element {
 
   const handleLeaveSession = useCallback(async () => {
     if (musicArea) {
-      console.log('handling leave session');
       townController.interactEnd(musicArea);
       const musicAreaController = townController.getMusicAreaController(musicArea);
       await musicAreaController.removeUserFromSession();
       if (!musicAreaController.sessionInProgress) {
         // Reset state if session ended
+        const privateMusicAreaController = musicAreaController as PrivateMusicAreaController;
+        await privateMusicAreaController.setPrivacy(false);
         setIsOpen(true);
       }
     }
@@ -175,16 +206,20 @@ export default function FirstMusicWrapper(): JSX.Element {
     }
   });
 
-  if (musicArea && musicArea.getType() === 'musicArea') {
-    console.log('Rendering first music. isOpen: ' + isOpen);
+  if (musicArea && isValidMusicAreaType(musicArea.getType())) {
     let sessionInProgress;
     if (musicArea) {
       const musicAreaController = townController.getMusicAreaController(musicArea);
       sessionInProgress = musicAreaController.sessionInProgress;
     }
-    console.log('session in progress: ' + sessionInProgress);
     if (!isOpen && sessionInProgress) {
-      return <Button onClick={handleReopen}>Re-open Music Player</Button>;
+      return (
+        <Modal isOpen={true} onClose={closeModal} size='sm'>
+          <ModalContent maxW='200px'>
+            <Button onClick={handleReopen}>Re-open Music Player</Button>;
+          </ModalContent>
+        </Modal>
+      );
     } else {
       return (
         <Modal isOpen={isOpen} onClose={closeModal} closeOnOverlayClick={false} size='2xl'>

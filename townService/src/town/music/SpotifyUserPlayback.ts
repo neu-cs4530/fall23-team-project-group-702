@@ -108,7 +108,6 @@ export class SpotifyUserPlayback {
           If state doesn't exist, then no song is currently playing/paused so do nothing to avoid spotify error
           If state exists, then only resume playback if the song is paused
         */
-        console.log('Endpoint.startResumePlayback on device');
         await this._sdk.player.startResumePlayback(device.id as string);
       }
     });
@@ -139,7 +138,6 @@ export class SpotifyUserPlayback {
           If state exists, then only resume playback if the song is paused
         */
         /* if state doesn't exist, this throws an error */
-        console.log('Endpoint.pausePlayback on device');
         await this._sdk.player.pausePlayback(device.id as string);
       }
     });
@@ -261,9 +259,6 @@ export class SpotifyUserPlayback {
           },
         );
         const text = await playSongResponse.text();
-        console.log(
-          `Now playing on name: ${device.name} || playSongResponse: ${playSongResponse.status} || text: ${text}`,
-        );
         if (!playSongResponse.ok) {
           throw new Error(`Unable to play song on device - Error: ${text}`);
         }

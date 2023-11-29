@@ -1,7 +1,6 @@
 /* eslint-disable no-console */
 import { ITiledMapObject } from '@jonbell/tiled-map-type-guard';
 import { Track } from '@spotify/web-api-ts-sdk';
-import { isPlainObject } from 'lodash';
 import InvalidParametersError from '../../lib/InvalidParametersError';
 import Player from '../../lib/Player';
 import {
@@ -16,11 +15,11 @@ import SpotifyController from './SpotifyController';
 
 export default class SpotifyArea extends InteractableArea {
   /* The topic of the conversation area, or undefined if it is not set */
-  private _topic: string;
+  protected _topic: string;
 
-  private _sessionInProgress: boolean; // NEED GETTERS AND SETTERS
+  protected _sessionInProgress: boolean; // NEED GETTERS AND SETTERS
 
-  private _musicSessionController: SpotifyController;
+  protected _musicSessionController: SpotifyController;
 
   public get topic(): string {
     return this._topic;
@@ -58,9 +57,6 @@ export default class SpotifyArea extends InteractableArea {
     super(id, coordinates, townEmitter);
     this._topic = topic;
     this._sessionInProgress = false;
-    console.log(
-      `created music area topic: ${this._topic} | sessionInProgress: ${this._sessionInProgress}`,
-    );
     this._musicSessionController = new SpotifyController();
   }
 
@@ -73,9 +69,7 @@ export default class SpotifyArea extends InteractableArea {
    * @param player
    */
   public remove(player: Player) {
-    console.log(`players before remove:${JSON.stringify(this._occupants)}`);
     super.remove(player);
-    console.log('removed');
     if (this._occupants.length === 0) {
       this._topic = '';
       this._emitAreaChanged();
@@ -144,7 +138,6 @@ export default class SpotifyArea extends InteractableArea {
   ): Promise<InteractableCommandReturnType<CommandType>> {
     switch (command.type) {
       case 'CreateMusicSession': {
-        console.log('backend: created music session');
         this._topic = command.topic;
         this._sessionInProgress = true;
 
@@ -157,7 +150,6 @@ export default class SpotifyArea extends InteractableArea {
         const { deviceId } = command;
 
         if (accessToken && deviceId) {
-          console.log('received access token. creating spotify playback object');
           const confirmedAccessToken = await this._musicSessionController.addUserMusicPlayer(
             deviceId,
             accessToken,
@@ -183,9 +175,6 @@ export default class SpotifyArea extends InteractableArea {
       }
       case 'SkipSongMusicSession': {
         const updatedState = await this._musicSessionController.skip();
-        console.log('~SKIP STATS~');
-        console.log(updatedState[0]?.name);
-        console.log(updatedState[1]?.length);
         this._emitAreaChanged();
         return {
           currentSong: updatedState[0],
@@ -206,7 +195,6 @@ export default class SpotifyArea extends InteractableArea {
       }
       case 'RemoveUserFromMusicSession': {
         const { accessToken } = command;
-        console.log(`removing from session with access token: ${accessToken.access_token}`);
 
         // Check if the host (player who created this session) left
         let hostUserWasRemoved: boolean;
@@ -226,7 +214,6 @@ export default class SpotifyArea extends InteractableArea {
         this._musicSessionController.removeUser(accessToken.access_token); // if invariant don't need to check
         if (this._musicSessionController.userMusicPlayers.length === 0 || hostUserWasRemoved) {
           // Reset state
-          console.log('clearing musicSession state');
           this._topic = '';
           this._musicSessionController.clearState();
           this.sessionInProgress = false;

@@ -7,16 +7,16 @@ import InteractableAreaController, { BaseInteractableEventMap } from './Interact
  * The events that a MusicAreaController can emit
  */
 export type MusicAreaEvents = BaseInteractableEventMap & {
-  /**
-   * A playbackChange event indicates that the playing/paused state has changed.
-   * Listeners are passed the new state in the parameter `isPlaying`
-   */
+  /* Base Music Room Events*/
   topicChange: (topic: string) => void;
   currentSongChange: (song: Track | null) => void;
   currentQueueChange: (queue: QueuedTrack[]) => void;
   sessionInProgressChange: (sessionInProgress: boolean) => void;
   accessTokenChange: (accessToken: AccessToken) => void;
   playbackStateChange: (playbackState: boolean) => void;
+  roomVisibilityChange: (privateState: boolean) => void;
+  /* Private Room Music Events */
+  roomPrivacyChange: (privateState: boolean) => void;
 };
 
 /**
@@ -45,7 +45,6 @@ export default class MusicAreaController extends InteractableAreaController<
     super(musicAreaModel.id);
     this._model = musicAreaModel;
     this._townController = townController;
-    console.log('MusicAreaController constructor');
   }
 
   get topic(): string {
@@ -113,7 +112,7 @@ export default class MusicAreaController extends InteractableAreaController<
   }
 
   /**
-   * @returns MusicAreaModel that represents the current state of this ViewingAreaController
+   * @returns MusicAreaModel that represents the current state of this MusicAreaController
    */
   public toInteractableAreaModel(): MusicAreaModel {
     return this._model;
@@ -127,7 +126,6 @@ export default class MusicAreaController extends InteractableAreaController<
    */
   protected _updateFrom(updatedModel: MusicAreaModel): void {
     // Invokes setters, which have emit()
-    console.log('frontend says that isplayingstate is now: ' + updatedModel.isPlaying);
     if (updatedModel.topic !== undefined) this.topic = updatedModel.topic;
     if (updatedModel.sessionInProgress != undefined)
       this.sessionInProgress = updatedModel.sessionInProgress;
@@ -168,7 +166,6 @@ export default class MusicAreaController extends InteractableAreaController<
    * @param deviceId a Spotify device id
    */
   public async addUserToSession(accessToken: AccessToken, deviceId: string) {
-    console.log('attempting to send interactableCommand(AddUsertoMusicSession)');
     const instanceID = this.id;
     if (!instanceID) {
       throw new Error('instanceID undefined');
@@ -185,7 +182,6 @@ export default class MusicAreaController extends InteractableAreaController<
     if (!instanceID) {
       throw new Error('instanceID undefined');
     }
-    console.log('send RemoveUserFromMusicSession');
     await this._townController.sendInteractableCommand(this.id, {
       type: 'RemoveUserFromMusicSession',
       accessToken: this._townController.spotifyAccessToken,
