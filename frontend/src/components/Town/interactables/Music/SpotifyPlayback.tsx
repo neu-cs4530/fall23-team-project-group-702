@@ -125,7 +125,7 @@ export default function SpotifyPlayback({
                 ))
               ) : (
                 <Tr>
-                  <Td colSpan='3'>No tracks in queue</Td>
+                  <Td>No tracks in queue</Td>
                 </Tr>
               )}
             </Tbody>
