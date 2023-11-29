@@ -92,7 +92,7 @@ export class SpotifyUserPlayback {
     await this.getDevices();
     if (this._activeDevices.devices.length < 1) {
       /* return false if there are no active devices */
-      console.log('resumePlayback() not executed, no active devices');
+      // consol.log('resumePlayback() not executed, no active devices');
       return;
     }
     /* get song state from sdk. if state doesn't exist, then no song is currently playing/paused */
@@ -100,17 +100,15 @@ export class SpotifyUserPlayback {
     this._activeDevices.devices.forEach(async device => {
       /* if device is not active, don't to anything. If device is not Covey Player, do not adjust playback */
       if (!device.is_active || device.name !== 'Covey Player') {
-        console.log(`device ${device.name} is not active or has incorrect name: ${device.name}`);
-      } else {
-        console.log(`in resumePlayback(): # devices active: ${this._activeDevices.devices.length}`);
+        // consol.log(`device ${device.name} is not active or has incorrect name: ${device.name}`);
+      } else if (thisUserState && !thisUserState.is_playing) {
+        // consol.log(`in resumePlayback(): # devices active: ${this._activeDevices.devices.length}`);
         /* 
           We know a song is currently.
           If state doesn't exist, then no song is currently playing/paused so do nothing to avoid spotify error
           If state exists, then only resume playback if the song is paused
         */
-        if (thisUserState && !thisUserState.is_playing) {
-          await this._sdk.player.startResumePlayback(device.id as string);
-        }
+        await this._sdk.player.startResumePlayback(device.id as string);
       }
     });
   }
@@ -123,7 +121,7 @@ export class SpotifyUserPlayback {
     await this.getDevices();
     if (this._activeDevices.devices.length < 1) {
       /* return false if there are no active devices */
-      console.log('resumePlayback() not executed, no active devices');
+      // consol.log('resumePlayback() not executed, no active devices');
       return;
     }
     /* get song state from sdk. if state doesn't exist, then no song is currently playing/paused */
@@ -131,18 +129,16 @@ export class SpotifyUserPlayback {
     this._activeDevices.devices.forEach(async device => {
       /* if device is not active, don't to anything. If device is not Covey Player, do not adjust playback */
       if (!device.is_active || device.name !== 'Covey Player') {
-        console.log(`device ${device.name} is not active or has incorrect name: ${device.name}`);
-      } else {
-        console.log(`in resumePlayback(): # devices active: ${this._activeDevices.devices.length}`);
+        // console.log(`device ${device.name} is not active or has incorrect name: ${device.name}`);
+      } else if (state && state.is_playing) {
+        // console.log(`in resumePlayback(): # devices active: ${this._activeDevices.devices.length}`);
         /* 
           We know a song is currently.
           If state doesn't exist, then no song is currently playing/paused so do nothing to avoid spotify error
           If state exists, then only resume playback if the song is paused
         */
-        if (state && state.is_playing) {
-          /* if state doesn't exist, this throws an error */
-          await this._sdk.player.pausePlayback(device.id as string);
-        }
+        /* if state doesn't exist, this throws an error */
+        await this._sdk.player.pausePlayback(device.id as string);
       }
     });
   }
@@ -155,11 +151,11 @@ export class SpotifyUserPlayback {
    */
   public async nextSong(trackId: string): Promise<void> {
     await this.getDevices();
-    console.log(
-      `active devices length at time of skip: ${JSON.stringify(
-        this._activeDevices.devices.length,
-      )}`,
-    );
+    // console.log(
+    // `active devices length at time of skip: ${JSON.stringify(
+    //   this._activeDevices.devices.length,
+    // )}`,
+    // );
     if (this._activeDevices.devices.length < 1) {
       return;
     }
@@ -219,7 +215,7 @@ export class SpotifyUserPlayback {
           return;
         }
       }
-      console.log('LOOPING');
+      // console.log('LOOPING');
       // console.log(new Date());
       // await new Promise(resolve => setTimeout(resolve, 1000));
       // console.log(new Date());
@@ -227,11 +223,11 @@ export class SpotifyUserPlayback {
     }
     checkDeviceTransfer(deviceId, this._activeDevices.devices, this);
 
-    console.log(
-      `transfer complete. active devices length: ${JSON.stringify(
-        this._activeDevices.devices.length,
-      )}`,
-    );
+    // console.log(
+    //   `transfer complete. active devices length: ${JSON.stringify(
+    //     this._activeDevices.devices.length,
+    //   )}`,
+    // );
   }
 
   /**
@@ -263,9 +259,9 @@ export class SpotifyUserPlayback {
           },
         );
         const text = await playSongResponse.text();
-        console.log(
-          `name: ${device.name} || playSongResponse: ${playSongResponse.status} || text: ${text}`,
-        );
+        // // consol.log(
+        //   `name: ${device.name} || playSongResponse: ${playSongResponse.status} || text: ${text}`,
+        // );
         if (!playSongResponse.ok) {
           throw new Error(`Unable to play song on device - Error: ${text}`);
         }
@@ -278,11 +274,11 @@ export class SpotifyUserPlayback {
    * @param positionMs - the position in milliseconds to seek to
    */
   public async seekToPosition(positionMs: number): Promise<void> {
-    console.log(`seeking to position: ${positionMs}`);
+    // consol.log(`seeking to position: ${positionMs}`);
     await this.getDevices();
-    console.log(
-      `num active devices at time of seek: ${JSON.stringify(this._activeDevices.devices.length)}`,
-    );
+    // consol.log(
+    // `num active devices at time of seek: ${JSON.stringify(this._activeDevices.devices.length)}`,
+    // );
     await this._sdk.player.seekToPosition(positionMs);
   }
 

@@ -173,9 +173,9 @@ export default class Town {
           eachInteractable => eachInteractable.id === command.interactableID,
         );
         // !!!!!!!!!!!!!!!!!!!!! ADDED EXTRA CHECK FOR MUSIC AREA
-        console.log('inside socket.on(interactableCOmmand)');
+        // console.log('inside socket.on(interactableCOmmand)');
         if (interactable && interactable.toModel().type === 'MusicArea') {
-          console.log('attempting to call handleSpotifyCommmand');
+          // console.log('attempting to call handleSpotifyCommmand');
           try {
             const musicInteractable = interactable as SpotifyArea;
             const payload = await musicInteractable.handleSpotifyCommand(command);
