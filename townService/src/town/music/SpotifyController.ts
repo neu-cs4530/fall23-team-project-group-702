@@ -61,7 +61,6 @@ export default class SpotifyController {
    * @returns - the access token of the user
    */
   public async addUserMusicPlayer(deviceId: string, userAccessToken: AccessToken): Promise<void> {
-    console.log('in addUserMusicPlayer');
     /* Create music player and transfer playback to websdk */
     const userMusicPlayer = new SpotifyUserPlayback(userAccessToken);
     const confirmedAccessToken = await userMusicPlayer.authenticate();
@@ -78,30 +77,16 @@ export default class SpotifyController {
     );
     if (!userExists) {
       this._userMusicPlayers.push(userMusicPlayer);
-      console.log(`pushed new music player. now length: ${this.userMusicPlayers.length}`);
       await this.transferPlayback(deviceId, confirmedAccessToken.access_token);
       const hostUserState = await this.getCurrentHostPlaybackState();
       /* If song is currently playing, added check for players > 1 because we don't need to auto-play if only host */
       if (hostUserState && this._userMusicPlayers.length > 1) {
-        console.log(
-          `in add music player - host user state: currently playing item = ${JSON.stringify(
-            hostUserState.item.id,
-          )} || progress_ms = ${JSON.stringify(
-            hostUserState.progress_ms,
-          )} || track name = ${JSON.stringify(hostUserState.item.name)}
-          and isPlaying = ${hostUserState.is_playing}`,
-        );
         if (hostUserState.is_playing) {
           await userMusicPlayer.playSongNow(hostUserState.item.id, hostUserState.progress_ms);
           // await this.synchronize();
           await userMusicPlayer.seekToPosition(hostUserState.progress_ms);
         }
       }
-      console.log('Current users in music session: ');
-      for (const player of this._userMusicPlayers) {
-        console.log(`user: ${player.accessToken.access_token}`);
-      }
-      console.log('~~REGISTERED USER IN THE BACKEND~~');
     }
   }
 
@@ -133,11 +118,6 @@ export default class SpotifyController {
       track: newTrack,
     };
     this._queue = [...this._queue, queuedTrack];
-
-    console.log('New queue after adding to queue: ');
-    for (const track of this._queue) {
-      console.log(`track: ${track.track.name}`);
-    }
     return this._queue;
   }
 
@@ -152,10 +132,6 @@ export default class SpotifyController {
     }
     this._queue = this._queue.filter(track => track.queueId !== queueId);
     /* Debugging */
-    console.log('New queue after remove: ');
-    for (const track of this._queue) {
-      console.log(`track: ${track.track.name}`);
-    }
     return this._queue;
   }
 
@@ -165,7 +141,6 @@ export default class SpotifyController {
    */
   public async skip(): Promise<[Track | null, QueuedTrack[]]> {
     if (this._queue.length < 1) {
-      console.log('empty queue, returning null and empty data...');
       return [null, []];
     }
     const nextQueuedTrack = this._queue[0];
@@ -175,12 +150,6 @@ export default class SpotifyController {
       await userMusicPlayer.playSongNow(nextQueuedTrack.track.id);
     }
     this._isASongPlaying = true;
-
-    /* Debugging */
-    console.log(`New queue after skip length: ${this._queue.length}`);
-    // for (const track of this._queue) {
-    //   console.log('track: ' + track.track.name);
-    // }
     return [nextQueuedTrack.track, this._queue];
   }
 
@@ -197,16 +166,13 @@ export default class SpotifyController {
 
         /* Guarantees each player has the same song and playbackPosition as the host. */
         if (this.songNowPlaying?.id !== currentState.item.id) {
-          console.log('await userMusicPlayer.playSongNow()');
           await userMusicPlayer.playSongNow(currentlyPlayingTrack, currentPosition);
         }
       }
-      // might be redundant if 
+      // might be redundant if
       if (!this._isASongPlaying) {
-        console.log('resuming playback');
         await userMusicPlayer.resumePlayback();
       } else {
-        console.log('pausing playback');
         await userMusicPlayer.pausePlayback();
       }
     }
@@ -229,7 +195,6 @@ export default class SpotifyController {
     for (const userMusicPlayer of this._userMusicPlayers) {
       /* Pause if no 'playing now' song is set */
       if (!this._songNowPlaying) {
-        console.log('no song now playing');
         await userMusicPlayer.pausePlayback();
         return;
       }
@@ -241,7 +206,6 @@ export default class SpotifyController {
         const userState = await userMusicPlayer.getCurrentlyPlayingTrack();
         /* Checks that the user is playing the same song as the host */
         if (userState?.item.id !== hostUserState.item.id) {
-          console.log('await userMusicPlayer.playSongNow()');
           await userMusicPlayer.playSongNow(hostUserState.item.id, hostUserPosition);
           // pauses if rpaused
         }
@@ -250,10 +214,8 @@ export default class SpotifyController {
         this._isASongPlaying = hostIsPlaying;
         /* If song isPlaying was desynced, resyncrhonize */
         if (!this._isASongPlaying) {
-          console.log('await userMusicPlayer.resumePlayback();');
           await userMusicPlayer.resumePlayback();
         } else {
-          console.log('await userMusicPlayer.pausePlayback();');
           await userMusicPlayer.pausePlayback();
         }
       }
@@ -315,7 +277,6 @@ export default class SpotifyController {
       userMusicPlayer => userMusicPlayer.accessToken.access_token === accessToken,
     );
     if (!playerToRemove) {
-      console.log('No music player exists for this user');
       return;
     }
     const userState = await playerToRemove?.getCurrentlyPlayingTrack();
@@ -326,11 +287,6 @@ export default class SpotifyController {
     this._userMusicPlayers = this._userMusicPlayers.filter(
       userMusicPlayer => userMusicPlayer.accessToken.access_token !== accessToken,
     );
-
-    console.log('Removed user: Current users in music session: ');
-    for (const userMusicPlayer of this._userMusicPlayers) {
-      console.log(`In Removed user, user: ${userMusicPlayer.accessToken.access_token}`);
-    }
   }
 
   /**

@@ -25,8 +25,6 @@ export default function PreJoinScreens() {
   useEffect(() => {
     if (!mediaError) {
       getAudioAndVideoTracks().catch(error => {
-        console.log('Error acquiring local media:');
-        console.dir(error);
         setMediaError(error);
       });
     }

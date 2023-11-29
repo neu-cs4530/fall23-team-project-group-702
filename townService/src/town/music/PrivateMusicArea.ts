@@ -75,7 +75,6 @@ export default class PrivateSpotifyArea extends SpotifyArea {
   ): Promise<InteractableCommandReturnType<CommandType>> {
     // Open and close the room to other coveytown members
     if (command.type === 'SetRoomPrivacy') {
-      console.log('spotify command found room privacy');
       this._isPrivate = !this._isPrivate;
       this._emitAreaChanged();
       return {} as InteractableCommandReturnType<CommandType>;

@@ -174,12 +174,10 @@ export default class Town {
           eachInteractable => eachInteractable.id === command.interactableID,
         );
         // !!!!!!!!!!!!!!!!!!!!! ADDED EXTRA CHECK FOR MUSIC AREA
-        console.log('inside socket.on(interactableCOmmand)');
         if (
           (interactable && interactable.toModel().type === 'MusicArea') ||
           interactable?.toModel().type === 'PrivateMusicArea'
         ) {
-          console.log('attempting to call handleSpotifyCommmand');
           try {
             let musicInteractable;
             // Distinguish between private and public music rooms

@@ -45,7 +45,6 @@ export default class MusicAreaController extends InteractableAreaController<
     super(musicAreaModel.id);
     this._model = musicAreaModel;
     this._townController = townController;
-    console.log('MusicAreaController constructor');
   }
 
   get topic(): string {
@@ -127,7 +126,6 @@ export default class MusicAreaController extends InteractableAreaController<
    */
   protected _updateFrom(updatedModel: MusicAreaModel): void {
     // Invokes setters, which have emit()
-    console.log('frontend says that isplayingstate is now: ' + updatedModel.isPlaying);
     if (updatedModel.topic !== undefined) this.topic = updatedModel.topic;
     if (updatedModel.sessionInProgress != undefined)
       this.sessionInProgress = updatedModel.sessionInProgress;
@@ -168,7 +166,6 @@ export default class MusicAreaController extends InteractableAreaController<
    * @param deviceId a Spotify device id
    */
   public async addUserToSession(accessToken: AccessToken, deviceId: string) {
-    console.log('attempting to send interactableCommand(AddUsertoMusicSession)');
     const instanceID = this.id;
     if (!instanceID) {
       throw new Error('instanceID undefined');
@@ -185,7 +182,6 @@ export default class MusicAreaController extends InteractableAreaController<
     if (!instanceID) {
       throw new Error('instanceID undefined');
     }
-    console.log('send RemoveUserFromMusicSession');
     await this._townController.sendInteractableCommand(this.id, {
       type: 'RemoveUserFromMusicSession',
       accessToken: this._townController.spotifyAccessToken,

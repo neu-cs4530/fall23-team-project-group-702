@@ -10,8 +10,6 @@ import {
   ModalCloseButton,
   ModalContent,
   ModalOverlay,
-  toast,
-  useToast,
   VStack,
 } from '@chakra-ui/react';
 import { useInteractable, useInteractableAreaController } from '../../../../classes/TownController';
@@ -66,7 +64,6 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
    * Handles starting a music session with the session name.
    */
   const handleStartMusicSession = async () => {
-    console.log('Starting music session');
     await musicAreaController.createSession(sessionName);
     setSessionActive(true);
   };
@@ -174,12 +171,8 @@ export default function FirstMusicWrapper(): JSX.Element {
   const closeModal = useCallback(() => {
     setIsOpen(false);
 
-    console.log('closing modal');
     if (musicArea) {
       const musicAreaController = townController.getMusicAreaController(musicArea);
-      console.log(
-        'musicAreaController.sessionInProgress: ' + musicAreaController.sessionInProgress,
-      );
       if (!musicAreaController.sessionInProgress) {
         musicArea.overlapExit();
       }
@@ -192,7 +185,6 @@ export default function FirstMusicWrapper(): JSX.Element {
 
   const handleLeaveSession = useCallback(async () => {
     if (musicArea) {
-      console.log('handling leave session');
       townController.interactEnd(musicArea);
       const musicAreaController = townController.getMusicAreaController(musicArea);
       await musicAreaController.removeUserFromSession();
@@ -215,13 +207,11 @@ export default function FirstMusicWrapper(): JSX.Element {
   });
 
   if (musicArea && isValidMusicAreaType(musicArea.getType())) {
-    console.log('Rendering first music. isOpen: ' + isOpen);
     let sessionInProgress;
     if (musicArea) {
       const musicAreaController = townController.getMusicAreaController(musicArea);
       sessionInProgress = musicAreaController.sessionInProgress;
     }
-    console.log('session in progress: ' + sessionInProgress);
     if (!isOpen && sessionInProgress) {
       return <Button onClick={handleReopen}>Re-open Music Player</Button>;
     } else {

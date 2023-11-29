@@ -68,9 +68,7 @@ app.use(
 
 // Start the configured server, defaulting to port 8081 if $PORT is not set
 server.listen(process.env.PORT || 8081, () => {
-  const address = server.address() as AddressInfo;
-  // eslint-disable-next-line no-console
-  console.log(`Listening on ${address.port}`);
+  server.address() as AddressInfo;
   if (process.env.DEMO_TOWN_ID) {
     TownsStore.getInstance().createTown(process.env.DEMO_TOWN_ID, false);
   }

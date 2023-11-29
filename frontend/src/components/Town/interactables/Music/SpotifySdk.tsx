@@ -1,7 +1,6 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback } from 'react';
 import { WebPlaybackSDK } from 'react-spotify-web-playback-sdk';
 import { AccessToken } from '@spotify/web-api-ts-sdk';
-// import MusicAreaController from '../../../../classes/interactable/MusicAreaController';
 
 const SpotifySdk: React.VFC<{
   userAccessToken: AccessToken;
@@ -11,9 +10,6 @@ const SpotifySdk: React.VFC<{
     callback => callback(props.userAccessToken.access_token),
     [props.userAccessToken],
   );
-  useEffect(() => {
-    console.log(`accessToken: ${props.userAccessToken.access_token}`);
-  }, [props.userAccessToken]);
   if (!props.userAccessToken) {
     return <div>Not logged in || Host web sdk object not created</div>;
   } else {

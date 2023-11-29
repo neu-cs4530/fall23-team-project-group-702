@@ -15,12 +15,10 @@ export default class PrivateMusicArea extends MusicArea {
     super.addedToScene();
     /* Set musicArea to be a private room controller */
     this._musicArea = this.townController.getPrivateMusicAreaController(this);
-    console.log('Private room created.. creating controller..');
   }
 
   overlap(): void {
     super.overlap();
-    console.log('overlapping in a private session...');
     if (this.isPrivateSession) {
       const spawnPoint = { x: 832.333166666666, y: 900.3335 };
       this._scene.moveOurPlayerTo({

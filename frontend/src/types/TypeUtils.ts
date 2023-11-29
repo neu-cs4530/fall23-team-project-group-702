@@ -32,7 +32,7 @@ export function isMusicArea(interactable: Interactable): interactable is MusicAr
 /**
  * Test to see if an interactable is a private music area
  */
- export function isPrivateMusicArea(interactable: Interactable): interactable is PrivateMusicArea {
+export function isPrivateMusicArea(interactable: Interactable): interactable is PrivateMusicArea {
   return interactable.type === 'PrivateMusicArea';
 }
 

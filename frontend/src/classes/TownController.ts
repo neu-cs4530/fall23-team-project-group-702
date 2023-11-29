@@ -386,7 +386,6 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
    * @param interactedObj
    */
   public interact<T extends Interactable>(interactedObj: T) {
-    console.log(interactedObj.getType());
     this._interactableEmitter.emit(interactedObj.getType(), interactedObj);
   }
 
@@ -539,7 +538,6 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
     interactableID: InteractableID,
     command: CommandType,
   ): Promise<InteractableCommandResponse<CommandType>['payload']> {
-    console.log('inside sendInteractableCommand with type' + command.type);
     const commandMessage: InteractableCommand & InteractableCommandBase = {
       ...command,
       commandID: nanoid(),
@@ -645,8 +643,6 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
 
         this._interactableControllers = [];
         initialData.interactables.forEach(eachInteractable => {
-          console.log('[DEBUG]' + eachInteractable.type);
-          console.log('[DEBUG]' + eachInteractable.type);
           if (isConversationArea(eachInteractable)) {
             this._interactableControllers.push(
               ConversationAreaController.fromConversationAreaModel(
@@ -662,7 +658,6 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
             this._interactableControllers.push(
               new PrivateMusicAreaController(eachInteractable, this),
             );
-            console.log('found private room, pushing..?');
           } else if (isTicTacToeArea(eachInteractable)) {
             this._interactableControllers.push(
               new TicTacToeAreaController(eachInteractable.id, eachInteractable, this),
@@ -923,12 +918,10 @@ function samePlayers(a1: PlayerController[], a2: PlayerController[]) {
 export function useInteractable<T extends Interactable>(
   interactableType: T['name'],
 ): T | undefined {
-  console.log('interactable name ' + interactableType);
   const townController = useTownController();
   const [interactable, setInteractable] = useState<T | undefined>(undefined);
   useEffect(() => {
     const onInteract = (interactWith: T) => {
-      console.log('interacting with ' + interactableType);
       setInteractable(interactWith);
     };
     const offInteract = () => {
@@ -938,7 +931,6 @@ export function useInteractable<T extends Interactable>(
     townController.interactableEmitter.on('endInteraction', offInteract);
 
     return () => {
-      console.log('ends interaction');
       townController.interactableEmitter.off(interactableType, onInteract);
       townController.interactableEmitter.off('endInteraction', offInteract);
     };
