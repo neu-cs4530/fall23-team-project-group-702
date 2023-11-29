@@ -10,17 +10,21 @@ import {
   ModalCloseButton,
   ModalContent,
   ModalOverlay,
+  toast,
+  useToast,
   VStack,
 } from '@chakra-ui/react';
 import { useInteractable, useInteractableAreaController } from '../../../../classes/TownController';
 import useTownController from '../../../../hooks/useTownController';
 import MusicAreaInteractable from '../MusicArea';
+import PrivateMusicAreaInteractable from '../PrivateMusicArea';
 import { useCallback, useEffect, useState } from 'react';
 import { InteractableID } from '../../../../types/CoveyTownSocket';
 import MusicAreaController from '../../../../classes/interactable/MusicAreaController';
 import { AccessToken } from '@spotify/web-api-ts-sdk';
 import SpotifyPlayback from './SpotifyPlayback';
 import { SpotifyDetails } from './SpotifyDetails';
+import PrivateMusicAreaController from '../../../../classes/interactable/PrivateMusicAreaController';
 
 /**
  * Jukebox Interface Component that handles rendering the join/create music session modal and the music playback interface modal.
@@ -86,6 +90,15 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
             <Button colorScheme='pink' w='50%' alignSelf='center' onClick={handleStartMusicSession}>
               Create session
             </Button>
+            {
+              <Button
+                onClick={() => {
+                  const privateController = musicAreaController as PrivateMusicAreaController;
+                  privateController.setPrivacy(!privateController.isPrivateSession);
+                }}>
+                Make Private Session
+              </Button>
+            }
           </VStack>
         </Box>
       </div>
@@ -113,14 +126,21 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
   }
 }
 
+function isValidMusicAreaType(areaType: string): boolean {
+  return areaType === 'musicArea' || areaType === 'privateMusicArea';
+}
+
 /**
  * A wrapper component for the TicTacToeArea component.
  * Determines if the player is currently in a tic tac toe area on the map, and if so,
  * renders the TicTacToeArea component in a modal.
  */
 export default function FirstMusicWrapper(): JSX.Element {
-  console.log('Rendering FirstMusicWrapper');
-  const musicArea = useInteractable<MusicAreaInteractable>('musicArea');
+  let musicArea = useInteractable<MusicAreaInteractable>('musicArea');
+  // Check for different types of music rooms
+  if (!musicArea) {
+    musicArea = useInteractable<PrivateMusicAreaInteractable>('privateMusicArea');
+  }
   const townController = useTownController();
 
   const [isOpen, setIsOpen] = useState<boolean>(true);
@@ -176,27 +196,16 @@ export default function FirstMusicWrapper(): JSX.Element {
   });
 
   if (musicArea && musicArea.getType() === 'musicArea') {
-    console.log('Rendering first music. isOpen: ' + isOpen);
-    let sessionInProgress;
-    if (musicArea) {
-      const musicAreaController = townController.getMusicAreaController(musicArea);
-      sessionInProgress = musicAreaController.sessionInProgress;
-    }
-    console.log('session in progress: ' + sessionInProgress);
-    if (!isOpen && sessionInProgress) {
-      return <Button onClick={handleReopen}>Re-open Music Player</Button>;
-    } else {
-      return (
-        <Modal isOpen={isOpen} onClose={closeModal} closeOnOverlayClick={false} size='2xl'>
-          <ModalOverlay />
-          <ModalContent maxW='540px'>
-            {' '}
-            <ModalCloseButton />
-            <FirstMusic interactableID={musicArea.id} />
-          </ModalContent>
-        </Modal>
-      );
-    }
+    console.log('Rendering first music');
+    return (
+      <Modal isOpen={true} onClose={closeModal} closeOnOverlayClick={false}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalCloseButton />
+          <FirstMusic interactableID={musicArea.id} />;
+        </ModalContent>
+      </Modal>
+    );
   }
   return <></>;
 }

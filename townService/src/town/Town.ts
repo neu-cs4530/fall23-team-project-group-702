@@ -174,11 +174,20 @@ export default class Town {
           eachInteractable => eachInteractable.id === command.interactableID,
         );
         // !!!!!!!!!!!!!!!!!!!!! ADDED EXTRA CHECK FOR MUSIC AREA
-        // console.log('inside socket.on(interactableCOmmand)');
-        if (interactable && interactable.toModel().type === 'MusicArea') {
-          // console.log('attempting to call handleSpotifyCommmand');
+        console.log('inside socket.on(interactableCOmmand)');
+        if (
+          (interactable && interactable.toModel().type === 'MusicArea') ||
+          interactable?.toModel().type === 'PrivateMusicArea'
+        ) {
+          console.log('attempting to call handleSpotifyCommmand');
           try {
-            const musicInteractable = interactable as SpotifyArea;
+            let musicInteractable;
+            // Distinguish between private and public music rooms
+            if (interactable.toModel().type === 'MusicArea') {
+              musicInteractable = interactable as SpotifyArea;
+            } else {
+              musicInteractable = interactable as PrivateSpotifyArea;
+            }
             const payload = await musicInteractable.handleSpotifyCommand(command);
             socket.emit('commandResponse', {
               commandID: command.commandID,
