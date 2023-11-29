@@ -78,7 +78,7 @@ export default function SpotifyPlayback({
   }, [musicController]);
 
   return (
-    <Box p={4} bg='white' boxShadow='md' borderRadius='md' my={9}>
+    <Box p={4} bg='white' borderRadius='md' my={5}>
       <iframe
         src={`https://open.spotify.com/embed/track/${
           currentTrack?.id ?? undefined
@@ -115,7 +115,7 @@ export default function SpotifyPlayback({
                   <Td>{track.track.artists[0].name}</Td>
                   <Td>{track.track.name}</Td>
                   <Td>
-                    <Button onClick={() => handleRemoveFromQueue(track.queueId)}>Remove</Button>
+                    <Button onClick={() => handleRemoveFromQueue(track.queueId)}>❌</Button>
                   </Td>
                 </Tr>
               ))
@@ -155,7 +155,7 @@ export default function SpotifyPlayback({
                   <Td>{track.artists[0].name}</Td>
                   <Td>{track.name}</Td>
                   <Td>
-                    <Button onClick={() => handleAddToQueue(track.id)}>Add</Button>
+                    <Button onClick={() => handleAddToQueue(track.id)}>➕</Button>
                   </Td>
                 </Tr>
               ))}

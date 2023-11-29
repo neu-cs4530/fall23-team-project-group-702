@@ -4,6 +4,7 @@ import {
   Button,
   FormControl,
   FormLabel,
+  Heading,
   Input,
   Modal,
   ModalCloseButton,
@@ -63,35 +64,38 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
   if (!sessionActive) {
     return (
       <div>
-        <b>Start a Music Session</b>
-        <VStack spacing={3} align='stretch' p={3}>
-          <Box textAlign='center'>Open Lounge Jukebox 1</Box>
-          <form>
-            <FormControl display='flex' flexDirection='column' alignItems='center'>
-              {' '}
-              <FormLabel htmlFor='name' mb={2}>
-                Name of Music Session
-              </FormLabel>{' '}
-              <Input
-                id='name'
-                placeholder='What are the vibes?'
-                name='name'
-                value={sessionName}
-                onChange={e => setSessionName(e.target.value)}
-                w='70%'
-              />
-            </FormControl>
-          </form>
-          <Button colorScheme='pink' w='50%' alignSelf='center' onClick={handleStartMusicSession}>
-            Create session
-          </Button>
-        </VStack>
+        <Box mt={4}>
+          <VStack spacing={6} align='stretch' p={3}>
+            <Box textAlign='center'>You found an Open Lounge Jukebox!</Box>
+            <form>
+              <FormControl display='flex' flexDirection='column' alignItems='center'>
+                {' '}
+                <FormLabel htmlFor='name' mb={2}>
+                  Name of Music Session
+                </FormLabel>{' '}
+                <Input
+                  id='name'
+                  placeholder='What are the vibes?'
+                  name='name'
+                  value={sessionName}
+                  onChange={e => setSessionName(e.target.value)}
+                  w='70%'
+                />
+              </FormControl>
+            </form>
+            <Button colorScheme='pink' w='50%' alignSelf='center' onClick={handleStartMusicSession}>
+              Create session
+            </Button>
+          </VStack>
+        </Box>
       </div>
     );
   } else {
     return (
       <div>
-        <div>{sessionName}</div>
+        <Heading as='h2' size='lg' textAlign='center' my={4}>
+          {sessionName}
+        </Heading>
         <>
           {accessToken ? (
             <>
