@@ -2,7 +2,6 @@ import { AccessToken } from '@spotify/web-api-ts-sdk';
 import { useEffect } from 'react';
 import { usePlayerDevice } from 'react-spotify-web-playback-sdk';
 import MusicAreaController from '../../../../classes/interactable/MusicAreaController';
-import { MusicArea } from '../../../../types/CoveyTownSocket';
 
 /*
   Every player should have their own playback device upon entering Covey.Town. We should move this logic

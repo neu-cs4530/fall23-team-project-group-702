@@ -1,6 +1,6 @@
 import assert from 'assert';
 import EventEmitter from 'events';
-import _, { String } from 'lodash';
+import _ from 'lodash';
 import { nanoid } from 'nanoid';
 import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';

@@ -1,13 +1,6 @@
-import { AccordionDescendantsProvider } from '@chakra-ui/react';
 import { AccessToken, Track } from '@spotify/web-api-ts-sdk';
-import {
-  MusicArea,
-  MusicArea as MusicAreaModel,
-  QueuedTrack,
-  Song,
-} from '../../types/CoveyTownSocket';
+import { MusicArea as MusicAreaModel, QueuedTrack } from '../../types/CoveyTownSocket';
 import TownController from '../TownController';
-// import { SongQueue } from '../../types/CoveyTownSocket';
 import InteractableAreaController, { BaseInteractableEventMap } from './InteractableAreaController';
 
 /**
@@ -224,7 +217,7 @@ export default class MusicAreaController extends InteractableAreaController<
     if (!instanceID) {
       throw new Error('instanceID undefined');
     }
-    const response = await this._townController.sendInteractableCommand(this.id, {
+    await this._townController.sendInteractableCommand(this.id, {
       type: 'AddMusicToSessionQueue',
       trackId,
     });
@@ -240,7 +233,7 @@ export default class MusicAreaController extends InteractableAreaController<
     if (!instanceID) {
       throw new Error('instanceID undefined');
     }
-    const response = await this._townController.sendInteractableCommand(this.id, {
+    await this._townController.sendInteractableCommand(this.id, {
       type: 'RemoveMusicFromSessionQueue',
       queueId,
     });
@@ -255,7 +248,7 @@ export default class MusicAreaController extends InteractableAreaController<
     if (!instanceID) {
       throw new Error('instanceID undefined');
     }
-    const response = await this._townController.sendInteractableCommand(this.id, {
+    await this._townController.sendInteractableCommand(this.id, {
       type: 'SkipSongMusicSession',
     });
     // this.currentSong = response.currentSong;
@@ -271,26 +264,9 @@ export default class MusicAreaController extends InteractableAreaController<
     if (!instanceID) {
       throw new Error('instanceID undefined');
     }
-    const { isPlaying } = await this._townController.sendInteractableCommand(this.id, {
+    await this._townController.sendInteractableCommand(this.id, {
       type: 'TogglePlayMusicSession',
     });
     // this.isPlaying = isPlaying;
   }
-
-  // /**
-  //  * Sends a command to the backend to update the state of the music area
-  //  * @param payload information to send
-  //  */
-  // public async sendSpotifyCommand(payload: MusicArea): Promise<MusicArea> {
-  //   const instanceID = this.id;
-  //   if (!instanceID) {
-  //     throw new Error('instanceID undefined');
-  //   }
-  //   const response = await this._townController.sendInteractableCommand(this.id, {
-  //     type: 'MusicAreaCommand',
-  //     payload: payload,
-  //   });
-  //   const musicAreaState = response.payload as MusicArea;
-  //   return musicAreaState;
-  // }
 }
