@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { Track } from '@spotify/web-api-ts-sdk';
 import { useState } from 'react';
 import { Box, Button, Heading, Input, Table, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/react';
@@ -56,10 +56,10 @@ export default function SpotifyPlayback({
    * If the current state is playing, pause.
    * Finally alter isPlaying state
    */
-  const handleTogglePlay = async () => {
+  const handleTogglePlay = useCallback(async () => {
     setIsPlaying(!isPlaying);
     await musicController.togglePlay();
-  };
+  }, [isPlaying, musicController]);
 
   // Listener effects
   /**
@@ -78,7 +78,7 @@ export default function SpotifyPlayback({
   }, [musicController]);
 
   return (
-    <Box p={4} bg='white' boxShadow='md' borderRadius='md' my={9}>
+    <Box p={4} bg='white' borderRadius='md' my={5}>
       <iframe
         src={`https://open.spotify.com/embed/track/${
           currentTrack?.id ?? undefined
@@ -106,27 +106,34 @@ export default function SpotifyPlayback({
             <Tr>
               <Th>Artist</Th>
               <Th>Track Name</Th>
+              <Th width='50px'></Th>
             </Tr>
           </Thead>
-          <Tbody>
-            {queue.length > 0 ? (
-              queue.map(track => (
-                <Tr key={track.queueId}>
-                  <Td>{track.track.artists[0].name}</Td>
-                  <Td>{track.track.name}</Td>
-                  <Td>
-                    <Button onClick={() => handleRemoveFromQueue(track.queueId)}>Remove</Button>
-                  </Td>
-                </Tr>
-              ))
-            ) : (
-              <></>
-            )}
-          </Tbody>
         </Table>
+        <Box maxH='200px' overflowY='scroll'>
+          <Table variant='simple'>
+            <Tbody>
+              {queue.length > 0 ? (
+                queue.map(track => (
+                  <Tr key={track.queueId}>
+                    <Td>{track.track.artists[0].name}</Td>
+                    <Td>{track.track.name}</Td>
+                    <Td>
+                      <Button onClick={() => handleRemoveFromQueue(track.queueId)}>❌</Button>
+                    </Td>
+                  </Tr>
+                ))
+              ) : (
+                <Tr>
+                  <Td colSpan='3'>No tracks in queue</Td>
+                </Tr>
+              )}
+            </Tbody>
+          </Table>
+        </Box>
       </Box>
 
-      <Box my={4}>
+      <Box my={4} maxH='300px' overflowY='scroll'>
         <Heading size='md' mb={2}>
           Search
         </Heading>
@@ -146,7 +153,7 @@ export default function SpotifyPlayback({
               <Tr>
                 <Th>Artists</Th>
                 <Th>Track Name</Th>
-                <Th></Th>
+                <Th width='50px'></Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -155,7 +162,7 @@ export default function SpotifyPlayback({
                   <Td>{track.artists[0].name}</Td>
                   <Td>{track.name}</Td>
                   <Td>
-                    <Button onClick={() => handleAddToQueue(track.id)}>Add</Button>
+                    <Button onClick={() => handleAddToQueue(track.id)}>➕</Button>
                   </Td>
                 </Tr>
               ))}
