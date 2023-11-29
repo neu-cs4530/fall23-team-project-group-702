@@ -187,11 +187,12 @@ export default function FirstMusicWrapper(): JSX.Element {
       return <Button onClick={handleReopen}>Re-open Music Player</Button>;
     } else {
       return (
-        <Modal isOpen={isOpen} onClose={closeModal} closeOnOverlayClick={false}>
+        <Modal isOpen={isOpen} onClose={closeModal} closeOnOverlayClick={false} size='2xl'>
           <ModalOverlay />
-          <ModalContent>
+          <ModalContent maxW='540px'>
+            {' '}
             <ModalCloseButton />
-            <FirstMusic interactableID={musicArea.id} />;
+            <FirstMusic interactableID={musicArea.id} />
           </ModalContent>
         </Modal>
       );

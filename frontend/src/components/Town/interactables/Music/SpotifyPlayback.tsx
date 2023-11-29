@@ -106,27 +106,34 @@ export default function SpotifyPlayback({
             <Tr>
               <Th>Artist</Th>
               <Th>Track Name</Th>
+              <Th width='50px'></Th>
             </Tr>
           </Thead>
-          <Tbody>
-            {queue.length > 0 ? (
-              queue.map(track => (
-                <Tr key={track.queueId}>
-                  <Td>{track.track.artists[0].name}</Td>
-                  <Td>{track.track.name}</Td>
-                  <Td>
-                    <Button onClick={() => handleRemoveFromQueue(track.queueId)}>❌</Button>
-                  </Td>
-                </Tr>
-              ))
-            ) : (
-              <></>
-            )}
-          </Tbody>
         </Table>
+        <Box maxH='200px' overflowY='scroll'>
+          <Table variant='simple'>
+            <Tbody>
+              {queue.length > 0 ? (
+                queue.map(track => (
+                  <Tr key={track.queueId}>
+                    <Td>{track.track.artists[0].name}</Td>
+                    <Td>{track.track.name}</Td>
+                    <Td>
+                      <Button onClick={() => handleRemoveFromQueue(track.queueId)}>❌</Button>
+                    </Td>
+                  </Tr>
+                ))
+              ) : (
+                <Tr>
+                  <Td colSpan='3'>No tracks in queue</Td>
+                </Tr>
+              )}
+            </Tbody>
+          </Table>
+        </Box>
       </Box>
 
-      <Box my={4}>
+      <Box my={4} maxH='300px' overflowY='scroll'>
         <Heading size='md' mb={2}>
           Search
         </Heading>
@@ -146,7 +153,7 @@ export default function SpotifyPlayback({
               <Tr>
                 <Th>Artists</Th>
                 <Th>Track Name</Th>
-                <Th></Th>
+                <Th width='50px'></Th>
               </Tr>
             </Thead>
             <Tbody>
