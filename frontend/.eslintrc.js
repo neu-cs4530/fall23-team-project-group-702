@@ -31,6 +31,7 @@ module.exports = {
     '/*.*', 
     'node_modules/@spotify/web-api-ts-sdk/dist/mjs/endpoints/SearchEndpoints.d.ts',
     'node_modules/*',
+    '**/dist/**',
   ],
   rules: {
     'prettier/prettier': [
