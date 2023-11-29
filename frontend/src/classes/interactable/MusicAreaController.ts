@@ -112,7 +112,6 @@ export default class MusicAreaController extends InteractableAreaController<
     return this._model.sessionInProgress !== undefined;
   }
 
-
   /**
    * @returns MusicAreaModel that represents the current state of this MusicAreaController
    */

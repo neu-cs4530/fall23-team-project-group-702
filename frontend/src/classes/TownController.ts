@@ -646,6 +646,7 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
         this._interactableControllers = [];
         initialData.interactables.forEach(eachInteractable => {
           console.log('[DEBUG]' + eachInteractable.type);
+          console.log('[DEBUG]' + eachInteractable.type);
           if (isConversationArea(eachInteractable)) {
             this._interactableControllers.push(
               ConversationAreaController.fromConversationAreaModel(
@@ -655,12 +656,14 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
             );
           } else if (isViewingArea(eachInteractable)) {
             this._interactableControllers.push(new ViewingAreaController(eachInteractable));
-          } else if (isMusicArea(eachInteractable)) {
+          } else if (isMusicArea(eachInteractable) && !isPrivateMusicArea(eachInteractable)) {
             this._interactableControllers.push(new MusicAreaController(eachInteractable, this));
           } else if (isPrivateMusicArea(eachInteractable)) {
-            this._interactableControllers.push(new PrivateMusicAreaController(eachInteractable, this));
+            this._interactableControllers.push(
+              new PrivateMusicAreaController(eachInteractable, this),
+            );
             console.log('found private room, pushing..?');
-          }else if (isTicTacToeArea(eachInteractable)) {
+          } else if (isTicTacToeArea(eachInteractable)) {
             this._interactableControllers.push(
               new TicTacToeAreaController(eachInteractable.id, eachInteractable, this),
             );
@@ -839,7 +842,6 @@ export function useInteractableAreaController<T>(interactableAreaID: string): T 
 
   const halfJoined = temp.concat(temp2);
   const joined = halfJoined.concat(temp3);
-  
 
   const interactableAreaController = joined.find(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
