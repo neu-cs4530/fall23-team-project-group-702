@@ -16,11 +16,11 @@ import SpotifyController from './SpotifyController';
 
 export default class SpotifyArea extends InteractableArea {
   /* The topic of the conversation area, or undefined if it is not set */
-  private _topic: string;
+  protected _topic: string;
 
-  private _sessionInProgress: boolean; // NEED GETTERS AND SETTERS
+  protected _sessionInProgress: boolean; // NEED GETTERS AND SETTERS
 
-  private _musicSessionController: SpotifyController;
+  protected _musicSessionController: SpotifyController;
 
   public get topic(): string {
     return this._topic;

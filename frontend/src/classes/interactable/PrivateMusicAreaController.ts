@@ -9,6 +9,7 @@ export default class PrivateMusicAreaController extends MusicAreaController {
     private _isPrivateSession : boolean;
 
     constructor(musicAreaModel: PrivateMusicAreaModel, townController: TownController) {
+      console.log('constructor hit..')
         super(musicAreaModel, townController);
         this._isPrivateSession = musicAreaModel.isPrivate;
         console.log('private room state initially: ' + this._isPrivateSession);
