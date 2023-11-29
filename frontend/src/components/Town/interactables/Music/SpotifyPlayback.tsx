@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { Track } from '@spotify/web-api-ts-sdk';
 import { useState } from 'react';
 import { Box, Button, Heading, Input, Table, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/react';
@@ -56,10 +56,10 @@ export default function SpotifyPlayback({
    * If the current state is playing, pause.
    * Finally alter isPlaying state
    */
-  const handleTogglePlay = async () => {
+  const handleTogglePlay = useCallback(async () => {
     setIsPlaying(!isPlaying);
     await musicController.togglePlay();
-  };
+  }, [isPlaying, musicController]);
 
   // Listener effects
   /**
