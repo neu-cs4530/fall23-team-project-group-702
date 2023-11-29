@@ -1,8 +1,6 @@
 /* eslint-disable no-await-in-loop */
 /* eslint-disable no-console */
 import { Track, AccessToken, PartialSearchResult, PlaybackState } from '@spotify/web-api-ts-sdk';
-import { is } from 'ramda';
-// import { uniqueId } from 'lodash';
 import { SpotifyUserPlayback, QueuedTrack } from './SpotifyUserPlayback';
 
 export function generateRandomString(length: number) {
@@ -90,58 +88,20 @@ export default class SpotifyController {
             hostUserState.item.id,
           )} || progress_ms = ${JSON.stringify(
             hostUserState.progress_ms,
-          )} || track name = ${JSON.stringify(hostUserState.item.name)}`,
+          )} || track name = ${JSON.stringify(hostUserState.item.name)}
+          and isPlaying = ${hostUserState.is_playing}`,
         );
-        await userMusicPlayer.playSongNow(hostUserState.item.id, hostUserState.progress_ms);
-        await this.synchronize();
+        if (hostUserState.is_playing) {
+          await userMusicPlayer.playSongNow(hostUserState.item.id, hostUserState.progress_ms);
+          // await this.synchronize();
+          await userMusicPlayer.seekToPosition(hostUserState.progress_ms);
+        }
       }
       console.log('Current users in music session: ');
       for (const player of this._userMusicPlayers) {
         console.log(`user: ${player.accessToken.access_token}`);
       }
       console.log('~~REGISTERED USER IN THE BACKEND~~');
-    }
-  }
-
-  /**
-   * Synchronizes the music session if a song is playing
-   * @throws - if there are no users in the music session
-   */
-  // only use host as source-of-truth for seekTo, use this state for rest
-  public async synchronize(): Promise<void> {
-    const hostUserState = await this.getCurrentHostPlaybackState();
-    for (const userMusicPlayer of this._userMusicPlayers) {
-      /* Pause if no 'playing now' song is set */
-      if (!this._songNowPlaying) {
-        console.log('no song now playing');
-        await userMusicPlayer.pausePlayback();
-        return;
-      }
-
-      // dk if this if makes sense
-      if (hostUserState) {
-        const hostUserPosition = hostUserState.progress_ms;
-        const hostIsPlaying = hostUserState.is_playing;
-        const userState = await userMusicPlayer.getCurrentlyPlayingTrack();
-        /* Checks that the user is playing the same song as the host */
-        if (userState?.item.id !== hostUserState.item.id) {
-          console.log('await userMusicPlayer.playSongNow()');
-          await userMusicPlayer.playSongNow(hostUserState.item.id, hostUserPosition);
-          // pauses if rpaused
-        }
-
-        /* Set is playing to the host's playing state */
-        this._isASongPlaying = hostIsPlaying;
-        /* If song isPlaying was desynced, resyncrhonize */
-        if (!this._isASongPlaying) {
-          console.log('await userMusicPlayer.resumePlayback();');
-          await userMusicPlayer.resumePlayback();
-        } else {
-          console.log('await userMusicPlayer.pausePlayback();');
-          await userMusicPlayer.pausePlayback();
-        }
-        await userMusicPlayer.seekToPosition(hostUserPosition);
-      }
     }
   }
 
@@ -230,6 +190,18 @@ export default class SpotifyController {
    */
   public async togglePlay(): Promise<boolean> {
     for (const userMusicPlayer of this._userMusicPlayers) {
+      const currentState = await this.getCurrentHostPlaybackState();
+      if (currentState) {
+        const currentPosition = currentState.progress_ms;
+        const currentlyPlayingTrack = currentState.item.id;
+
+        /* Guarantees each player has the same song and playbackPosition as the host. */
+        if (this.songNowPlaying?.id !== currentState.item.id) {
+          console.log('await userMusicPlayer.playSongNow()');
+          await userMusicPlayer.playSongNow(currentlyPlayingTrack, currentPosition);
+        }
+      }
+      // might be redundant if 
       if (!this._isASongPlaying) {
         console.log('resuming playback');
         await userMusicPlayer.resumePlayback();
@@ -238,11 +210,54 @@ export default class SpotifyController {
         await userMusicPlayer.pausePlayback();
       }
     }
-    console.log(`before sync isSongPlaying ${this._isASongPlaying}`); // no matter what this is, sync is setting to true
-    await this.synchronize();
     this._isASongPlaying = !this._isASongPlaying;
-    console.log(`after sync isSongPlaying ${this._isASongPlaying}`);
     return this._isASongPlaying;
+    // console.log(`before sync isSongPlaying ${this._isASongPlaying}`); // no matter what this is, sync is setting to true
+    // await this.synchronize();
+    // this._isASongPlaying = !this._isASongPlaying;
+    // console.log(`after sync isSongPlaying ${this._isASongPlaying}`);
+    // return this._isASongPlaying;
+  }
+
+  /**
+   * Synchronizes the music session if a song is playing
+   * @throws - if there are no users in the music session
+   */
+  // only use host as source-of-truth for seekTo, use this state for rest
+  public async synchronize(): Promise<void> {
+    const hostUserState = await this.getCurrentHostPlaybackState();
+    for (const userMusicPlayer of this._userMusicPlayers) {
+      /* Pause if no 'playing now' song is set */
+      if (!this._songNowPlaying) {
+        console.log('no song now playing');
+        await userMusicPlayer.pausePlayback();
+        return;
+      }
+
+      // dk if this if makes sense
+      if (hostUserState) {
+        const hostUserPosition = hostUserState.progress_ms;
+        const hostIsPlaying = hostUserState.is_playing;
+        const userState = await userMusicPlayer.getCurrentlyPlayingTrack();
+        /* Checks that the user is playing the same song as the host */
+        if (userState?.item.id !== hostUserState.item.id) {
+          console.log('await userMusicPlayer.playSongNow()');
+          await userMusicPlayer.playSongNow(hostUserState.item.id, hostUserPosition);
+          // pauses if rpaused
+        }
+
+        /* Set is playing to the host's playing state */
+        this._isASongPlaying = hostIsPlaying;
+        /* If song isPlaying was desynced, resyncrhonize */
+        if (!this._isASongPlaying) {
+          console.log('await userMusicPlayer.resumePlayback();');
+          await userMusicPlayer.resumePlayback();
+        } else {
+          console.log('await userMusicPlayer.pausePlayback();');
+          await userMusicPlayer.pausePlayback();
+        }
+      }
+    }
   }
 
   /**
