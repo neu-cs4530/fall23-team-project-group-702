@@ -9,13 +9,8 @@ export default class PrivateMusicAreaController extends MusicAreaController {
     private _isPrivateSession : boolean;
 
     constructor(musicAreaModel: PrivateMusicAreaModel, townController: TownController) {
-      console.log('constructor hit..')
         super(musicAreaModel, townController);
         this._isPrivateSession = musicAreaModel.isPrivate;
-        console.log('private room state initially: ' + this._isPrivateSession);
-        this._isPrivateSession = true;
-        console.log('now it is: ' + this._isPrivateSession);
-        console.log('Private controller created..')
       }
 
       public get isPrivateSession() {
@@ -27,7 +22,16 @@ export default class PrivateMusicAreaController extends MusicAreaController {
           this.emit('roomVisibilityChange', privateState);
     }
 
-    /**
+    public async setPrivacy(privacyState: boolean) {
+      console.log('Setting privacy to:' + privacyState);
+      await this._townController.sendInteractableCommand(this.id, {
+        type: 'SetRoomPrivacy',
+        privacyState,
+      });
+      console.log('Privacy now' + privacyState);
+    }
+
+  /**
    * Applies updates to this music area controller's model, setting the fields
    *
    *

@@ -260,6 +260,7 @@ export default class SpotifyArea extends InteractableArea {
   public async handleSpotifyCommand<CommandType extends InteractableCommand>(
     command: CommandType,
   ): Promise<InteractableCommandReturnType<CommandType>> {
+    console.log('is this code running...');
     switch (command.type) {
       case 'CreateMusicSession': {
         this._topic = command.topic;

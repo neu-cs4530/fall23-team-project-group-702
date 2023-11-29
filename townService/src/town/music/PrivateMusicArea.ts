@@ -2,6 +2,8 @@
 import { ITiledMapObject } from '@jonbell/tiled-map-type-guard';
 import {
   BoundingBox,
+  InteractableCommand,
+  InteractableCommandReturnType,
   InteractableType,
   PrivateMusicArea as PrivateMusicAreaModel,
   TownEmitter,
@@ -61,10 +63,23 @@ export default class PrivateSpotifyArea extends SpotifyArea {
         currentSong: null,
         songQueue: [],
         isPlaying: false,
-        isPrivate: true,
+        isPrivate: false,
       },
       rect,
       broadcastEmitter,
     );
+  }
+
+  public async handleSpotifyCommand<CommandType extends InteractableCommand>(
+    command: CommandType,
+  ): Promise<InteractableCommandReturnType<CommandType>> {
+    // Open and close the room to other coveytown members
+    if (command.type === 'SetRoomPrivacy') {
+      console.log('spotify command found room privacy');
+      this._isPrivate = !this._isPrivate;
+      this._emitAreaChanged();
+      return {} as InteractableCommandReturnType<CommandType>;
+    }
+    return super.handleSpotifyCommand(command);
   }
 }

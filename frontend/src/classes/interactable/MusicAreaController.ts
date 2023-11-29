@@ -6,6 +6,7 @@ import {
   QueuedTrack,
   Song,
 } from '../../types/CoveyTownSocket';
+import PlayerController from '../PlayerController';
 import TownController from '../TownController';
 // import { SongQueue } from '../../types/CoveyTownSocket';
 import InteractableAreaController, { BaseInteractableEventMap } from './InteractableAreaController';
@@ -14,10 +15,7 @@ import InteractableAreaController, { BaseInteractableEventMap } from './Interact
  * The events that a MusicAreaController can emit
  */
 export type MusicAreaEvents = BaseInteractableEventMap & {
-  /**
-   * A playbackChange event indicates that the playing/paused state has changed.
-   * Listeners are passed the new state in the parameter `isPlaying`
-   */
+  /* Base Music Room Events*/
   topicChange: (topic: string) => void;
   currentSongChange: (song: Track | null) => void;
   currentQueueChange: (queue: QueuedTrack[]) => void;
@@ -25,6 +23,8 @@ export type MusicAreaEvents = BaseInteractableEventMap & {
   accessTokenChange: (accessToken: AccessToken) => void;
   playbackStateChange: (playbackState: boolean) => void;
   roomVisibilityChange: (privateState: boolean) => void;
+  /* Private Room Music Events */
+  roomPrivacyChange: (privateState: boolean) => void;
 };
 
 /**
@@ -119,6 +119,7 @@ export default class MusicAreaController extends InteractableAreaController<
   public isActive(): boolean {
     return this._model.sessionInProgress !== undefined;
   }
+
 
   /**
    * @returns MusicAreaModel that represents the current state of this MusicAreaController

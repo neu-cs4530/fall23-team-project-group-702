@@ -23,6 +23,7 @@ export default class PrivateMusicArea extends MusicArea {
 
     overlap(): void {
         super.overlap();
+        console.log('overlapping in a private session...');
         if(this.isPrivateSession) {
             const spawnPoint = { x :832.333166666666, y:900.3335 };
             this._scene.moveOurPlayerTo({ rotation: 'front', moving: false, x: spawnPoint.x, y: spawnPoint.y });

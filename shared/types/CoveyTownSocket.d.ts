@@ -230,7 +230,8 @@ export type InteractableCommand =
   | AddMusicToSessionQueue
   | SkipSongMusicSession
   | TogglePlayMusicSession
-  | RemoveMusicFromSessionQueue;
+  | RemoveMusicFromSessionQueue
+  | SetRoomPrivacy;
 
 export interface CreateMusicSessionCommand {
   type: 'CreateMusicSession';
@@ -263,6 +264,10 @@ export interface SkipSongMusicSession {
 
 export interface TogglePlayMusicSession {
   type: 'TogglePlayMusicSession'
+}
+
+export interface SetRoomPrivacy {
+  type: 'SetRoomPrivacy'
 }
 
 export interface ViewingAreaUpdateCommand {
@@ -302,6 +307,8 @@ export type InteractableCommandReturnType<CommandType extends InteractableComman
     ? { isPlaying: boolean }
     : CommandType extends RemoveMusicFromSessionQueue
     ? { updatedQueue: QueuedTrack[] }
+    : CommandType extends SetRoomPrivacy
+    ? undefined
     : never;
 
 export type InteractableCommandResponse<MessageType> = {
