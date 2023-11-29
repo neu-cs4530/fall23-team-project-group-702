@@ -27,7 +27,11 @@ module.exports = {
     tsconfigRootDir: __dirname,
     warnOnUnsupportedTypeScriptVersion: false,
   },
-  ignorePatterns: ['/*.*'],
+  ignorePatterns: [
+    '/*.*', 
+    'node_modules/@spotify/web-api-ts-sdk/dist/mjs/endpoints/SearchEndpoints.d.ts',
+    'node_modules/*',
+  ],
   rules: {
     'prettier/prettier': [
       "error",

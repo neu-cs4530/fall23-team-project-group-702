@@ -4,3 +4,6 @@ build
 public/virtualbackground
 node_modules/@spotify/web-api-ts-sdk/
 client/dist/
+dist/*
+node_modules/@spotify/web-api-ts-sdk/dist/mjs/endpoints/SearchEndpoints.d.ts
+# git commit -am "trying to fix eslint again by adding dist/* to .eslintignore"
