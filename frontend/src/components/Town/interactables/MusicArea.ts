@@ -9,7 +9,7 @@ export default class MusicArea extends Interactable {
 
   private _defaultSong?: Song;
 
-  private _musicArea?: MusicAreaController;
+  protected _musicArea?: any;
 
   private _isInteracting = false;
 
@@ -32,7 +32,6 @@ export default class MusicArea extends Interactable {
       this.name,
       { color: '#FFFFFF', backgroundColor: '#000000' },
     );
-    this._musicArea = this.townController.getMusicAreaController(this);
     this.setDepth(-1);
   }
 
