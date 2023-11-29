@@ -32,6 +32,7 @@ export default class MusicArea extends Interactable {
       this.name,
       { color: '#FFFFFF', backgroundColor: '#000000' },
     );
+    this._musicArea = this.townController.getMusicAreaController(this);
     this.setDepth(-1);
   }
 

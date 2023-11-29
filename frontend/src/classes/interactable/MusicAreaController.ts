@@ -1,5 +1,15 @@
 import { AccessToken, Track } from '@spotify/web-api-ts-sdk';
+<<<<<<< HEAD
 import { MusicArea as MusicAreaModel, QueuedTrack } from '../../types/CoveyTownSocket';
+=======
+import {
+  MusicArea,
+  MusicArea as MusicAreaModel,
+  QueuedTrack,
+  Song,
+} from '../../types/CoveyTownSocket';
+import PlayerController from '../PlayerController';
+>>>>>>> c7c93de (backend informed private sessions, see button in firstmusic to see how to control, could be cleaner)
 import TownController from '../TownController';
 import InteractableAreaController, { BaseInteractableEventMap } from './InteractableAreaController';
 
@@ -111,6 +121,7 @@ export default class MusicAreaController extends InteractableAreaController<
   public isActive(): boolean {
     return this._model.sessionInProgress !== undefined;
   }
+
 
   /**
    * @returns MusicAreaModel that represents the current state of this MusicAreaController
