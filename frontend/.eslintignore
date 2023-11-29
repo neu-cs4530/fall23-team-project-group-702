@@ -3,3 +3,4 @@ src/classes/DebugLogger.ts
 build
 public/virtualbackground
 node_modules/@spotify/web-api-ts-sdk/
+client/dist/
