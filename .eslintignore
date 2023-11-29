@@ -1,0 +1,14 @@
+node_modules
+node_modules/
+node_modules/*
+node_modules/@spotify/web-api-ts-sdk/
+node_modules/@spotify/web-api-ts-sdk/dist/mjs/endpoints/SearchEndpoints.d.ts
+src/components/VideoCall/VideoFrontend
+src/classes/DebugLogger.ts
+build
+public/virtualbackground
+client/dist/
+dist/*
+dist/mjs/endpoints/SearchEndpoints.d.ts
+dist/
+**/dist/**

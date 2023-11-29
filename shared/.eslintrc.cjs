@@ -13,7 +13,14 @@ module.exports = {
     tsconfigRootDir: __dirname,
     warnOnUnsupportedTypeScriptVersion: false,
   },
-  ignorePatterns: ['/*.*'],
+  ignorePatterns: [
+    '/*.*',
+    'node_modules/@spotify/web-api-ts-sdk/dist/mjs/endpoints/SearchEndpoints.d.ts',
+    'node_modules/*',
+    '**/dist/**',
+    'dist/',
+    'dist/*',
+  ],
   rules: {
     'no-underscore-dangle': 0,
     'no-param-reassign': 0,

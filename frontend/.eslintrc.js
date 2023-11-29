@@ -33,7 +33,7 @@ module.exports = {
     'node_modules/*',
     '**/dist/**',
     'dist/',
-    'dist/*'
+    'dist/*',
   ],
   rules: {
     'prettier/prettier': [
