@@ -1,3 +1,5 @@
+import MusicAreaController from '../../../classes/interactable/MusicAreaController';
+import PrivateMusicAreaController from '../../../classes/interactable/PrivateMusicAreaController';
 import { Song } from '../../../types/CoveyTownSocket';
 import Interactable, { KnownInteractableTypes } from '../Interactable';
 
@@ -8,7 +10,7 @@ export default class MusicArea extends Interactable {
 
   private _defaultSong?: Song;
 
-  protected _musicArea?: any;
+  protected _musicArea?: MusicAreaController | PrivateMusicAreaController;
 
   private _isInteracting = false;
 

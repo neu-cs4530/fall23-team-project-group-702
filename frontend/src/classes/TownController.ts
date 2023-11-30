@@ -833,6 +833,7 @@ export function useInteractableAreaController<T>(interactableAreaID: string): T 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const temp2: any = townController.musicAreas;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const temp3: any = townController.privateMusicAreas;
 
   const halfJoined = temp.concat(temp2);

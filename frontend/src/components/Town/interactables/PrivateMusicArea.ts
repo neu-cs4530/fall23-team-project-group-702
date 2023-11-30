@@ -1,13 +1,13 @@
 import PrivateMusicAreaController from '../../../classes/interactable/PrivateMusicAreaController';
-import TownController from '../../../classes/TownController';
+import { KnownInteractableTypes } from '../Interactable';
 import MusicArea from './MusicArea';
-import Interactable, { KnownInteractableTypes } from '../Interactable';
 
 export default class PrivateMusicArea extends MusicArea {
   public get isPrivateSession() {
     if (!this._musicArea) return false;
     else {
-      return this._musicArea.isPrivateSession;
+      const privateMusicAreaController = this._musicArea as PrivateMusicAreaController;
+      return privateMusicAreaController.isPrivateSession;
     }
   }
 

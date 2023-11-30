@@ -201,7 +201,7 @@ export default function FirstMusicWrapper(): JSX.Element {
     if (musicArea) {
       musicArea.addListener('leaveSession', handleLeaveSession);
       return () => {
-        musicArea.removeListener('leaveSession', handleLeaveSession);
+        musicArea?.removeListener('leaveSession', handleLeaveSession);
       };
     }
   });
