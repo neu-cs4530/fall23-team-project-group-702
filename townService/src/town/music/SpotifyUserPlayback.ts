@@ -246,7 +246,7 @@ export class SpotifyUserPlayback {
       requestBody = JSON.stringify({ uris: [`spotify:track:${trackId}`], position_ms: seek });
     }
     playerDevice.devices.forEach(async device => {
-      if (device.id === this._deviceId) {
+      if (device.id === this._deviceId && device.name === 'Covey Player') {
         const playSongResponse = await fetch(
           `https://api.spotify.com/v1/me/player/play?device_id=${device.id}`,
           {

@@ -150,11 +150,12 @@ function isValidMusicAreaType(areaType: string): boolean {
  * renders the TicTacToeArea component in a modal.
  */
 export default function FirstMusicWrapper(): JSX.Element {
-  let musicArea = useInteractable<MusicAreaInteractable>('musicArea');
+  const musicArea = useInteractable<MusicAreaInteractable>('privateMusicArea');
+  // let musicArea = useInteractable<MusicAreaInteractable>('musicArea');
   // Check for different types of music rooms
-  if (!musicArea) {
-    musicArea = useInteractable<PrivateMusicAreaInteractable>('privateMusicArea');
-  }
+  // if (!musicArea) {
+  //   musicArea = useInteractable<PrivateMusicAreaInteractable>('privateMusicArea');
+  // }
   const townController = useTownController();
 
   const [isOpen, setIsOpen] = useState<boolean>(true);

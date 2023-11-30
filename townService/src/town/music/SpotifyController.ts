@@ -84,7 +84,7 @@ export default class SpotifyController {
         if (hostUserState.is_playing) {
           await userMusicPlayer.playSongNow(hostUserState.item.id, hostUserState.progress_ms);
           // await this.synchronize();
-          await userMusicPlayer.seekToPosition(hostUserState.progress_ms);
+          // await userMusicPlayer.seekToPosition(hostUserState.progress_ms);
         }
       }
     }
@@ -297,7 +297,7 @@ export default class SpotifyController {
     this._queue = [];
     this._songNowPlaying = null;
     for (const user of this._userMusicPlayers) {
-      this.removeUser(user.accessToken.access_token);
+      await this.removeUser(user.accessToken.access_token);
     }
   }
 }

@@ -7,6 +7,7 @@ export default class PrivateMusicArea extends MusicArea {
     if (!this._musicArea) return false;
     else {
       const privateMusicAreaController = this._musicArea as PrivateMusicAreaController;
+      console.log(`PrivateMusicArea interactable: ${privateMusicAreaController.isPrivateSession}`);
       return privateMusicAreaController.isPrivateSession;
     }
   }

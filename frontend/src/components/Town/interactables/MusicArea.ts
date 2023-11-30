@@ -61,8 +61,8 @@ export default class MusicArea extends Interactable {
     this._labelText?.setVisible(false);
     this._infoTextBox?.setVisible(false);
     if (this._isInteracting) {
-      this.townController.interactableEmitter.emit('endInteraction', this);
       this.emit('leaveSession');
+      this.townController.interactableEmitter.emit('endInteraction', this);
       this._isInteracting = false;
     }
   }

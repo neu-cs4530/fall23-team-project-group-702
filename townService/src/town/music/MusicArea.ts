@@ -211,11 +211,11 @@ export default class SpotifyArea extends InteractableArea {
         } else {
           hostUserWasRemoved = false;
         }
-        this._musicSessionController.removeUser(accessToken.access_token); // if invariant don't need to check
+        await this._musicSessionController.removeUser(accessToken.access_token); // if invariant don't need to check
         if (this._musicSessionController.userMusicPlayers.length === 0 || hostUserWasRemoved) {
           // Reset state
           this._topic = '';
-          this._musicSessionController.clearState();
+          await this._musicSessionController.clearState();
           this.sessionInProgress = false;
         }
         this._emitAreaChanged();
