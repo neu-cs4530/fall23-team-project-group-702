@@ -13,6 +13,8 @@ import SpotifyArea from './MusicArea';
 export default class PrivateSpotifyArea extends SpotifyArea {
   private _isPrivate: boolean;
 
+  private _toggle: boolean;
+
   /**
    * Creates a new MusicArea
    *
@@ -27,6 +29,7 @@ export default class PrivateSpotifyArea extends SpotifyArea {
   ) {
     super({ topic, id } as Omit<PrivateMusicAreaModel, 'type'>, coordinates, townEmitter);
     this._isPrivate = isPrivate;
+    this._toggle = false;
   }
 
   public toModel(): PrivateMusicAreaModel {
@@ -35,6 +38,7 @@ export default class PrivateSpotifyArea extends SpotifyArea {
       ...basicModel,
       type: 'PrivateMusicArea' as InteractableType,
       isPrivate: this._isPrivate,
+      toggle: this._toggle,
     };
     return privateModel;
   }
@@ -64,6 +68,7 @@ export default class PrivateSpotifyArea extends SpotifyArea {
         songQueue: [],
         isPlaying: false,
         isPrivate: false,
+        toggle: false,
       },
       rect,
       broadcastEmitter,
@@ -76,8 +81,13 @@ export default class PrivateSpotifyArea extends SpotifyArea {
     // Open and close the room to other coveytown members
     if (command.type === 'SetRoomPrivacy') {
       this._isPrivate = command.isPrivate;
-      console.log(`received SetRoomPrivacy, setting privacy to ${this._isPrivate}`);
       this._emitAreaChanged();
+      return {} as InteractableCommandReturnType<CommandType>;
+    }
+    if (command.type === 'RequestJoinRoom') {
+      this._toggle = command.toggle;
+      this._emitAreaChanged();
+      console.log(`received RequestJoinRoom, setting toggle to ${this._toggle}`);
       return {} as InteractableCommandReturnType<CommandType>;
     }
     if (command.type === 'RemoveUserFromMusicSession') {

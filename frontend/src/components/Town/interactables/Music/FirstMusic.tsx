@@ -15,15 +15,14 @@ import {
 } from '@chakra-ui/react';
 import { useInteractable, useInteractableAreaController } from '../../../../classes/TownController';
 import useTownController from '../../../../hooks/useTownController';
-import MusicAreaInteractable from '../MusicArea';
 import PrivateMusicAreaInteractable from '../PrivateMusicArea';
 import { useCallback, useEffect, useState } from 'react';
 import { InteractableID } from '../../../../types/CoveyTownSocket';
 import MusicAreaController from '../../../../classes/interactable/MusicAreaController';
 import { AccessToken } from '@spotify/web-api-ts-sdk';
 import SpotifyPlayback from './SpotifyPlayback';
-import { SpotifyDetails } from './SpotifyDetails';
 import PrivateMusicAreaController from '../../../../classes/interactable/PrivateMusicAreaController';
+import SpotifyLogin from '../../../Login/SpotifyLogin';
 
 /**
  * Jukebox Interface Component that handles rendering the join/create music session modal and the music playback interface modal.
@@ -32,6 +31,7 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
   const musicAreaController = useInteractableAreaController<MusicAreaController>(interactableID);
   const privateMusicAreaController = musicAreaController as PrivateMusicAreaController;
   const townController = useTownController();
+  const toast = useToast();
 
   const [accessToken, setAccessToken] = useState<AccessToken | undefined>(
     townController.spotifyAccessToken,
@@ -41,6 +41,8 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
     musicAreaController.sessionInProgress,
   );
   const [isPrivate, setIsPrivate] = useState<boolean>(privateMusicAreaController.isPrivateSession);
+
+  const [toggle, setToggle] = useState<boolean>(privateMusicAreaController.toggle);
 
   useEffect(() => {
     musicAreaController.addListener('topicChange', setSessionName);
@@ -55,8 +57,10 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
 
   useEffect(() => {
     const privateController = musicAreaController as PrivateMusicAreaController;
+    privateController.addListener('requestJoinRoom', setToggle);
     privateController.addListener('roomVisibilityChange', setIsPrivate);
     return () => {
+      privateController.removeListener('requestJoinRoom', setToggle);
       musicAreaController.removeListener('roomVisibilityChange', setIsPrivate);
     };
   }, [musicAreaController]);
@@ -77,6 +81,36 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
     // Set for this controller
     setIsPrivate(!privateController.isPrivateSession);
   };
+
+  useEffect(() => {
+    console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+    if (townController.userID === musicAreaController.hostId) {
+      console.log('NICEEEEEEEEEEEEEEEEEEEE');
+    }
+    if (sessionActive && isPrivate && toggle) {
+      console.log('handleRequestJoinRoom: hostId == userID');
+      setToggle(false);
+      toast({
+        title: 'Someone wants to join your room!',
+        description: 'Click the button below to let them in.',
+        status: 'info',
+        duration: 5000,
+        isClosable: true,
+        onCloseComplete: async () => {
+          console.log('completed');
+          await privateMusicAreaController.requestJoinRoom(false);
+        },
+      });
+    }
+  }, [
+    toggle,
+    toast,
+    sessionActive,
+    isPrivate,
+    privateMusicAreaController,
+    townController.userID,
+    musicAreaController.hostId,
+  ]);
 
   if (!accessToken) {
     return <div>Not logged in</div>;
@@ -124,16 +158,19 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
             </Button>
           }
         </Box>
+        {`toggle: ${toggle}`}
         <>
           {accessToken ? (
             <>
               <div>
-                <SpotifyPlayback musicController={musicAreaController} />
+                <SpotifyPlayback
+                  userAccessToken={accessToken}
+                  musicController={musicAreaController}
+                />
               </div>
-              <SpotifyDetails userAccessToken={accessToken} musicController={musicAreaController} />
             </>
           ) : (
-            <>User Access Tokens Not Loaded</>
+            <SpotifyLogin />
           )}
         </>
       </div>
@@ -151,36 +188,30 @@ function isValidMusicAreaType(areaType: string): boolean {
  * renders the TicTacToeArea component in a modal.
  */
 export default function FirstMusicWrapper(): JSX.Element {
-  const musicArea = useInteractable<MusicAreaInteractable>('privateMusicArea');
-  // let musicArea = useInteractable<MusicAreaInteractable>('musicArea');
-  // Check for different types of music rooms
-  // if (!musicArea) {
-  //   musicArea = useInteractable<PrivateMusicAreaInteractable>('privateMusicArea');
-  // }
-  const townController = useTownController();
-  const toast = useToast();
+  const musicArea = useInteractable<PrivateMusicAreaInteractable>('privateMusicArea');
+  const coveyTownController = useTownController();
 
   const [isOpen, setIsOpen] = useState<boolean>(true);
 
   // Pause controller if interacting and modal is open
   useEffect(() => {
     if (isOpen && musicArea) {
-      townController.pause();
+      coveyTownController.pause();
     } else {
-      townController.unPause();
+      coveyTownController.unPause();
     }
-  }, [isOpen, musicArea, townController]);
+  }, [isOpen, musicArea, coveyTownController]);
 
   const closeModal = useCallback(() => {
     setIsOpen(false);
 
     if (musicArea) {
-      const musicAreaController = townController.getMusicAreaController(musicArea);
+      const musicAreaController = coveyTownController.getMusicAreaController(musicArea);
       if (!musicAreaController.sessionInProgress) {
         musicArea.overlapExit();
       }
     }
-  }, [musicArea, townController]);
+  }, [musicArea, coveyTownController]);
 
   const handleReopen = useCallback(() => {
     setIsOpen(true);
@@ -188,8 +219,8 @@ export default function FirstMusicWrapper(): JSX.Element {
 
   const handleLeaveSession = useCallback(async () => {
     if (musicArea) {
-      townController.interactEnd(musicArea);
-      const musicAreaController = townController.getMusicAreaController(musicArea);
+      coveyTownController.interactEnd(musicArea);
+      const musicAreaController = coveyTownController.getMusicAreaController(musicArea);
       await musicAreaController.removeUserFromSession();
       if (!musicAreaController.sessionInProgress) {
         // Reset state if session ended
@@ -198,30 +229,31 @@ export default function FirstMusicWrapper(): JSX.Element {
         setIsOpen(true);
       }
     }
-  }, [musicArea, townController]);
+  }, [musicArea, coveyTownController]);
 
-  const handleRequestJoinRoom = useCallback(async () => {
-    if (musicArea) {
-      const musicAreaController = townController.getMusicAreaController(musicArea);
-      if (musicAreaController && musicAreaController.hostId == townController.userID) {
-        toast({
-          title: 'Someone wants to join your room!',
-          description: 'Click the button below to let them in.',
-          status: 'info',
-          duration: 5000,
-          isClosable: true,
-        });
-      }
-    }
-  }, [musicArea, toast, townController]);
+  // const handleRequestJoinRoom = useCallback(async () => {
+  //   console.log('handleRequestJoinRoom: called');
+  //   if (musicArea) {
+  //     console.log('handleRequestJoinRoom');
+  //     const musicAreaController = coveyTownController.getMusicAreaController(musicArea);
+  //     if (musicAreaController && musicAreaController.hostId == coveyTownController.userID) {
+  //       console.log('handleRequestJoinRoom: hostId == userID');
+  //       toast({
+  //         title: 'Someone wants to join your room!',
+  //         description: 'Click the button below to let them in.',
+  //         status: 'info',
+  //         duration: 5000,
+  //         isClosable: true,
+  //       });
+  //     }
+  //   }
+  // }, [musicArea, toast, coveyTownController]);
 
   useEffect(() => {
     if (musicArea) {
       musicArea.addListener('leaveSession', handleLeaveSession);
-      musicArea.addListener('requestJoinRoom', handleRequestJoinRoom);
       return () => {
         musicArea?.removeListener('leaveSession', handleLeaveSession);
-        musicArea?.removeListener('requestJoinRoom', handleRequestJoinRoom);
       };
     }
   });
@@ -229,7 +261,7 @@ export default function FirstMusicWrapper(): JSX.Element {
   if (musicArea && isValidMusicAreaType(musicArea.getType())) {
     let sessionInProgress;
     if (musicArea) {
-      const musicAreaController = townController.getMusicAreaController(musicArea);
+      const musicAreaController = coveyTownController.getMusicAreaController(musicArea);
       sessionInProgress = musicAreaController.sessionInProgress;
     }
     if (!isOpen && sessionInProgress) {

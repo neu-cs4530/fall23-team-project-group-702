@@ -217,6 +217,7 @@ export interface MusicArea extends Interactable {
  */
 export interface PrivateMusicArea extends MusicArea {
   isPrivate: boolean;
+  toggle: boolean;
 }
 
 export type InteractableCommand =
@@ -232,7 +233,8 @@ export type InteractableCommand =
   | TogglePlayMusicSession
   | RemoveMusicFromSessionQueue
   | RemoveUserFromMusicSessionCommand
-  | SetRoomPrivacy;
+  | SetRoomPrivacy
+  | RequestJoinRoom;
 
 export interface CreateMusicSessionCommand {
   type: 'CreateMusicSession';
@@ -275,6 +277,11 @@ export interface RemoveUserFromMusicSessionCommand {
 export interface SetRoomPrivacy {
   type: 'SetRoomPrivacy'
   isPrivate: boolean;
+}
+
+export interface RequestJoinRoom {
+  type: 'RequestJoinRoom';
+  toggle: boolean;
 }
 
 export interface ViewingAreaUpdateCommand {

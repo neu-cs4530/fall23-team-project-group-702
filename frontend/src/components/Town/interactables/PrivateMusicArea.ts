@@ -28,7 +28,8 @@ export default class PrivateMusicArea extends MusicArea {
         x: spawnPoint.x,
         y: spawnPoint.y,
       });
-      this.emit('requestJoinRoom');
+      const privateMusicArea = this._musicArea as PrivateMusicAreaController;
+      privateMusicArea?.requestJoinRoom(true);
     }
   }
 

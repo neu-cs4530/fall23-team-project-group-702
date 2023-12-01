@@ -10,6 +10,8 @@ import SpotifySdk from './interactables/Music/SpotifySdk';
 import { AccessToken } from '@spotify/web-api-ts-sdk';
 import { useRouter } from 'next/router';
 import { CLIENT_ID, CLIENT_SECRET, REDIRECT_URI, TOKEN_URL } from '../../utilities/constants';
+import SpotifyLogin from '../Login/SpotifyLogin';
+import { Box } from '@chakra-ui/react';
 
 export default function TownMap(): JSX.Element {
   const coveyTownController = useTownController();
@@ -112,7 +114,9 @@ export default function TownMap(): JSX.Element {
           </div>
         </>
       ) : (
-        <>Not Logged Into Spotify</>
+        <Box position='absolute' top={0} width='100%' height='50px'>
+          <SpotifyLogin />
+        </Box>
       )}
     </div>
   );

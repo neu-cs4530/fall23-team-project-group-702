@@ -1,20 +1,45 @@
 import React, { useCallback, useEffect } from 'react';
-import { Track } from '@spotify/web-api-ts-sdk';
+import { AccessToken, Track } from '@spotify/web-api-ts-sdk';
 import { useState } from 'react';
 import { Box, Button, Heading, Input, Table, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/react';
 import { QueuedTrack } from '../../../../types/CoveyTownSocket';
 import MusicAreaController from '../../../../classes/interactable/MusicAreaController';
+import { SpotifyDetails } from './SpotifyDetails';
 
 export default function SpotifyPlayback({
   musicController,
+  userAccessToken,
 }: {
   musicController: MusicAreaController;
+  userAccessToken: AccessToken;
 }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Track[]>([]);
   const [currentTrack, setCurrentTrack] = useState<Track | null>({} as Track); // pull from backend instead of {}
   const [queue, setQueue] = useState<QueuedTrack[]>([]); // pull from backend instead of []
+
+  // const handleBeforeUnload = (event: { preventDefault: () => void }) => {
+  //   event.preventDefault();
+  //   console.log('Window is about to be closed');
+  //   // if (musicArea !== undefined) {
+  //   //   const musicAreaController = coveyTownController.getMusicAreaController(musicArea);
+  //   //   if (musicAreaController.sessionInProgress) {
+  //   //     console.log('Removing user from session');
+  //   //     musicAreaController.removeUserFromSession();
+  //   //   }
+  //   // }
+  // };
+
+  // useEffect(() => {
+  //   console.log('mounting component...');
+  //   window.addEventListener('beforeunload', handleBeforeUnload);
+
+  //   return () => {
+  //     console.log('unmounting component...');
+  //     window.removeEventListener('beforeunload', handleBeforeUnload);
+  //   };
+  // }, []);
 
   /**
    * handleSearch: Searches based on the current search query
@@ -79,6 +104,7 @@ export default function SpotifyPlayback({
 
   return (
     <Box p={4} bg='white' borderRadius='md' my={5}>
+      <SpotifyDetails userAccessToken={userAccessToken} musicController={musicController} />
       <iframe
         src={`https://open.spotify.com/embed/track/${
           currentTrack?.id ?? undefined
