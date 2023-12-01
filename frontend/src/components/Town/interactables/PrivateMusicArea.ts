@@ -7,7 +7,6 @@ export default class PrivateMusicArea extends MusicArea {
     if (!this._musicArea) return false;
     else {
       const privateMusicAreaController = this._musicArea as PrivateMusicAreaController;
-      console.log(`PrivateMusicArea interactable: ${privateMusicAreaController.isPrivateSession}`);
       return privateMusicAreaController.isPrivateSession;
     }
   }
@@ -21,6 +20,8 @@ export default class PrivateMusicArea extends MusicArea {
   overlap(): void {
     super.overlap();
     if (this.isPrivateSession) {
+      console.log('emitted requestJoinRoom');
+      this.emit('requestJoinRoom');
       const spawnPoint = { x: 832.333166666666, y: 900.3335 };
       this._scene.moveOurPlayerTo({
         rotation: 'front',
@@ -28,7 +29,6 @@ export default class PrivateMusicArea extends MusicArea {
         x: spawnPoint.x,
         y: spawnPoint.y,
       });
-      this.emit('requestJoinRoom');
     }
   }
 

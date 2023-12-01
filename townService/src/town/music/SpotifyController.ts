@@ -178,11 +178,6 @@ export default class SpotifyController {
     }
     this._isASongPlaying = !this._isASongPlaying;
     return this._isASongPlaying;
-    // console.log(`before sync isSongPlaying ${this._isASongPlaying}`); // no matter what this is, sync is setting to true
-    // await this.synchronize();
-    // this._isASongPlaying = !this._isASongPlaying;
-    // console.log(`after sync isSongPlaying ${this._isASongPlaying}`);
-    // return this._isASongPlaying;
   }
 
   /**

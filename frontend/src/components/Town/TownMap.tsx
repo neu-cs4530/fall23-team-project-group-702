@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Phaser from 'phaser';
 import useTownController from '../../hooks/useTownController';
 import SocialSidebar from '../SocialSidebar/SocialSidebar';
@@ -10,14 +10,45 @@ import SpotifySdk from './interactables/Music/SpotifySdk';
 import { AccessToken } from '@spotify/web-api-ts-sdk';
 import { useRouter } from 'next/router';
 import { CLIENT_ID, CLIENT_SECRET, REDIRECT_URI, TOKEN_URL } from '../../utilities/constants';
+import { useToast } from '@chakra-ui/react';
+import { useInteractable } from '../../classes/TownController';
+import PrivateMusicAreaInteractable from './interactables/PrivateMusicArea';
+import MusicArea from './interactables/MusicArea';
 
 export default function TownMap(): JSX.Element {
   const coveyTownController = useTownController();
   const router = useRouter();
+  const musicArea = useInteractable<PrivateMusicAreaInteractable>('privateMusicArea');
+  const toast = useToast();
 
   const [accessToken, setAccessToken] = useState<AccessToken | undefined>(
     coveyTownController.spotifyAccessToken,
   );
+
+  const handleRequestJoinRoom = useCallback(() => {
+    console.log('requsetJoinRoom listener called');
+    const musicAreaController = coveyTownController.getMusicAreaController(musicArea as MusicArea);
+    if (musicAreaController && musicAreaController.hostId == coveyTownController.userID) {
+      toast({
+        title: 'Someone wants to join your room!',
+        description: 'Click the button below to let them in.',
+        status: 'info',
+        duration: 4000,
+        isClosable: true,
+      });
+    }
+  }, [musicArea, toast, coveyTownController]);
+
+  useEffect(() => {
+    if (musicArea) {
+      console.log('adding listener for requestJoinRoom');
+      musicArea.addListener('requestJoinRoom', handleRequestJoinRoom);
+      return () => {
+        console.log('removing listener for requestJoinRoom');
+        musicArea?.removeListener('requestJoinRoom', handleRequestJoinRoom);
+      };
+    }
+  });
 
   useEffect(() => {
     const params = router.query;

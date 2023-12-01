@@ -15,7 +15,6 @@ import {
 } from '@chakra-ui/react';
 import { useInteractable, useInteractableAreaController } from '../../../../classes/TownController';
 import useTownController from '../../../../hooks/useTownController';
-import MusicAreaInteractable from '../MusicArea';
 import PrivateMusicAreaInteractable from '../PrivateMusicArea';
 import { useCallback, useEffect, useState } from 'react';
 import { InteractableID } from '../../../../types/CoveyTownSocket';
@@ -151,12 +150,7 @@ function isValidMusicAreaType(areaType: string): boolean {
  * renders the TicTacToeArea component in a modal.
  */
 export default function FirstMusicWrapper(): JSX.Element {
-  const musicArea = useInteractable<MusicAreaInteractable>('privateMusicArea');
-  // let musicArea = useInteractable<MusicAreaInteractable>('musicArea');
-  // Check for different types of music rooms
-  // if (!musicArea) {
-  //   musicArea = useInteractable<PrivateMusicAreaInteractable>('privateMusicArea');
-  // }
+  const musicArea = useInteractable<PrivateMusicAreaInteractable>('privateMusicArea');
   const townController = useTownController();
   const toast = useToast();
 
@@ -200,28 +194,29 @@ export default function FirstMusicWrapper(): JSX.Element {
     }
   }, [musicArea, townController]);
 
-  const handleRequestJoinRoom = useCallback(async () => {
-    if (musicArea) {
-      const musicAreaController = townController.getMusicAreaController(musicArea);
-      if (musicAreaController && musicAreaController.hostId == townController.userID) {
-        toast({
-          title: 'Someone wants to join your room!',
-          description: 'Click the button below to let them in.',
-          status: 'info',
-          duration: 5000,
-          isClosable: true,
-        });
-      }
-    }
-  }, [musicArea, toast, townController]);
+  // const handleRequestJoinRoom = useCallback(() => {
+  //   console.log('requsetJoinRoom listener called');
+  //   if (musicArea) {
+  //     const musicAreaController = townController.getMusicAreaController(musicArea);
+  //     if (musicAreaController && musicAreaController.hostId == townController.userID) {
+  //       toast({
+  //         title: 'Someone wants to join your room!',
+  //         description: 'Click the button below to let them in.',
+  //         status: 'info',
+  //         duration: 4000,
+  //         isClosable: true,
+  //       });
+  //     }
+  //   }
+  // }, [musicArea, toast, townController]);
 
   useEffect(() => {
     if (musicArea) {
       musicArea.addListener('leaveSession', handleLeaveSession);
-      musicArea.addListener('requestJoinRoom', handleRequestJoinRoom);
+      // musicArea.addListener('requestJoinRoom', handleRequestJoinRoom);
       return () => {
         musicArea?.removeListener('leaveSession', handleLeaveSession);
-        musicArea?.removeListener('requestJoinRoom', handleRequestJoinRoom);
+        // musicArea?.removeListener('requestJoinRoom', handleRequestJoinRoom);
       };
     }
   });
