@@ -71,6 +71,7 @@ function App() {
     const params = router.query;
     async function spotifyAccessTokenRequest() {
       if (!params.code) {
+        // router.
         /* redirect user to spotify login */
         // const loginResponse = await fetch('/api/login', {
         //   method: 'GET',
@@ -80,6 +81,34 @@ function App() {
         //   throw new Error('Unable to get Spotify login URL');
         // }
         // Redirects user's page to Spotify login page
+        /*
+
+        redirect the entire page to the login page, once that page opens up we will have spotify url,
+        then we will be redirected to spotify api login page, then append the response parameter to the url
+        send the user to the home url. on home url use that information.
+
+        ####################################################### nextjs allows us to redirect to one of the own
+        pages in the app.
+
+        INSTEAD OF DOING FETCH, send user to the page.
+        window.location.href = 
+
+
+
+        with router we can create a new route, set the route as /api/login. Now, using react router,
+        we can redirect the user to /api/login which is actually another react page. The react component
+        useEffect to call spotify api, get the information, then redirect to this homeurl where we can use 
+        the information as parameter.
+
+        another advantage of react router, if we do window.location.href, all the state before that point is erased.
+        There is a difference between redirecting and using react router to redirect.
+        changing the url HARD REFRESHES THE PAGE. with react router, it maintains the state that was present before
+        redirecting to that page (because it is the same app completely)
+
+
+        redirect the user to /api/login
+        once that contacts spotify api, redirect user from /api/login back to the home url
+        */
         const state = generateRandomString(16);
         const redirectParams = new URLSearchParams({
           response_type: 'code',
@@ -93,7 +122,7 @@ function App() {
       }
     }
     spotifyAccessTokenRequest();
-  });
+  }, [router.query]);
 
   let page: JSX.Element;
   if (townController) {
