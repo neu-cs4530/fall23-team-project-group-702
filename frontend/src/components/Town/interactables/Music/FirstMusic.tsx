@@ -158,7 +158,6 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
             </Button>
           }
         </Box>
-        {`toggle: ${toggle}`}
         <>
           {accessToken ? (
             <>
