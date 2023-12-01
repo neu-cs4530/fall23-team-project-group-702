@@ -56,11 +56,11 @@ export default class PrivateMusicAreaController extends MusicAreaController {
   protected _updateFrom(updatedModel: PrivateMusicAreaModel): void {
     super._updateFrom(updatedModel);
     // this._toggle = updatedModel.toggle;
-    console.log(
-      `updatedModel.toggle: ${updatedModel.toggle} | updatedModel.isPrivate: ${updatedModel.isPrivate} | this._toggle ${this._toggle}`,
-    );
+    // console.log(
+    //   `updatedModel.toggle: ${updatedModel.toggle} | updatedModel.isPrivate: ${updatedModel.isPrivate} | this._toggle ${this._toggle}`,
+    // );
     if (updatedModel.toggle !== undefined) {
-      console.log(`toggleState emitting and setting: ${updatedModel.toggle}`);
+      // console.log(`toggleState emitting and setting: ${updatedModel.toggle}`);
       this.emit('requestJoinRoom', updatedModel.toggle);
     }
     if (updatedModel.isPrivate !== undefined) this.isPrivateSession = updatedModel.isPrivate;

@@ -87,7 +87,6 @@ export default class PrivateSpotifyArea extends SpotifyArea {
     if (command.type === 'RequestJoinRoom') {
       this._toggle = command.toggle;
       this._emitAreaChanged();
-      console.log(`received RequestJoinRoom, setting toggle to ${this._toggle}`);
       return {} as InteractableCommandReturnType<CommandType>;
     }
     if (command.type === 'RemoveUserFromMusicSession') {

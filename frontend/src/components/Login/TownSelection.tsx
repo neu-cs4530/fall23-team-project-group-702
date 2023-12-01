@@ -24,7 +24,6 @@ import { Town } from '../../generated/client';
 import useLoginController from '../../hooks/useLoginController';
 import TownController from '../../classes/TownController';
 import useVideoContext from '../VideoCall/VideoFrontend/hooks/useVideoContext/useVideoContext';
-import SpotifyLogin from './SpotifyLogin';
 
 export default function TownSelection(): JSX.Element {
   const [userName, setUserName] = useState<string>('');

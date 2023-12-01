@@ -83,12 +83,12 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
   };
 
   useEffect(() => {
-    console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
-    if (townController.userID === musicAreaController.hostId) {
-      console.log('NICEEEEEEEEEEEEEEEEEEEE');
-    }
+    // console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+    // if (townController.userID === musicAreaController.hostId) {
+    //   console.log('NICEEEEEEEEEEEEEEEEEEEE');
+    // }
     if (sessionActive && isPrivate && toggle) {
-      console.log('handleRequestJoinRoom: hostId == userID');
+      // console.log('handleRequestJoinRoom: hostId == userID');
       setToggle(false);
       toast({
         title: 'Someone wants to join your room!',
@@ -97,7 +97,7 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
         duration: 5000,
         isClosable: true,
         onCloseComplete: async () => {
-          console.log('completed');
+          // console.log('completed');
           await privateMusicAreaController.requestJoinRoom(false);
         },
       });
