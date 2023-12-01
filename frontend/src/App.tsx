@@ -68,31 +68,31 @@ function App() {
   const router = useRouter();
 
   useEffect(() => {
-    // const params = router.query;
-    // async function spotifyAccessTokenRequest() {
-    //   if (!params.code) {
-    //     /* redirect user to spotify login */
-    //     // const loginResponse = await fetch('/api/login', {
-    //     //   method: 'GET',
-    //     // });
-    //     // const spotifyLoginPageURL = await loginResponse.json();
-    //     // if (!spotifyLoginPageURL) {
-    //     //   throw new Error('Unable to get Spotify login URL');
-    //     // }
-    //     // Redirects user's page to Spotify login page
-    //     const state = generateRandomString(16);
-    //     const redirectParams = new URLSearchParams({
-    //       response_type: 'code',
-    //       client_id: CLIENT_ID,
-    //       scope: SINGLE_STRING_SCOPE,
-    //       redirect_uri: REDIRECT_URI,
-    //       state: state,
-    //     });
-    //     const url = `${LOGIN_URL}?${redirectParams.toString()}`;
-    //     window.location.href = url;
-    //   }
-    // }
-    // spotifyAccessTokenRequest();
+    const params = router.query;
+    async function spotifyAccessTokenRequest() {
+      if (!params.code) {
+        /* redirect user to spotify login */
+        // const loginResponse = await fetch('/api/login', {
+        //   method: 'GET',
+        // });
+        // const spotifyLoginPageURL = await loginResponse.json();
+        // if (!spotifyLoginPageURL) {
+        //   throw new Error('Unable to get Spotify login URL');
+        // }
+        // Redirects user's page to Spotify login page
+        const state = generateRandomString(16);
+        const redirectParams = new URLSearchParams({
+          response_type: 'code',
+          client_id: CLIENT_ID,
+          scope: SINGLE_STRING_SCOPE,
+          redirect_uri: REDIRECT_URI,
+          state: state,
+        });
+        const url = `${LOGIN_URL}?${redirectParams.toString()}`;
+        window.location.href = url;
+      }
+    }
+    spotifyAccessTokenRequest();
   });
 
   let page: JSX.Element;
