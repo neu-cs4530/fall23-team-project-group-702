@@ -274,6 +274,7 @@ export interface RemoveUserFromMusicSessionCommand {
 
 export interface SetRoomPrivacy {
   type: 'SetRoomPrivacy'
+  isPrivate: boolean;
 }
 
 export interface ViewingAreaUpdateCommand {

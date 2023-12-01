@@ -24,7 +24,7 @@ export default class PrivateMusicAreaController extends MusicAreaController {
     console.log(`in private music area controller, setting privacy to ${privacyState}`);
     await this._townController.sendInteractableCommand(this.id, {
       type: 'SetRoomPrivacy',
-      privacyState,
+      isPrivate: privacyState,
     });
   }
 
