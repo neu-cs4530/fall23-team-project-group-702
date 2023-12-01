@@ -20,6 +20,8 @@ export default class PrivateMusicArea extends MusicArea {
 
   overlap(): void {
     super.overlap();
+    // Emit attempted join for an existing area
+    this._musicArea && this._musicArea.emit('knock', this.townController.ourPlayer.id);
     if (this.isPrivateSession) {
       const spawnPoint = { x: 832.333166666666, y: 900.3335 };
       this._scene.moveOurPlayerTo({
@@ -28,7 +30,6 @@ export default class PrivateMusicArea extends MusicArea {
         x: spawnPoint.x,
         y: spawnPoint.y,
       });
-      this.emit('requestJoinRoom');
     }
   }
 

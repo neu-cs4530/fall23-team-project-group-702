@@ -15,8 +15,7 @@ export type MusicAreaEvents = BaseInteractableEventMap & {
   accessTokenChange: (accessToken: AccessToken) => void;
   playbackStateChange: (playbackState: boolean) => void;
   roomVisibilityChange: (privateState: boolean) => void;
-  /* Private Room Music Events */
-  roomPrivacyChange: (privateState: boolean) => void;
+  knock: (userId: string) => void;
 };
 
 /**

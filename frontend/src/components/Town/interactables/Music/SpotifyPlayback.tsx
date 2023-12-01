@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect } from 'react';
 import { Track } from '@spotify/web-api-ts-sdk';
 import { useState } from 'react';
-import { Box, Button, Heading, Input, Table, Tbody, Td, Th, Thead, Tr } from '@chakra-ui/react';
+import { Box, Button, Heading, Input, Table, Tbody, Td, Th, Thead, Tr, useToast } from '@chakra-ui/react';
 import { QueuedTrack } from '../../../../types/CoveyTownSocket';
 import MusicAreaController from '../../../../classes/interactable/MusicAreaController';
 
@@ -61,19 +61,36 @@ export default function SpotifyPlayback({
     await musicController.togglePlay();
   }, [isPlaying, musicController]);
 
+  const toast = useToast();
+  /* Room Visibility and Knocking*/
+  const handleRequestJoinRoom = useCallback(async () => {
+    console.log('HAI');
+        toast({
+          title: 'Someone is knocking!',
+          description: 'Jason just tried to enter the jam session',
+          status: 'info',
+          duration: 5000,
+          isClosable: true,
+        });
+  }, [toast]);
+
   // Listener effects
   /**
    *   currentSongChange: (song: Track | undefined) => void;
        currentQueueChange: (queue: QueuedTrack[] | undefined) => void;
+       playbackStateChange (isPlaying: boolean) => void;
+       knock (username: string) => void;
    */
   useEffect(() => {
     musicController.addListener('currentQueueChange', setQueue);
     musicController.addListener('currentSongChange', setCurrentTrack);
     musicController.addListener('playbackStateChange', setIsPlaying);
+    musicController.addListener('knock', (arg: string) => console.log(arg));
     return () => {
       musicController.removeListener('currentQueueChange', setQueue);
       musicController.removeListener('currentSongChange', setCurrentTrack);
       musicController.removeListener('playbackStateChange', setIsPlaying);
+      musicController.removeListener('knock', (arg: string) => console.log(arg));
     };
   }, [musicController]);
 

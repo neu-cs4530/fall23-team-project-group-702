@@ -111,6 +111,8 @@ export type TownEvents = {
    * @param obj the interactable that is being interacted with
    */
   interact: <T extends Interactable>(typeName: T['name'], obj: T) => void;
+
+  knock: () => void;
 };
 
 /**
@@ -518,6 +520,16 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
   public emitChatMessage(message: ChatMessage) {
     this._socket.emit('chatMessage', message);
   }
+
+    /**
+   * Emit a chat message to the townService
+   *
+   * @param message
+   */
+     public emitKnock(message: ChatMessage) {
+      this._socket.emit('knock', message);
+    }
+  
 
   /**
    * Sends an InteractableArea command to the townService. Returns a promise that resolves

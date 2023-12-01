@@ -53,6 +53,7 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
     };
   }, [musicAreaController]);
 
+
   useEffect(() => {
     const privateController = musicAreaController as PrivateMusicAreaController;
     privateController.addListener('roomVisibilityChange', setIsPrivate);
@@ -200,28 +201,12 @@ export default function FirstMusicWrapper(): JSX.Element {
     }
   }, [musicArea, townController]);
 
-  const handleRequestJoinRoom = useCallback(async () => {
-    if (musicArea) {
-      const musicAreaController = townController.getMusicAreaController(musicArea);
-      if (musicAreaController && musicAreaController.hostId == townController.userID) {
-        toast({
-          title: 'Someone wants to join your room!',
-          description: 'Click the button below to let them in.',
-          status: 'info',
-          duration: 5000,
-          isClosable: true,
-        });
-      }
-    }
-  }, [musicArea, toast, townController]);
-
   useEffect(() => {
     if (musicArea) {
+      const musicAreaController = townController.getMusicAreaController(musicArea);
       musicArea.addListener('leaveSession', handleLeaveSession);
-      musicArea.addListener('requestJoinRoom', handleRequestJoinRoom);
       return () => {
         musicArea?.removeListener('leaveSession', handleLeaveSession);
-        musicArea?.removeListener('requestJoinRoom', handleRequestJoinRoom);
       };
     }
   });
