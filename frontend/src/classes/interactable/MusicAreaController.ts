@@ -35,6 +35,8 @@ export default class MusicAreaController extends InteractableAreaController<
 
   protected _townController: TownController;
 
+  protected _hostId: string;
+
   /**
    * Constructs a new MusicAreaController, initialized with the state of the
    * provided musicAreaModel.
@@ -45,6 +47,11 @@ export default class MusicAreaController extends InteractableAreaController<
     super(musicAreaModel.id);
     this._model = musicAreaModel;
     this._townController = townController;
+    this._hostId = '';
+  }
+
+  get hostId(): string {
+    return this._hostId;
   }
 
   get topic(): string {
@@ -147,6 +154,7 @@ export default class MusicAreaController extends InteractableAreaController<
       type: 'CreateMusicSession',
       topic: sessionName,
     });
+    this._hostId = this._townController.userID;
   }
 
   public async leaveSession(accessToken: AccessToken) {

@@ -10,6 +10,7 @@ import {
   ModalCloseButton,
   ModalContent,
   ModalOverlay,
+  useToast,
   VStack,
 } from '@chakra-ui/react';
 import { useInteractable, useInteractableAreaController } from '../../../../classes/TownController';
@@ -157,6 +158,7 @@ export default function FirstMusicWrapper(): JSX.Element {
   //   musicArea = useInteractable<PrivateMusicAreaInteractable>('privateMusicArea');
   // }
   const townController = useTownController();
+  const toast = useToast();
 
   const [isOpen, setIsOpen] = useState<boolean>(true);
 
@@ -198,11 +200,28 @@ export default function FirstMusicWrapper(): JSX.Element {
     }
   }, [musicArea, townController]);
 
+  const handleRequestJoinRoom = useCallback(async () => {
+    if (musicArea) {
+      const musicAreaController = townController.getMusicAreaController(musicArea);
+      if (musicAreaController && musicAreaController.hostId == townController.userID) {
+        toast({
+          title: 'Someone wants to join your room!',
+          description: 'Click the button below to let them in.',
+          status: 'info',
+          duration: 5000,
+          isClosable: true,
+        });
+      }
+    }
+  }, [musicArea, toast, townController]);
+
   useEffect(() => {
     if (musicArea) {
       musicArea.addListener('leaveSession', handleLeaveSession);
+      musicArea.addListener('requestJoinRoom', handleRequestJoinRoom);
       return () => {
         musicArea?.removeListener('leaveSession', handleLeaveSession);
+        musicArea?.removeListener('requestJoinRoom', handleRequestJoinRoom);
       };
     }
   });
