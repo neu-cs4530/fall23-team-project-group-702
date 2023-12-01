@@ -92,7 +92,7 @@ function FirstMusic({ interactableID }: { interactableID: InteractableID }): JSX
       setToggle(false);
       toast({
         title: 'Someone wants to join your room!',
-        description: 'Click the button below to let them in.',
+        description: 'Unlock the area to let them in.',
         status: 'info',
         duration: 5000,
         isClosable: true,
