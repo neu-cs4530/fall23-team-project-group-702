@@ -6,10 +6,10 @@ import NewConversationModal from './interactables/NewCoversationModal';
 import TownGameScene from './TownGameScene';
 import TicTacToeAreaWrapper from './interactables/TicTacToe/TicTacToeArea';
 import FirstMusicWrapper from './interactables/Music/FirstMusic';
+import SpotifySdk from './interactables/Music/SpotifySdk';
 import { AccessToken } from '@spotify/web-api-ts-sdk';
 import { useRouter } from 'next/router';
 import { CLIENT_ID, CLIENT_SECRET, REDIRECT_URI, TOKEN_URL } from '../../utilities/constants';
-import SpotifySdk from './interactables/Music/SpotifySdk';
 
 export default function TownMap(): JSX.Element {
   const coveyTownController = useTownController();
@@ -22,18 +22,7 @@ export default function TownMap(): JSX.Element {
   useEffect(() => {
     const params = router.query;
     async function spotifyAccessTokenRequest() {
-      if (!params.code) {
-        /* redirect user to spotify login */
-        const loginResponse = await fetch('http://localhost:3000/api/login', {
-          method: 'GET',
-        });
-        const spotifyLoginPageURL = await loginResponse.json();
-        if (!spotifyLoginPageURL) {
-          throw new Error('Unable to get Spotify login URL');
-        }
-        // Redirects user's page to Spotify login page
-        window.location.href = spotifyLoginPageURL;
-      } else if (accessToken === undefined) {
+      if (params.code && accessToken === undefined) {
         /* get user access token using login info */
         const spotifyAccessTokenParams = new URLSearchParams({
           grant_type: 'authorization_code',

@@ -18,6 +18,7 @@ import TownControllerContext from './contexts/TownControllerContext';
 import LoginControllerContext from './contexts/LoginControllerContext';
 import { TownsServiceClient } from './generated/client';
 import { nanoid } from 'nanoid';
+import { useRouter } from 'next/router';
 
 function App() {
   const [townController, setTownController] = useState<TownController | null>(null);
@@ -27,6 +28,27 @@ function App() {
   const onDisconnect = useCallback(() => {
     townController?.disconnect();
   }, [townController]);
+
+  const router = useRouter();
+
+  useEffect(() => {
+    const params = router.query;
+    async function spotifyAccessTokenRequest() {
+      if (!params.code) {
+        /* redirect user to spotify login */
+        const loginResponse = await fetch('http://localhost:3000/api/login', {
+          method: 'GET',
+        });
+        const spotifyLoginPageURL = await loginResponse.json();
+        if (!spotifyLoginPageURL) {
+          throw new Error('Unable to get Spotify login URL');
+        }
+        // Redirects user's page to Spotify login page
+        window.location.href = spotifyLoginPageURL;
+      }
+    }
+    spotifyAccessTokenRequest();
+  });
 
   let page: JSX.Element;
   if (townController) {
