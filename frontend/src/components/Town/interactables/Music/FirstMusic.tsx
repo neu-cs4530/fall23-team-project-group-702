@@ -17,7 +17,7 @@ import { useInteractable, useInteractableAreaController } from '../../../../clas
 import useTownController from '../../../../hooks/useTownController';
 import PrivateMusicAreaInteractable from '../PrivateMusicArea';
 import { useCallback, useEffect, useState } from 'react';
-import { InteractableID } from '../../../../types/CoveyTownSocket';
+import { InteractableID, MusicArea } from '../../../../types/CoveyTownSocket';
 import MusicAreaController from '../../../../classes/interactable/MusicAreaController';
 import { AccessToken } from '@spotify/web-api-ts-sdk';
 import SpotifyPlayback from './SpotifyPlayback';
@@ -151,7 +151,7 @@ function isValidMusicAreaType(areaType: string): boolean {
  */
 export default function FirstMusicWrapper(): JSX.Element {
   const musicArea = useInteractable<PrivateMusicAreaInteractable>('privateMusicArea');
-  const townController = useTownController();
+  const coveyTownController = useTownController();
   const toast = useToast();
 
   const [isOpen, setIsOpen] = useState<boolean>(true);
@@ -159,22 +159,22 @@ export default function FirstMusicWrapper(): JSX.Element {
   // Pause controller if interacting and modal is open
   useEffect(() => {
     if (isOpen && musicArea) {
-      townController.pause();
+      coveyTownController.pause();
     } else {
-      townController.unPause();
+      coveyTownController.unPause();
     }
-  }, [isOpen, musicArea, townController]);
+  }, [isOpen, musicArea, coveyTownController]);
 
   const closeModal = useCallback(() => {
     setIsOpen(false);
 
     if (musicArea) {
-      const musicAreaController = townController.getMusicAreaController(musicArea);
+      const musicAreaController = coveyTownController.getMusicAreaController(musicArea);
       if (!musicAreaController.sessionInProgress) {
         musicArea.overlapExit();
       }
     }
-  }, [musicArea, townController]);
+  }, [musicArea, coveyTownController]);
 
   const handleReopen = useCallback(() => {
     setIsOpen(true);
@@ -182,8 +182,8 @@ export default function FirstMusicWrapper(): JSX.Element {
 
   const handleLeaveSession = useCallback(async () => {
     if (musicArea) {
-      townController.interactEnd(musicArea);
-      const musicAreaController = townController.getMusicAreaController(musicArea);
+      coveyTownController.interactEnd(musicArea);
+      const musicAreaController = coveyTownController.getMusicAreaController(musicArea);
       await musicAreaController.removeUserFromSession();
       if (!musicAreaController.sessionInProgress) {
         // Reset state if session ended
@@ -192,31 +192,40 @@ export default function FirstMusicWrapper(): JSX.Element {
         setIsOpen(true);
       }
     }
-  }, [musicArea, townController]);
+  }, [musicArea, coveyTownController]);
 
-  // const handleRequestJoinRoom = useCallback(() => {
-  //   console.log('requsetJoinRoom listener called');
-  //   if (musicArea) {
-  //     const musicAreaController = townController.getMusicAreaController(musicArea);
-  //     if (musicAreaController && musicAreaController.hostId == townController.userID) {
-  //       toast({
-  //         title: 'Someone wants to join your room!',
-  //         description: 'Click the button below to let them in.',
-  //         status: 'info',
-  //         duration: 4000,
-  //         isClosable: true,
-  //       });
-  //     }
-  //   }
-  // }, [musicArea, toast, townController]);
+  const userJoinRoom = useCallback(() => {
+    if (musicArea) {
+      const musicAreaController = coveyTownController.getMusicAreaController(musicArea);
+      console.log('userJoinRoom listener called');
+      if (musicAreaController && musicAreaController.hostId == coveyTownController.userID) {
+        toast({
+          title: 'Someone wants to join your room!',
+          description: 'Click the button below to let them in.',
+          status: 'info',
+          duration: 4000,
+          isClosable: true,
+        });
+      }
+    }
+  }, [coveyTownController, musicArea, toast]);
+
+  useEffect(() => {
+    if (musicArea) {
+      console.log('adding listener for userJoinRoom');
+      coveyTownController.addListener('userJoinRoom', userJoinRoom);
+      return () => {
+        console.log('removing listener for userJoinRoom');
+        coveyTownController?.removeListener('userJoinRoom', userJoinRoom);
+      };
+    }
+  });
 
   useEffect(() => {
     if (musicArea) {
       musicArea.addListener('leaveSession', handleLeaveSession);
-      // musicArea.addListener('requestJoinRoom', handleRequestJoinRoom);
       return () => {
         musicArea?.removeListener('leaveSession', handleLeaveSession);
-        // musicArea?.removeListener('requestJoinRoom', handleRequestJoinRoom);
       };
     }
   });
@@ -224,7 +233,7 @@ export default function FirstMusicWrapper(): JSX.Element {
   if (musicArea && isValidMusicAreaType(musicArea.getType())) {
     let sessionInProgress;
     if (musicArea) {
-      const musicAreaController = townController.getMusicAreaController(musicArea);
+      const musicAreaController = coveyTownController.getMusicAreaController(musicArea);
       sessionInProgress = musicAreaController.sessionInProgress;
     }
     if (!isOpen && sessionInProgress) {

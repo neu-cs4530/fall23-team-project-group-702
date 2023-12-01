@@ -141,6 +141,11 @@ export default class Town {
       this._broadcastEmitter.emit('chatMessage', message);
     });
 
+    socket.on('userJoinRoom', () => {
+      console.log('In backend emitting userJoinRoom');
+      this._broadcastEmitter.emit('userJoinRoom');
+    });
+
     // Register an event listener for the client socket: if the client updates their
     // location, inform the CoveyTownController
     socket.on('playerMovement', (movementData: PlayerLocation) => {

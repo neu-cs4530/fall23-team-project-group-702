@@ -333,6 +333,7 @@ export interface ServerToClientEvents {
   townSettingsUpdated: (update: TownSettingsUpdate) => void;
   townClosing: () => void;
   chatMessage: (message: ChatMessage) => void;
+  userJoinRoom: () => void;
   interactableUpdate: (interactable: Interactable) => void;
   commandResponse: (response: InteractableCommandResponse) => void;
 }
