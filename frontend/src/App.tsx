@@ -19,6 +19,7 @@ import LoginControllerContext from './contexts/LoginControllerContext';
 import { TownsServiceClient } from './generated/client';
 import { nanoid } from 'nanoid';
 import { useRouter } from 'next/router';
+// const REDIRECT_URI = process.env.NEXT_PUBLIC_SPOTIFY_REDIRECT_URI as string;
 
 function App() {
   const [townController, setTownController] = useState<TownController | null>(null);
@@ -36,7 +37,7 @@ function App() {
     async function spotifyAccessTokenRequest() {
       if (!params.code) {
         /* redirect user to spotify login */
-        const loginResponse = await fetch('http://localhost:3000/api/login', {
+        const loginResponse = await fetch('/api/login', {
           method: 'GET',
         });
         const spotifyLoginPageURL = await loginResponse.json();
