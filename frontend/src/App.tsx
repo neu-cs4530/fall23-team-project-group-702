@@ -122,7 +122,8 @@ function App() {
       }
     }
     spotifyAccessTokenRequest();
-  }, [router.query]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   let page: JSX.Element;
   if (townController) {
