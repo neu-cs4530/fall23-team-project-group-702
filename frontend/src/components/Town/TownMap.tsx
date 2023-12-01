@@ -37,15 +37,15 @@ export default function TownMap(): JSX.Element {
         isClosable: true,
       });
     }
-  }, [musicArea, toast, coveyTownController]);
+  }, [coveyTownController, musicArea, toast]);
 
   useEffect(() => {
-    if (musicArea) {
+    if (coveyTownController) {
       console.log('adding listener for requestJoinRoom');
-      musicArea.addListener('requestJoinRoom', handleRequestJoinRoom);
+      coveyTownController.addListener('requestJoinRoom', handleRequestJoinRoom);
       return () => {
         console.log('removing listener for requestJoinRoom');
-        musicArea?.removeListener('requestJoinRoom', handleRequestJoinRoom);
+        coveyTownController.removeListener('requestJoinRoom', handleRequestJoinRoom);
       };
     }
   });

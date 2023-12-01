@@ -111,6 +111,10 @@ export type TownEvents = {
    * @param obj the interactable that is being interacted with
    */
   interact: <T extends Interactable>(typeName: T['name'], obj: T) => void;
+  /**
+   * An event that indicates that the player is requesting to join a room
+   */
+  userJoinRoom: () => void;
 };
 
 /**
@@ -517,6 +521,10 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
    */
   public emitChatMessage(message: ChatMessage) {
     this._socket.emit('chatMessage', message);
+  }
+
+  public emitUserJoinRoom() {
+    this._socket.emit('userJoinRoom');
   }
 
   /**
