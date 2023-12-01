@@ -9,6 +9,7 @@ import ToggleVideoButton from '../../Buttons/ToggleVideoButton/ToggleVideoButton
 import { useAppState } from '../../../state';
 import useChatContext from '../../../hooks/useChatContext/useChatContext';
 import useVideoContext from '../../../hooks/useVideoContext/useVideoContext';
+import SpotifyLogin from '../../../../../Login/SpotifyLogin';
 
 const useStyles = makeStyles((theme: Theme) => ({
   gutterBottom: {
@@ -74,7 +75,17 @@ export default function DeviceSelectionScreen({ }: DeviceSelectionScreenProps) {
               <ToggleAudioButton className={classes.mobileButton} disabled={disableButtons} />
               <ToggleVideoButton className={classes.mobileButton} disabled={disableButtons} />
             </Hidden>
-            <SettingsMenu mobileButtonClass={classes.mobileButton} />
+            <Grid container justifyContent="space-between" className={classes.mobileButtonBar}>
+              <Grid item>
+                <SettingsMenu mobileButtonClass={classes.mobileButton} />
+              </Grid>
+              <Grid item>
+                <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                  <div style={{ flex: '1' }}></div>
+                  <SpotifyLogin />
+                </div>
+              </Grid>
+            </Grid>
           </div>
         </Grid>
         <Grid item md={5} sm={12} xs={12}>

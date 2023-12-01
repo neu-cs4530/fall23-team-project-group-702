@@ -24,6 +24,7 @@ import { Town } from '../../generated/client';
 import useLoginController from '../../hooks/useLoginController';
 import TownController from '../../classes/TownController';
 import useVideoContext from '../VideoCall/VideoFrontend/hooks/useVideoContext/useVideoContext';
+import SpotifyLogin from './SpotifyLogin';
 
 export default function TownSelection(): JSX.Element {
   const [userName, setUserName] = useState<string>('');
@@ -243,7 +244,7 @@ export default function TownSelection(): JSX.Element {
               Select a username
             </Heading>
 
-            <FormControl>
+            <FormControl pb='6'>
               <FormLabel htmlFor='name'>Name</FormLabel>
               <Input
                 autoFocus

@@ -18,43 +18,6 @@ import TownControllerContext from './contexts/TownControllerContext';
 import LoginControllerContext from './contexts/LoginControllerContext';
 import { TownsServiceClient } from './generated/client';
 import { nanoid } from 'nanoid';
-import { useRouter } from 'next/router';
-const CLIENT_ID = process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID as string;
-const LOGIN_URL = process.env.NEXT_PUBLIC_AUTHORIZATION_URL as string;
-const REDIRECT_URI = process.env.NEXT_PUBLIC_SPOTIFY_REDIRECT_URI as string;
-
-export const SPOTIFY_SCOPES = [
-  'ugc-image-upload',
-  'user-read-recently-played',
-  'user-top-read',
-  'user-read-playback-position',
-  'user-read-playback-state',
-  'user-modify-playback-state',
-  'user-read-currently-playing',
-  'app-remote-control',
-  'streaming',
-  'playlist-modify-public',
-  'playlist-modify-private',
-  'playlist-read-private',
-  'playlist-read-collaborative',
-  'user-follow-modify',
-  'user-follow-read',
-  'user-library-modify',
-  'user-library-read',
-  'user-read-email',
-  'user-read-private',
-] as const;
-const SINGLE_STRING_SCOPE = SPOTIFY_SCOPES.join(' ');
-
-export const generateRandomString = function (length: number) {
-  let text = '';
-  const possibleChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-
-  for (let i = 0; i < length; i++) {
-    text += possibleChars.charAt(Math.floor(Math.random() * possibleChars.length));
-  }
-  return text;
-};
 
 function App() {
   const [townController, setTownController] = useState<TownController | null>(null);
@@ -64,66 +27,6 @@ function App() {
   const onDisconnect = useCallback(() => {
     townController?.disconnect();
   }, [townController]);
-
-  const router = useRouter();
-
-  useEffect(() => {
-    const params = router.query;
-    async function spotifyAccessTokenRequest() {
-      if (!params.code) {
-        // router.
-        /* redirect user to spotify login */
-        // const loginResponse = await fetch('/api/login', {
-        //   method: 'GET',
-        // });
-        // const spotifyLoginPageURL = await loginResponse.json();
-        // if (!spotifyLoginPageURL) {
-        //   throw new Error('Unable to get Spotify login URL');
-        // }
-        // Redirects user's page to Spotify login page
-        /*
-
-        redirect the entire page to the login page, once that page opens up we will have spotify url,
-        then we will be redirected to spotify api login page, then append the response parameter to the url
-        send the user to the home url. on home url use that information.
-
-        ####################################################### nextjs allows us to redirect to one of the own
-        pages in the app.
-
-        INSTEAD OF DOING FETCH, send user to the page.
-        window.location.href = 
-
-
-
-        with router we can create a new route, set the route as /api/login. Now, using react router,
-        we can redirect the user to /api/login which is actually another react page. The react component
-        useEffect to call spotify api, get the information, then redirect to this homeurl where we can use 
-        the information as parameter.
-
-        another advantage of react router, if we do window.location.href, all the state before that point is erased.
-        There is a difference between redirecting and using react router to redirect.
-        changing the url HARD REFRESHES THE PAGE. with react router, it maintains the state that was present before
-        redirecting to that page (because it is the same app completely)
-
-
-        redirect the user to /api/login
-        once that contacts spotify api, redirect user from /api/login back to the home url
-        */
-        const state = generateRandomString(16);
-        const redirectParams = new URLSearchParams({
-          response_type: 'code',
-          client_id: CLIENT_ID,
-          scope: SINGLE_STRING_SCOPE,
-          redirect_uri: REDIRECT_URI,
-          state: state,
-        });
-        const url = `${LOGIN_URL}?${redirectParams.toString()}`;
-        window.location.href = url;
-      }
-    }
-    spotifyAccessTokenRequest();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   let page: JSX.Element;
   if (townController) {
