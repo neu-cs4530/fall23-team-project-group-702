@@ -481,6 +481,7 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
      */
     this._socket.on('interactableUpdate', interactable => {
       try {
+        //
         const controller = this._interactableControllers.find(c => c.id === interactable.id);
         if (controller) {
           const activeBefore = controller.isActive();
@@ -496,6 +497,8 @@ export default class TownController extends (EventEmitter as new () => TypedEmit
       }
     });
   }
+
+  // this._socket.on('userJoinRoom', interactable => {
 
   /**
    * Emit a movement event for the current player, updating the state locally and

@@ -18,12 +18,37 @@ import MusicArea from './interactables/MusicArea';
 export default function TownMap(): JSX.Element {
   const coveyTownController = useTownController();
   const router = useRouter();
-  // const musicArea = useInteractable<PrivateMusicAreaInteractable>('privateMusicArea');
-  // const toast = useToast();
+  const musicArea = useInteractable<PrivateMusicAreaInteractable>('privateMusicArea');
+  const toast = useToast();
 
   const [accessToken, setAccessToken] = useState<AccessToken | undefined>(
     coveyTownController.spotifyAccessToken,
   );
+
+  const handleRequestJoinRoom = useCallback(() => {
+    console.log('requsetJoinRoom listener called');
+    const musicAreaController = coveyTownController.getMusicAreaController(musicArea as MusicArea);
+    if (musicAreaController && musicAreaController.hostId == coveyTownController.userID) {
+      toast({
+        title: 'Someone wants to join your room!',
+        description: 'Click the button below to let them in.',
+        status: 'info',
+        duration: 4000,
+        isClosable: true,
+      });
+    }
+  }, [coveyTownController, musicArea, toast]);
+
+  useEffect(() => {
+    if (coveyTownController) {
+      console.log('townController: adding listener for userJoinRoom');
+      coveyTownController.addListener('userJoinRoom', handleRequestJoinRoom);
+      return () => {
+        console.log('townController: removing listener for userJoinRoom');
+        coveyTownController.removeListener('userJoinRoom', handleRequestJoinRoom);
+      };
+    }
+  });
 
   useEffect(() => {
     const params = router.query;

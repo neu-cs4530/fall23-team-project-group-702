@@ -20,8 +20,7 @@ export default class PrivateMusicArea extends MusicArea {
   overlap(): void {
     super.overlap();
     if (this.isPrivateSession) {
-      console.log('emitted userJoinRoom');
-      this.townController.emit('userJoinRoom');
+      this.townController.emitUserJoinRoom();
       const spawnPoint = { x: 832.333166666666, y: 900.3335 };
       this._scene.moveOurPlayerTo({
         rotation: 'front',

@@ -17,7 +17,7 @@ import { useInteractable, useInteractableAreaController } from '../../../../clas
 import useTownController from '../../../../hooks/useTownController';
 import PrivateMusicAreaInteractable from '../PrivateMusicArea';
 import { useCallback, useEffect, useState } from 'react';
-import { InteractableID, MusicArea } from '../../../../types/CoveyTownSocket';
+import { InteractableID } from '../../../../types/CoveyTownSocket';
 import MusicAreaController from '../../../../classes/interactable/MusicAreaController';
 import { AccessToken } from '@spotify/web-api-ts-sdk';
 import SpotifyPlayback from './SpotifyPlayback';
@@ -213,10 +213,10 @@ export default function FirstMusicWrapper(): JSX.Element {
   useEffect(() => {
     if (musicArea) {
       console.log('adding listener for userJoinRoom');
-      coveyTownController.addListener('userJoinRoom', userJoinRoom);
+      musicArea.addListener('userJoinRoom', userJoinRoom);
       return () => {
         console.log('removing listener for userJoinRoom');
-        coveyTownController?.removeListener('userJoinRoom', userJoinRoom);
+        musicArea?.removeListener('userJoinRoom', userJoinRoom);
       };
     }
   });
